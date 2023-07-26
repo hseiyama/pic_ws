@@ -90,19 +90,34 @@ void Wait(unsigned int num)
 
 void main(void) {
     OSCCON = 0b01110010;    // 内部クロックとする(16MHz)
-//    OSCTUNE = 0b01011111;    // 4xPLLを有効にする
+    PLLEN  = 1;             // 4xPLLを有効にする ◆機能しない
     ANSELA = 0b00000000;    // AN0-4 アナログは使用しない、デジタルI/Oに割当
     ANSELB = 0b00000000;    // AN8-13アナログは使用しない、デジタルI/Oに割当
     ANSELC = 0b00000000;    // AN14-19アナログは使用しない、デジタルI/Oに割当
-    TRISA  = 0b11111110;    // RA0のみ出力に設定、1で入力 0で出力
+    TRISA  = 0b11111000;    // RA0-2のみ出力に設定、1で入力 0で出力
     TRISB  = 0b11111111;    // RB0-RB7全て入力に設定
     TRISC  = 0b11111111;    // RC0-RC7全て入力に設定 
     PORTA  = 0b00000000;    // 出力ピンの初期化(全てLOWにする)
     PORTB  = 0b00000000;    // 出力ピンの初期化(全てLOWにする)
     PORTC  = 0b00000000;    // 出力ピンの初期化(全てLOWにする)
+    RBPU   = 0;             // PORTBプルアップ有効
+    WPUB   = 0xFF;          // RB0-RB7全てプルアップ有効
     
     while(1) {
+        if(PORTBbits.RB0 == 1) {    // RB0がHIGHの場合
+            LATA1 = 0;
+        }
+        else{
+            LATA1 = 1;
+        }
+        if(PORTBbits.RB1 == 1) {    // RB1がHIGHの場合
+            LATA2 = 1;
+        }
+        else{
+            LATA2 = 0;
+        }
         LATA0 = 1 ;         // 2番ピン(RA0)にHIGH(5V)を出力する(LED ON)
+//      LATAbits.LA0 = 1;   // ◆こちらの表現も可能
         Wait(100) ;         // 1秒ウエイト
         LATA0 = 0 ;         // 2番ピン(RA0)にLOW(0V)を出力する(LED OFF)
         Wait(100) ;         // 1秒ウエイト
