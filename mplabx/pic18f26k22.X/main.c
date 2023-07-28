@@ -74,8 +74,7 @@
 
 #include <xc.h>
 
-//#define _XTAL_FREQ 64000000   // delay用に必要(クロック64MHzを指定)
-#define _XTAL_FREQ 16000000   // delay用に必要(クロック16MHzを指定)
+#define _XTAL_FREQ 64000000   // delay用に必要(クロック64MHzを指定)
 
 // 指定した時間(num x 10ms)だけウエイトを行う処理関数
 void Wait(unsigned int num)
@@ -89,8 +88,11 @@ void Wait(unsigned int num)
 }
 
 void main(void) {
-    OSCCON = 0b01110010;    // 内部クロックとする(16MHz)
-    PLLEN  = 1;             // 4xPLLを有効にする ◆機能しない
+    uint8_t data_uart;
+    /* CLOCK初期化 */
+    OSCCON = 0b01110000;    // 内部クロックとする(16MHz、プライマリ クロック)
+    PLLEN  = 1;             // PLL(x4)を有効化
+    /* PORT初期化 */
     ANSELA = 0b00000000;    // AN0-4 アナログは使用しない、デジタルI/Oに割当
     ANSELB = 0b00000000;    // AN8-13アナログは使用しない、デジタルI/Oに割当
     ANSELC = 0b00000000;    // AN14-19アナログは使用しない、デジタルI/Oに割当
@@ -102,6 +104,10 @@ void main(void) {
     PORTC  = 0b00000000;    // 出力ピンの初期化(全てLOWにする)
     RBPU   = 0;             // PORTBプルアップ有効
     WPUB   = 0xFF;          // RB0-RB7全てプルアップ有効
+    /* ESUART1初期化 */
+    TXSTA1 = 0b00100000;    // 送信情報設定：非同期モード、８ビット・ノンパリティ
+    RCSTA1 = 0b10010000;    // 受信情報設定
+    SPBRG1 = 103;           // ボーレートを9600(低速モード)に設定
     
     while(1) {
         if(PORTBbits.RB0 == 1) {    // RB0がHIGHの場合
@@ -118,8 +124,14 @@ void main(void) {
         }
         LATA0 = 1 ;         // 2番ピン(RA0)にHIGH(5V)を出力する(LED ON)
 //      LATAbits.LA0 = 1;   // ◆こちらの表現も可能
+        if(RC1IF == 1) {            // UART受信があった場合
+            data_uart = RCREG1;     // レジスタからデータを受信
+            while(TX1IF == 0);      // 送信可能になるまで待つ
+            TXREG1 = data_uart;     // 送信する
+        }
         Wait(100) ;         // 1秒ウエイト
         LATA0 = 0 ;         // 2番ピン(RA0)にLOW(0V)を出力する(LED OFF)
+        TXREG1 = 'Z';       // 送信する
         Wait(100) ;         // 1秒ウエイト
     }
 }
