@@ -74,40 +74,53 @@
 
 #include <xc.h>
 
-#define _XTAL_FREQ 64000000   // delay用に必要(クロック64MHzを指定)
+#define _XTAL_FREQ 64000000     // delay用に必要(クロック64MHzを指定)
+
+volatile uint8_t data_uart;
 
 // 指定した時間(num x 10ms)だけウエイトを行う処理関数
-void Wait(unsigned int num)
-{
+void Wait(unsigned int num) {
     int i ;
-    
+
     // numで指定した回数だけ繰り返す
     for (i=0 ; i < num ; i++) {
-         __delay_ms(10) ;    // 10msプログラムの一時停止
+        __delay_ms(10);         // 10msプログラムの一時停止
+    }
+}
+
+// 受信割込み処理
+void __interrupt() isr(void) {
+    if (RC1IF == 1) {           // 割込みはＵＳＡＲＴ通信の受信か？
+        data_uart = RCREG1;     // レジスタからデータを受信
+        while(TX1IF == 0);      // 送信可能になるまで待つ
+        TXREG1 = data_uart;     // データ受信を送信する
     }
 }
 
 void main(void) {
-    uint8_t data_uart;
     /* CLOCK初期化 */
-    OSCCON = 0b01110000;    // 内部クロックとする(16MHz、プライマリ クロック)
-    PLLEN  = 1;             // PLL(x4)を有効化
+    OSCCON  = 0b01110000;       // 内部クロックとする(16MHz、プライマリ クロック)
+    PLLEN   = 1;                // PLL(x4)を有効化
     /* PORT初期化 */
-    ANSELA = 0b00000000;    // AN0-4 アナログは使用しない、デジタルI/Oに割当
-    ANSELB = 0b00000000;    // AN8-13アナログは使用しない、デジタルI/Oに割当
-    ANSELC = 0b00000000;    // AN14-19アナログは使用しない、デジタルI/Oに割当
-    TRISA  = 0b11111000;    // RA0-2のみ出力に設定、1で入力 0で出力
-    TRISB  = 0b11111111;    // RB0-RB7全て入力に設定
-    TRISC  = 0b11111111;    // RC0-RC7全て入力に設定 
-    PORTA  = 0b00000000;    // 出力ピンの初期化(全てLOWにする)
-    PORTB  = 0b00000000;    // 出力ピンの初期化(全てLOWにする)
-    PORTC  = 0b00000000;    // 出力ピンの初期化(全てLOWにする)
-    RBPU   = 0;             // PORTBプルアップ有効
-    WPUB   = 0xFF;          // RB0-RB7全てプルアップ有効
+    ANSELA  = 0b00000000;       // AN0-4 アナログは使用しない、デジタルI/Oに割当
+    ANSELB  = 0b00000000;       // AN8-13アナログは使用しない、デジタルI/Oに割当
+    ANSELC  = 0b00000000;       // AN14-19アナログは使用しない、デジタルI/Oに割当
+    TRISA   = 0b11111000;       // RA0-2のみ出力に設定、1で入力 0で出力
+    TRISB   = 0b11111111;       // RB0-RB7全て入力に設定
+    TRISC   = 0b11111111;       // RC0-RC7全て入力に設定 
+    PORTA   = 0b00000000;       // 出力ピンの初期化(全てLOWにする)
+    PORTB   = 0b00000000;       // 出力ピンの初期化(全てLOWにする)
+    PORTC   = 0b00000000;       // 出力ピンの初期化(全てLOWにする)
+    RBPU    = 0;                // PORTBプルアップ有効
+    WPUB    = 0xFF;             // RB0-RB7全てプルアップ有効
     /* ESUART1初期化 */
-    TXSTA1 = 0b00100000;    // 送信情報設定：非同期モード、８ビット・ノンパリティ
-    RCSTA1 = 0b10010000;    // 受信情報設定
-    SPBRG1 = 103;           // ボーレートを9600(低速モード)に設定
+    TXSTA1  = 0b00100000;       // 送信情報設定：非同期モード、８ビット・ノンパリティ
+    RCSTA1  = 0b10010000;       // 受信情報設定
+    SPBRG1  = 103;              // ボーレートを9600(低速モード)に設定
+    RC1IE   = 1;                // USART割込み受信を有効にする
+    /* 全体初期化 */
+    PEIE    = 1;                // 周辺装置割込みを有効にする
+    GIE     = 1;                // 全割込み処理を許可する
     
     while(1) {
         if(PORTBbits.RB0 == 1) {    // RB0がHIGHの場合
@@ -122,16 +135,9 @@ void main(void) {
         else{
             LATA2 = 0;
         }
-        LATA0 = 1 ;         // 2番ピン(RA0)にHIGH(5V)を出力する(LED ON)
-//      LATAbits.LA0 = 1;   // ◆こちらの表現も可能
-        if(RC1IF == 1) {            // UART受信があった場合
-            data_uart = RCREG1;     // レジスタからデータを受信
-            while(TX1IF == 0);      // 送信可能になるまで待つ
-            TXREG1 = data_uart;     // 送信する
-        }
-        Wait(100) ;         // 1秒ウエイト
-        LATA0 = 0 ;         // 2番ピン(RA0)にLOW(0V)を出力する(LED OFF)
-        TXREG1 = 'Z';       // 送信する
-        Wait(100) ;         // 1秒ウエイト
+        LATA0 = 1;              // 2番ピン(RA0)にHIGH(5V)を出力する(LED ON)
+        Wait(100);              // 1秒ウエイト
+        LATA0 = 0;              // 2番ピン(RA0)にLOW(0V)を出力する(LED OFF)
+        Wait(100);              // 1秒ウエイト
     }
 }
