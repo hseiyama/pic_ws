@@ -128,8 +128,22 @@ void __interrupt() isr(void) {
             LATA0 = !LATA0;         // 2番ピン(RA0)を反転出力する
             LATA1 = !PORTBbits.RB0; // RB0を反転し、RA1に出力する
             LATA2 = PORTBbits.RB1;  // RB1を入力し、RA1に出力する
+            /* ADC操作処理 */
+            GO = 1;                 // A/D変換サイクルを開始する
         }
         TMR0IF = 0 ;            // タイマー0割込フラグをリセット
+    }
+    if (ADIF == 1) {            // ADC割り込み発生か？
+        data_adc = ((ADRESH << 8) | ADRESL) & 0x03FF;   // A/D結果を取得
+        {
+            /* メッセージ出力 */
+            uint8_t msg1[] = ">ADC0=";
+            uint8_t msg2[] = "\r\n";
+            send_strg(msg1);
+            echo_2byte(data_adc);   // 16進数データ送信 (2byte)
+            send_strg(msg2);
+        }
+        ADIF = 0;               // ADC割り込みフラグをクリアする
     }
 }
 
@@ -174,20 +188,13 @@ void main(void) {
     ADCON0  = 0b00100001;       // ﾁｬﾈﾙ選択AN8、ADCを有効化
     ADCON1  = 0b00000000;       // 負電圧VSS、正電圧VDD
     ADCON2  = 0b10010110;       // ﾌｫｰﾏｯﾄ右詰め、ｱｸｲｼﾞｮﾝ時間4TAD、変換ｸﾛｯｸFOSC/64
+    ADIF    = 0;                // ADC割り込みフラグをクリアする
+    ADIE    = 1;                // ADC割り込みを許可する
     /* 全体初期化 */
     PEIE    = 1;                // 周辺装置割込みを有効にする
     ei();                       // 全割込み処理を許可する
     
     while(1) {
         wait10ms(100);          // 1秒ウエイト
-        GO = 1;                 // A/D変換サイクルを開始する
-        while(DONE == 0);       // A/D変換が完了するまで待つ
-        data_adc = ((ADRESH << 8) | ADRESL) & 0x03FF;   // A/D結果を取得
-        /* メッセージ出力 */
-        uint8_t msg1[] = ">ADC0=";
-        uint8_t msg2[] = "\r\n";
-        send_strg(msg1);
-        echo_2byte(data_adc);   // 16進数データ送信 (2byte)
-        send_strg(msg2);
     }
 }
