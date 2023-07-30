@@ -74,33 +74,51 @@
 
 #include <xc.h>
 
-#define _XTAL_FREQ 64000000     // delay用に必要(クロック64MHzを指定)
+#define _XTAL_FREQ  64000000    // delay用に必要(クロック64MHzを指定)
+#define TMR0H_INIT  0x0B        // タイマー0H,Lのカウント開始の初期値
+#define TMR0L_INIT  0xDB        // ([0xFFFF-62,500]→1秒)
 
 volatile uint8_t data_uart;
 
-// 指定した時間(num x 10ms)だけウエイトを行う処理関数
-void Wait(unsigned int num) {
-    int i ;
-
-    // numで指定した回数だけ繰り返す
-    for (i=0 ; i < num ; i++) {
-        __delay_ms(10);         // 10msプログラムの一時停止
-    }
+// USART送信処理
+static void send_uart(uint8_t data) {
+    while(TX1IF == 0);          // 送信可能になるまで待つ
+    TXREG1 = data;              // データを送信する
 }
 
 // 受信割込み処理
 void __interrupt() isr(void) {
-    if (RC1IF == 1) {           // 割込みはＵＳＡＲＴ通信の受信か？
+    if (RC1IF == 1) {           // 割込みはUSART通信の受信か？
         data_uart = RCREG1;     // レジスタからデータを受信
-        while(TX1IF == 0);      // 送信可能になるまで待つ
-        TXREG1 = data_uart;     // データ受信を送信する
+        send_uart(data_uart);   // データ受信を送信する
+    }
+    if (TMR0IF == 1) {          // タイマー0の割込み発生か？
+        TMR0H = TMR0H_INIT;     // タイマー0H,Lのカウント開始の初期値をセットする
+        TMR0L = TMR0L_INIT;     // (1秒)
+        /* 1msタイマ割り込み毎の処理 */
+        {
+            LATA0 = !LATA0;         // 2番ピン(RA0)を反転出力する
+            LATA1 = !PORTBbits.RB0; // RB0を反転し、RA1に出力する
+            LATA2 = PORTBbits.RB1;  // RB1を入力し、RA1に出力する
+        }
+        TMR0IF = 0 ;            // タイマー0割込フラグをリセット
+    }
+}
+
+// 指定した時間(num x 10ms)だけウエイトを行う処理関数
+static void wait10ms(uint16_t num) {
+    uint16_t index ;
+
+    // numで指定した回数だけ繰り返す
+    for (index=0; index < num; index++) {
+        __delay_ms(10);         // 10msプログラムの一時停止
     }
 }
 
 void main(void) {
     /* CLOCK初期化 */
     OSCCON  = 0b01110000;       // 内部クロックとする(16MHz、プライマリ クロック)
-    PLLEN   = 1;                // PLL(x4)を有効化
+    PLLEN   = 1;                // PLL(x4)を有効化(→64MHz)
     /* PORT初期化 */
     ANSELA  = 0b00000000;       // AN0-4 アナログは使用しない、デジタルI/Oに割当
     ANSELB  = 0b00000000;       // AN8-13アナログは使用しない、デジタルI/Oに割当
@@ -108,7 +126,7 @@ void main(void) {
     TRISA   = 0b11111000;       // RA0-2のみ出力に設定、1で入力 0で出力
     TRISB   = 0b11111111;       // RB0-RB7全て入力に設定
     TRISC   = 0b11111111;       // RC0-RC7全て入力に設定 
-    PORTA   = 0b00000000;       // 出力ピンの初期化(全てLOWにする)
+    PORTA   = 0b00000001;       // 出力ピンの初期化(RA0のみHI、他はLOWにする)
     PORTB   = 0b00000000;       // 出力ピンの初期化(全てLOWにする)
     PORTC   = 0b00000000;       // 出力ピンの初期化(全てLOWにする)
     RBPU    = 0;                // PORTBプルアップ有効
@@ -118,26 +136,18 @@ void main(void) {
     RCSTA1  = 0b10010000;       // 受信情報設定
     SPBRG1  = 103;              // ボーレートを9600(低速モード)に設定
     RC1IE   = 1;                // USART割込み受信を有効にする
+    /* TIMER0初期化 */
+    T0CON  = 0b10000111;        // 内部ｸﾛｯｸ(64MHz/4)でTIMER0を16ビットにて使用、ﾌﾟﾘｽｹｰﾙ値 1:256
+    TMR0H  = TMR0H_INIT;        // タイマー0H,Lのカウント開始の初期値をセットする
+    TMR0L  = TMR0L_INIT;        // (この書込みﾀｲﾐﾝｸﾞで、TMR0H,Lが反映される)
+    TMR0IF = 0;                 // タイマー0割込フラグ(T0IF)を0にする
+    TMR0IE = 1;                 // タイマー0割込み(T0IE)を許可する
     /* 全体初期化 */
     PEIE    = 1;                // 周辺装置割込みを有効にする
-    GIE     = 1;                // 全割込み処理を許可する
+    ei();                       // 全割込み処理を許可する
     
     while(1) {
-        if(PORTBbits.RB0 == 1) {    // RB0がHIGHの場合
-            LATA1 = 0;
-        }
-        else{
-            LATA1 = 1;
-        }
-        if(PORTBbits.RB1 == 1) {    // RB1がHIGHの場合
-            LATA2 = 1;
-        }
-        else{
-            LATA2 = 0;
-        }
-        LATA0 = 1;              // 2番ピン(RA0)にHIGH(5V)を出力する(LED ON)
-        Wait(100);              // 1秒ウエイト
-        LATA0 = 0;              // 2番ピン(RA0)にLOW(0V)を出力する(LED OFF)
-        Wait(100);              // 1秒ウエイト
+        wait10ms(100);          // 1秒ウエイト
+        send_uart('x');         // USART送信する
     }
 }
