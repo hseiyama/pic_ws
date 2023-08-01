@@ -214,11 +214,11 @@ void main(void) {
     INT0IE  = 1;                // INT0外部割り込みを許可する
     INT1IE  = 1;                // INT1外部割り込みを許可する
     /* PWM初期化 */
-    CCPTMRS1 = 0b00000000;      // CCP5はTimer2(PWMモード)を使用する
+    CCPTMRS1 = 0b00000000;      // CCP5機能はTimer2を使用する
     CCP5CON  = 0b00001100 ;     // PWMモードを使用する
     T2CON    = 0b00000010;      // プリスケーラは16倍に設定
     CCPR5L   = 0;               // Duty値は0で初期化
-    PR2      = 0xFF;            // PWMの周期を設定(3.9KHzで設定)
+    PR2      = 0xFF;            // PWMの周期を設定(xxHzで設定)
     TMR2ON   = 1;               // TMR2(PWM)スタート
     /* 全体初期化 */
     PEIE    = 1;                // 周辺装置割込みを有効にする
@@ -227,6 +227,6 @@ void main(void) {
     while(1) {
         wait10ms(1);            // 10m秒ウエイト
         /* PWM操作 */
-        CCPR5L = (data_adc >> 2) & 0xFF;    // ADC値からDuty値を設定
+        CCPR5L = (data_adc >> 2) & 0xFF;    // アナログ値からのデータでデューティ値を設定
     }
 }
