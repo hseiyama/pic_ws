@@ -56,7 +56,7 @@
 #pragma config WDTPS = 32768    // Watchdog Timer Postscale Select bits (1:32768)
 
 // CONFIG3H
-#pragma config CCP2MX = PORTC1  // CCP2 MUX bit (CCP2 input/output is multiplexed with RC1)
+#pragma config CCP2MX = PORTB3  // CCP2 MUX bit (CCP2 input/output is multiplexed with RB3)
 #pragma config PBADEN = ON      // PORTB A/D Enable bit (PORTB<5:0> pins are configured as analog input channels on Reset)
 #pragma config CCP3MX = PORTB5  // P3A/CCP3 Mux bit (P3A/CCP3 input/output is multiplexed with RB5)
 #pragma config HFOFST = OFF     // HFINTOSC Fast Start-up (HFINTOSC output and ready status are delayed by the oscillator stable status)
@@ -105,7 +105,7 @@
 #include <xc.h>
 
 #define _XTAL_FREQ 64000000UL // PIC clock frequency(64MHz)
-#define Z80_CLK 1000000UL // Z80 clock frequency(1MHz)
+#define Z80_CLK 1000000UL // Z80 clock frequency(Max 16MHz)
 #define PWM_PERIOD (_XTAL_FREQ / (4 * Z80_CLK))
 
 #define ROM_SIZE 0x3800 // 14K bytes
@@ -157,7 +157,7 @@ void __interrupt() EXT_ISR(){
     // Z80 WR falling
     if(PORTBbits.RB0) { // RD==1 ?
         // Z80 memory write cycle
-        if(PORTBbits.RB5) { // IOREQ==1 ?
+        if(!PORTBbits.RB4) { // MREQ==0 ?
             if((ab.w >= RAM_TOP) && (ab.w < RAM_END)) // RAM area
                 ram[ab.w - RAM_TOP] = PORTC; // Write into RAM
         }
@@ -175,7 +175,7 @@ void __interrupt() EXT_ISR(){
     // Z80 RD falling
     TRISC = 0x00; // Set data bus as output
     // Z80 memory read cycle
-    if(PORTBbits.RB5) { // IOREQ==1 ?
+    if(!PORTBbits.RB4) { // MREQ==0 ?
         if(ab.w < ROM_SIZE) // ROM area
             LATC = rom[ab.w]; // Out ROM data
         else if((ab.w >= RAM_TOP) && (ab.w < RAM_END)) // RAM area
@@ -261,12 +261,15 @@ void main(void) {
     ANSB3 = 0; // Disable analog function
     LATB3 = 0; // Clock low side
     TRISB3 = 0; // Set as output
-    CCP2CONbits.CCP2M = 0b1100; // ECCP2 mode select PWM mode
+    CCP2CONbits.CCP2M = 0b1100; // ECCP2 mode select PWM mode (P2A active-high, P2B active-high)
+    CCP2CONbits.P2M = 0b00; // Enhanced PWM Single Output (P2A modulated, P2B assigned as port pin)
+    PSTR2CONbits.STR2A = 1; // P2A pin has the PWM waveform
+    PSTR2CONbits.STR2B = 0; // P2B pin is assigned to port pin
     CCPTMRS0bits.C2TSEL = 0b00; // CCP2 timer select PWM modes use Timer2
     CCPR2L = PWM_PERIOD / 2; // PWM duty cycle (9-2bits)
     CCP2CONbits.DC2B = 0b00; // PWM duty cycle (1-0bits)
     T2CONbits.T2CKPS = 0b00; // Timer2 clock prescaler 1:1
-    PR2 = PWM_PERIOD - 1; // PWM period (500KHz)
+    PR2 = PWM_PERIOD - 1; // PWM period
     TMR2ON = 1; // Timer2 is on
 
     // MREQ(RB4) input pin
@@ -302,6 +305,9 @@ void main(void) {
     TRISD6 = 0; // TX set as output
 
     SPEN2 =1; // Serial port enable
+
+    // Wait for clock stabilization
+    __delay_ms(2);
 
     // Z80 start
     GIE = 1; // Global interrupt enable
