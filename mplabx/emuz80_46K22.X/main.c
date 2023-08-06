@@ -147,7 +147,7 @@ char getch(void) {
 
 // Called falling edge(Immediately after Z80 RD or WR falling)
 void __interrupt() EXT_ISR(){
-    LATE1 = 0; // Set wait
+    LATE0 = 0; // Set wait
     INT0IF = 0; // Clear interrupt flag
     INT1IF = 0; // Clear interrupt flag
 
@@ -168,7 +168,7 @@ void __interrupt() EXT_ISR(){
             else if(ab.l == PORT_DREG) // LATB7
                 LATB7 = PORTC & 0x01; // Out LATB7
         }
-        LATE1 = 1; // Release wait
+        LATE0 = 1; // Release wait
         return;
     }
 
@@ -194,7 +194,7 @@ void __interrupt() EXT_ISR(){
         else // Empty
             LATC = 0xff; // Invalid data
     }
-    LATE1 = 1; // Release wait
+    LATE0 = 1; // Release wait
 
     //Post processing
     while(!PORTBbits.RB0); // RD==0 ?
@@ -223,7 +223,7 @@ void main(void) {
 
     // WAIT(RE0) output pin
     ANSE0 = 0; // Disable analog function
-    LATE1 = 1; // No wait request
+    LATE0 = 1; // No wait request
     TRISE0 = 0; // Set as output
 
     // RESET(RE1) output pin
