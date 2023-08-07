@@ -13,12 +13,12 @@
   Data Lines:
    D0..D7     <----> RC0..RC7
   Control lines:
-   RD         <----> RB0
-   WR         <----> RB1
-   M1         <----> RB2
+   MREQ       <----> RB0
+   IOREQ      <----> RB1
+   RFSH       <----> RB2
    CLK        <----> RB3(CCP2)
-   MREQ       <----> RB4
-   IOREQ      <----> RB5
+   RD         <----> RB4
+   WR         <----> RB5
                      RB6        <----> IN port (button)
                      RB7        <----> OUT port (led)
    WAIT       <----> RE0
@@ -145,19 +145,25 @@ char getch(void) {
 }
 */
 
-// Called falling edge(Immediately after Z80 RD or WR falling)
+// Called falling edge(Immediately after Z80 MREQ or IOREQ falling)
 void __interrupt() EXT_ISR(){
     LATE0 = 0; // Set wait
     INT0IF = 0; // Clear interrupt flag
     INT1IF = 0; // Clear interrupt flag
 
+    // Z80 refresh cycle
+    if(!PORTBbits.RB2) { // RFSH==0 ?
+        LATE0 = 1; // Release wait
+        return;
+    }
+
     ab.h = PORTD & 0x3f; // Read address high
     ab.l = PORTA; // Read address low
-    
-    // Z80 WR falling
-    if(PORTBbits.RB0) { // RD==1 ?
+
+    // Z80 write cycle
+    if(PORTBbits.RB4) { // RD==1 ?
         // Z80 memory write cycle
-        if(!PORTBbits.RB4) { // MREQ==0 ?
+        if(!PORTBbits.RB0) { // MREQ==0 ?
             if((ab.w >= RAM_TOP) && (ab.w < RAM_END)) // RAM area
                 ram[ab.w - RAM_TOP] = PORTC; // Write into RAM
         }
@@ -172,10 +178,10 @@ void __interrupt() EXT_ISR(){
         return;
     }
 
-    // Z80 RD falling
+    // Z80 read cycle
     TRISC = 0x00; // Set data bus as output
     // Z80 memory read cycle
-    if(!PORTBbits.RB4) { // MREQ==0 ?
+    if(!PORTBbits.RB0) { // MREQ==0 ?
         if(ab.w < ROM_SIZE) // ROM area
             LATC = rom[ab.w]; // Out ROM data
         else if((ab.w >= RAM_TOP) && (ab.w < RAM_END)) // RAM area
@@ -197,7 +203,7 @@ void __interrupt() EXT_ISR(){
     LATE0 = 1; // Release wait
 
     //Post processing
-    while(!PORTBbits.RB0); // RD==0 ?
+    while(!PORTBbits.RB4); // RD==0 ?
     TRISC = 0xff; // Set as input
 }
 
@@ -236,7 +242,7 @@ void main(void) {
     LATE2 = 1; // No interrupt request
     TRISE2 = 0; // Set as output
 
-    // RD(RB0)  input pin
+    // MREQ(RB0) input pin
     ANSB0 = 0; // Disable analog function
     WPUB0 = 1; // Week pull up
     TRISB0 = 1; // Set as intput
@@ -244,7 +250,7 @@ void main(void) {
     INT0IF  = 0; // Clear INT0 external interrupt flag
     INT0IE  = 1; // INT0 external interrupt enable
 
-    // WR(RB1)  input pin
+    // IOREQ(RB1) input pin
     ANSB1 = 0; // Disable analog function
     WPUB1 = 1; // Week pull up
     TRISB1 = 1; // Set as intput
@@ -252,7 +258,7 @@ void main(void) {
     INT1IF  = 0; // Clear INT1 external interrupt flag
     INT1IE  = 1; // INT1 external interrupt enable
 
-    // M1(RB2)  input pin
+    // RFSH(RB2)  input pin
     ANSB2 = 0; // Disable analog function
     WPUB2 = 1; // Week pull up
     TRISB2 = 1; // Set as intput
@@ -272,12 +278,12 @@ void main(void) {
     PR2 = PWM_PERIOD - 1; // PWM period
     TMR2ON = 1; // Timer2 is on
 
-    // MREQ(RB4) input pin
+    // RD(RB4)  input pin
     ANSB4 = 0; // Disable analog function
     WPUB4 = 1; // Week pull up
     TRISB4 = 1; // Set as input
 
-    // IOREQ(RB5) input pin
+    // WR(RB5)  input pin
     ANSB5 = 0; // Disable analog function
     WPUB5 = 1; // Week pull up
     TRISB5 = 1; // Set as input
