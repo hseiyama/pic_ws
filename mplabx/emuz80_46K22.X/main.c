@@ -9,9 +9,9 @@
   [Z80]             [PIC18F46K22]     [User input/output]
   Address Lines:
    A8..A13    <----> RD0..RD5
-   A0..A7     <----> RA0..RA7
+   A0..A7     <----> RC0..RC7
   Data Lines:
-   D0..D7     <----> RC0..RC7
+   D0..D7     <----> RA0..RA7
   Control lines:
    MREQ       <----> RB0
    IOREQ      <----> RB1
@@ -32,6 +32,7 @@
    HALT       <----------------------> HALT led
    BUSACK     <----------------------> BUSACK led
                                        POWER led
+   M1(Not assign)
 --------------------------------------------------------------------------------
   Memory map:
    0x0000-0x37FF  ROM  14Kbyte
@@ -158,53 +159,53 @@ void __interrupt() EXT_ISR(){
     }
 
     ab.h = PORTD & 0x3f; // Read address high
-    ab.l = PORTA; // Read address low
+    ab.l = PORTC; // Read address low
 
     // Z80 write cycle
     if(PORTBbits.RB4) { // RD==1 ?
         // Z80 memory write cycle
         if(!PORTBbits.RB0) { // MREQ==0 ?
             if((ab.w >= RAM_TOP) && (ab.w < RAM_END)) // RAM area
-                ram[ab.w - RAM_TOP] = PORTC; // Write into RAM
+                ram[ab.w - RAM_TOP] = PORTA; // Write into RAM
         }
         // Z80 io write cycle
         else {
             if(ab.l == UART_DREG) // TXREG2
-                TXREG2 = PORTC; // Write into TXREG2
+                TXREG2 = PORTA; // Write into TXREG2
             else if(ab.l == PORT_DREG) // LATB7
-                LATB7 = PORTC & 0x01; // Out LATB7
+                LATB7 = PORTA & 0x01; // Out LATB7
         }
         LATE0 = 1; // Release wait
         return;
     }
 
     // Z80 read cycle
-    TRISC = 0x00; // Set data bus as output
+    TRISA = 0x00; // Set data bus as output
     // Z80 memory read cycle
     if(!PORTBbits.RB0) { // MREQ==0 ?
         if(ab.w < ROM_SIZE) // ROM area
-            LATC = rom[ab.w]; // Out ROM data
+            LATA = rom[ab.w]; // Out ROM data
         else if((ab.w >= RAM_TOP) && (ab.w < RAM_END)) // RAM area
-            LATC = ram[ab.w - RAM_TOP]; // Out RAM data
+            LATA = ram[ab.w - RAM_TOP]; // Out RAM data
         else // Empty
-            LATC = 0xff; // Invalid data
+            LATA = 0xff; // Invalid data
     }
     // Z80 io read cycle
     else {
         if(ab.l == UART_CREG) // RC2IF
-            LATC = RC2IF; // Out RC2IF
+            LATA = RC2IF; // Out RC2IF
         else if(ab.l == UART_DREG) //RCREG2
-            LATC = RCREG2; // Out RCREG2
+            LATA = RCREG2; // Out RCREG2
         else if(ab.l == PORT_DREG) //RB6
-            LATC = PORTBbits.RB6; // Out RB6
+            LATA = PORTBbits.RB6; // Out RB6
         else // Empty
-            LATC = 0xff; // Invalid data
+            LATA = 0xff; // Invalid data
     }
     LATE0 = 1; // Release wait
 
     //Post processing
     while(!PORTBbits.RB4); // RD==0 ?
-    TRISC = 0xff; // Set as input
+    TRISA = 0xff; // Set as input
 }
 
 // main routine
@@ -220,12 +221,12 @@ void main(void) {
     TRISD = 0xff; // Set as input
 
     // Address bus A7-A0 pin
-    ANSELA = 0x00; // Disable analog function
-    TRISA = 0xff; // Set as input
-
-    // Data bus D7-D0 pin
     ANSELC = 0x00; // Disable analog function
     TRISC = 0xff; // Set as input(default)
+
+    // Data bus D7-D0 pin
+    ANSELA = 0x00; // Disable analog function
+    TRISA = 0xff; // Set as input
 
     // WAIT(RE0) output pin
     ANSE0 = 0; // Disable analog function
