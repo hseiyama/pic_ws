@@ -106,13 +106,13 @@
 #include <xc.h>
 
 #define _XTAL_FREQ 64000000UL // PIC clock frequency(64MHz)
-#define Z80_CLK 1000000UL // Z80 clock frequency(Max 16MHz)
+#define Z80_CLK 64000UL // Z80 clock frequency(Max 16MHz)
 #define PWM_PERIOD (_XTAL_FREQ / (4 * Z80_CLK))
 
 #define ROM_SIZE 0x3800 // 14K bytes
 #define RAM_SIZE 0x0800 // 2K bytes
 #define RAM_TOP 0x3800 // RAM top address
-#define RAM_END RAM_TOP+RAM_SIZE
+#define RAM_END (RAM_TOP + RAM_SIZE)
 #define UART_DREG 0xE0 // UART_Data REG
 #define UART_CREG 0xE1 // UART_Control REG
 #define PORT_DREG 0xD0 // PORT_Data REG
@@ -192,8 +192,8 @@ void __interrupt() EXT_ISR(){
     }
     // Z80 io read cycle
     else {
-        if(ab.l == UART_CREG) // RC2IF
-            LATA = RC2IF; // Out RC2IF
+        if(ab.l == UART_CREG) // TX2IF, RC2IF
+            LATA = (TX2IF << 1) | RC2IF; // Out TX2IF, RC2IF
         else if(ab.l == UART_DREG) //RCREG2
             LATA = RCREG2; // Out RCREG2
         else if(ab.l == PORT_DREG) //RB6
@@ -248,16 +248,16 @@ void main(void) {
     WPUB0 = 1; // Week pull up
     TRISB0 = 1; // Set as intput
     INTEDG0 = 0; // INT0 external interrupt falling edge
-    INT0IF  = 0; // Clear INT0 external interrupt flag
-    INT0IE  = 1; // INT0 external interrupt enable
+    INT0IF = 0; // Clear INT0 external interrupt flag
+    INT0IE = 1; // INT0 external interrupt enable
 
     // IOREQ(RB1) input pin
     ANSB1 = 0; // Disable analog function
     WPUB1 = 1; // Week pull up
     TRISB1 = 1; // Set as intput
     INTEDG1 = 0; // INT1 external interrupt falling edge
-    INT1IF  = 0; // Clear INT1 external interrupt flag
-    INT1IE  = 1; // INT1 external interrupt enable
+    INT1IF = 0; // Clear INT1 external interrupt flag
+    INT1IE = 1; // INT1 external interrupt enable
 
     // RFSH(RB2)  input pin
     ANSB2 = 0; // Disable analog function
@@ -315,8 +315,9 @@ void main(void) {
 
     // Wait for clock stabilization
     __delay_ms(2);
-
     // Z80 start
+    INT0IF = 0; // Clear INT0 external interrupt flag
+    INT1IF = 0; // Clear INT1 external interrupt flag
     GIE = 1; // Global interrupt enable
     LATE1 = 1; // Release reset
 
@@ -325,12 +326,12 @@ void main(void) {
 
 const unsigned char rom[ROM_SIZE] = {
     // HELLO
-    0x31, 0x00, 0x40, 0x21, 0x2d, 0x00, 0x7e, 0xfe,
-    0x00, 0x28, 0x06, 0xcd, 0x19, 0x00, 0x23, 0x18,
-    0xf5, 0xcd, 0x24, 0x00, 0xcd, 0x19, 0x00, 0x18,
-    0xf8, 0xf5, 0xdb, 0xe1, 0xcb, 0x4f, 0x28, 0xfa,
-    0xf1, 0xd3, 0xe0, 0xc9, 0xdb, 0xe1, 0xcb, 0x47,
-    0x28, 0xfa, 0xdb, 0xe0, 0xc9, 0x48, 0x45, 0x4c,
-    0x4c, 0x4f, 0x2c, 0x20, 0x57, 0x4f, 0x52, 0x4c,
-    0x44, 0x0d, 0x0a, 0x00
+    0x31, 0x00, 0x40, 0x21, 0x31, 0x00, 0x7e, 0xfe,
+    0x00, 0x28, 0x06, 0xcd, 0x1d, 0x00, 0x23, 0x18,
+    0xf5, 0xdb, 0xd0, 0xd3, 0xd0, 0xcd, 0x28, 0x00,
+    0xcd, 0x1d, 0x00, 0x18, 0xf4, 0xf5, 0xdb, 0xe1,
+    0xcb, 0x4f, 0x28, 0xfa, 0xf1, 0xd3, 0xe0, 0xc9,
+    0xdb, 0xe1, 0xcb, 0x47, 0x28, 0xfa, 0xdb, 0xe0,
+    0xc9, 0x48, 0x45, 0x4c, 0x4c, 0x4f, 0x2c, 0x20,
+    0x57, 0x4f, 0x52, 0x4c, 0x44, 0x0d, 0x0a, 0x00
 };
