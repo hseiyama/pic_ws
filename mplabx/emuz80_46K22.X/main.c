@@ -118,31 +118,71 @@
 #define PORT_DREG 0xD0 // PORT_Data REG
 
 //Z80 ROM equivalent, see end of this file
-extern const unsigned char rom[];
+extern const uint8_t rom[];
 
 //Z80 RAM equivalent
-unsigned char ram[RAM_SIZE];
+uint8_t ram[RAM_SIZE];
 
 //Address Bus
 union {
-    unsigned int w; // 16 bits Address
+    uint16_t w; // 16 bits Address
     struct {
-        unsigned char l; // Address low
-        unsigned char h; // Address high
+        uint8_t l; // Address low
+        uint8_t h; // Address high
     };
 } ab;
 
 /*
 // UART2 Transmit
-void putch(char c) {
+static void putch(char c) {
     while(!TX2IF); // Wait or Tx interrupt flag set
     TXREG2 = c; // Write data
 }
 
 // UART2 Recive
-char getch(void) {
+static char getch(void) {
     while(!RC2IF); // Wait for Rx interrupt flag set
     return RCREG2; // Read data
+}
+
+// Output string
+static void echo_str(const uint8_t *data) {
+    while(*data != 0x00) {
+        putch(*data);
+        data++;
+    }
+}
+
+// Output hex data
+static void echo_hex(uint8_t hex_data) {
+    const uint8_t hex_table[] = {
+        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+    };
+    putch(hex_table[(hex_data >> 4) & 0x0F]);
+    putch(hex_table[hex_data & 0x0F]);
+}
+
+// Output 1byte data
+static void echo_1byte(uint8_t data) {
+    const uint8_t msg[] = "0x";
+    echo_str(msg);
+    echo_hex(data);
+}
+
+// Output 2byte data
+static void echo_2byte(uint16_t data) {
+    const uint8_t msg[] = "0x";
+    echo_str(msg);
+    echo_hex((data >> 8) & 0xFF);
+    echo_hex(data & 0xFF);
+}
+
+// Wait process (unit 10ms)
+static void wait10ms(uint16_t num) {
+    uint16_t index ;
+    for (index = 0; index < num; index++) {
+        __delay_ms(10); // Delay 10ms 
+    }
 }
 */
 
@@ -192,8 +232,10 @@ void __interrupt() EXT_ISR(){
     }
     // Z80 io read cycle
     else {
-        if(ab.l == UART_CREG) // TX2IF, RC2IF
-            LATA = (TX2IF << 1) | RC2IF; // Out TX2IF, RC2IF
+        if(ab.l == UART_CREG) { // RC2IF, TX2IF
+            LATA0 = RC2IF; // Out RC2IF
+            LATA1 = TX2IF; // Out TX2IF
+        }
         else if(ab.l == UART_DREG) //RCREG2
             LATA = RCREG2; // Out RCREG2
         else if(ab.l == PORT_DREG) //RB6
@@ -267,7 +309,8 @@ void main(void) {
     // Z80 clock(RB3) by CCP2 PWM mode
     ANSB3 = 0; // Disable analog function
     LATB3 = 0; // Clock low side
-    TRISB3 = 0; // Set as output
+    TRISB3 = 0; // PWM2 output
+    // CCP2 PWM mode initialize
     CCP2CONbits.CCP2M = 0b1100; // ECCP2 mode select PWM mode (P2A active-high, P2B active-high)
     CCP2CONbits.P2M = 0b00; // Enhanced PWM Single Output (P2A modulated, P2B assigned as port pin)
     PSTR2CONbits.STR2A = 1; // P2A pin has the PWM waveform
@@ -297,21 +340,21 @@ void main(void) {
     LATB7 = 0; // Low output
     TRISB7 = 0; // Set as output
 
-    // UART2 initialize
-    SPBRG2 = 103;// 9600bps @ 64MHz
-    CREN2 =1; // Receiver enable
-    TXEN2 =1; // Transmitter enable
-
-    // UART2 Receiver(RD7)
-    ANSD7 = 0; // Disable analog function
-    TRISD7 = 1; // RX set as input
-
     // UART2 Transmitter(RD6)
     ANSD6 = 0; // Disable analog function
-    LATD6 = 1; // Default level
-    TRISD6 = 0; // TX set as output
-
-    SPEN2 =1; // Serial port enable
+    TRISD6 = 1; // Asynchronous transmit data output
+    // UART2 Receiver(RD7)
+    ANSD7 = 0; // Disable analog function
+    TRISD7 = 1; // Asynchronous receive data in
+    // UART2 initialize
+    SYNC2 = 0; // Asynchronous mode
+    BRG162 = 0; // 8-bit baud rate generator
+    BRGH2 = 0; // Baud rate low speed
+    SPBRG2 = 103;// 9600bps @ 64MHz
+    TX92 = 0; // 8-bit transmission
+    TXEN2 = 1; // Transmitter enable
+    CREN2 = 1; // Receiver enable
+    SPEN2 = 1; // Serial port enable
 
     // Wait for clock stabilization
     __delay_ms(2);
@@ -324,7 +367,7 @@ void main(void) {
     while(1); // All things come to those who wait
 }
 
-const unsigned char rom[ROM_SIZE] = {
+const uint8_t rom[ROM_SIZE] = {
     // HELLO
     0x31, 0x00, 0x40, 0x21, 0x31, 0x00, 0x7e, 0xfe,
     0x00, 0x28, 0x06, 0xcd, 0x1d, 0x00, 0x23, 0x18,
