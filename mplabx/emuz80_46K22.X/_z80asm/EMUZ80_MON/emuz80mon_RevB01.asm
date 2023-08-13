@@ -19,9 +19,10 @@ F_bitSize	equ	8
 ;;; Memory switch
 ;;;
 
-RAM12K = 1
+RAM12K = 0
 RAM8K = 0
 RAM4K = 0
+RAM2K = 1
 
 	IF	RAM12K
 ;; ROM48K RAM12K for PIC18F47Q84
@@ -63,9 +64,23 @@ RAM_E	equ	9FFFH	;EMUZ80_Q43 RAM END address
 IO_B	equ	0E000H	;EMUZ80_Q43 I/O base address
 	ENDIF
 
-BASIC_TOP	equ	2000H
-BASIC_CST	equ	2000H	; basic cold start
-BASIC_WST	equ	2003H	; basic warm start
+	IF	RAM2K
+
+;; ROM14K RAM2K for PIC18F46K22
+UARTDR	EQU	0E0H	; UART DATA REGISTOR
+UARTCR	EQU	0E1H	; UART CONTROL REGISTOR
+WORK_B	equ	03F00H	; work area 3F00-3FFF
+STACKM	equ	03F00H	; monitor stack
+STACK	equ	03EC0H	; user stack
+ROM_B	equ	0000H	;EMUZ80_K22 ROM base address
+RAM_B	equ	3800H	;EMUZ80_K22 RAM base address
+RAM_E	equ	3FFFH	;EMUZ80_K22 RAM END address
+IO_B	equ	0E000H	;EMUZ80_K22 I/O base address
+	ENDIF
+
+BASIC_TOP	equ	1800H
+BASIC_CST	equ	1800H	; basic cold start
+BASIC_WST	equ	1803H	; basic warm start
 
 	IF	RAM12K
 TIM0_CTL0	equ	0F800H	; timer0 control0 register
@@ -1273,6 +1288,13 @@ inadr_chk_and_wrt:
 	cp	RAM_B >> 8		; 80H
 	jr	c, NO_RAM_AREA
 	cp	RAM_E >> 8		; 8FH
+	jr	nc, NO_RAM_AREA
+	ENDIF
+
+	IF	RAM2K
+	cp	RAM_B >> 8		; 38H
+	jr	c, NO_RAM_AREA
+	cp	RAM_E >> 8		; 3FH
 	jr	nc, NO_RAM_AREA
 	ENDIF
 
@@ -3540,24 +3562,24 @@ INIT:
 ;;;
 
 CONIN:
-	LD	A,(UARTCR)
+	IN	A,(UARTCR)
 	BIT	0,A
 	JR	Z,CONIN
-	LD	A,(UARTDR)
+	IN	A,(UARTDR)
 	RET
 
 CONST:
-	LD	A,(UARTCR)
+	IN	A,(UARTCR)
 	BIT	0,A
 	RET
 
 CONOUT:
 	PUSH	AF
-PCST1:	LD	A,(UARTCR)
+PCST1:	IN	A,(UARTCR)
 	BIT	1,A
 	JR	Z,PCST1
 	POP	AF
-	LD	(UARTDR),A
+	OUT	(UARTDR),A
 	RET
 
 	db	BASIC_TOP - $ dup(0ffH)
