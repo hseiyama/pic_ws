@@ -22,7 +22,7 @@ F_bitSize	equ	8
 RAM12K = 0
 RAM8K = 0
 RAM4K = 0
-RAM2K = 1
+RAM3K = 1
 
 	IF	RAM12K
 ;; ROM48K RAM12K for PIC18F47Q84
@@ -64,23 +64,23 @@ RAM_E	equ	9FFFH	;EMUZ80_Q43 RAM END address
 IO_B	equ	0E000H	;EMUZ80_Q43 I/O base address
 	ENDIF
 
-	IF	RAM2K
+	IF	RAM3K
 
-;; ROM14K RAM2K for PIC18F46K22
+;; ROM13K RAM3K for PIC18F46K22
 UARTDR	EQU	0E0H	; UART DATA REGISTOR
 UARTCR	EQU	0E1H	; UART CONTROL REGISTOR
 WORK_B	equ	03F00H	; work area 3F00-3FFF
 STACKM	equ	03F00H	; monitor stack
 STACK	equ	03EC0H	; user stack
 ROM_B	equ	0000H	;EMUZ80_K22 ROM base address
-RAM_B	equ	3800H	;EMUZ80_K22 RAM base address
+RAM_B	equ	3400H	;EMUZ80_K22 RAM base address
 RAM_E	equ	3FFFH	;EMUZ80_K22 RAM END address
-IO_B	equ	0E000H	;EMUZ80_K22 I/O base address
+IO_B	equ	4000H	;EMUZ80_K22 I/O base address
 	ENDIF
 
-BASIC_TOP	equ	1800H
-BASIC_CST	equ	1800H	; basic cold start
-BASIC_WST	equ	1803H	; basic warm start
+BASIC_TOP	equ	1400H
+BASIC_CST	equ	1400H	; basic cold start
+BASIC_WST	equ	1403H	; basic warm start
 
 	IF	RAM12K
 TIM0_CTL0	equ	0F800H	; timer0 control0 register
@@ -1291,8 +1291,8 @@ inadr_chk_and_wrt:
 	jr	nc, NO_RAM_AREA
 	ENDIF
 
-	IF	RAM2K
-	cp	RAM_B >> 8		; 38H
+	IF	RAM3K
+	cp	RAM_B >> 8		; 34H
 	jr	c, NO_RAM_AREA
 	cp	RAM_E >> 8		; 3FH
 	jr	nc, NO_RAM_AREA
