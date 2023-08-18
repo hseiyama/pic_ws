@@ -78,9 +78,9 @@ RAM_E	equ	3FFFH	;EMUZ80_K22 RAM END address
 IO_B	equ	4000H	;EMUZ80_K22 I/O base address
 	ENDIF
 
-BASIC_TOP	equ	1400H
-BASIC_CST	equ	1400H	; basic cold start
-BASIC_WST	equ	1403H	; basic warm start
+BASIC_TOP	equ	1500H
+BASIC_CST	equ	1500H	; basic cold start
+BASIC_WST	equ	1503H	; basic warm start
 
 	IF	RAM12K
 TIM0_CTL0	equ	0F800H	; timer0 control0 register
@@ -331,6 +331,11 @@ WSTART:
 	JP	Z, LOADH
 	CP	'P'
 	JP	Z, SAVEH
+
+	CP	'I'
+	JP	Z, PIN
+	CP	'O'
+	JP	Z, POUT
 
 	CP	'R'
 	JP	Z, REG
@@ -2240,6 +2245,60 @@ SHLS0:
 	JP	CRLF
 
 ;;;
+;;; Port in
+;;; 
+
+PIN:
+	INC	HL
+	CALL	SKIPSP
+	CALL	RDHEX
+	JP	C, ERR		; Port no. missing
+	CALL	SKIPSP
+	LD	A, (HL)
+	OR	A
+	JP	NZ, ERR
+
+	LD	B, D
+	LD	C, E
+
+	;; Byte
+	IN	A, (C)
+	CALL	HEXOUT2
+	CALL	CRLF
+	JP	WSTART
+
+;;;
+;;; Port out
+;;;
+
+POUT:
+	INC	HL
+	CALL	SKIPSP
+	CALL	RDHEX
+	JP	C, ERR		; Port no. missing
+	PUSH	DE
+	POP	IX
+	CALL	SKIPSP
+	LD	A, (HL)
+	CP	','
+	JP	NZ, ERR
+	INC	HL
+	CALL	SKIPSP
+	CALL	RDHEX
+	JP	C, ERR		; Data missing
+	CALL	SKIPSP
+	LD	A, (HL)
+	OR	A
+	JP	NZ, ERR
+
+	PUSH	IX
+	POP	BC
+
+	;; Byte
+	OUT	(C), E
+	JP	WSTART
+
+;;;
 ;;; Register
 ;;;
 
@@ -3266,14 +3325,16 @@ cmd_hlp:	db	"? : Command Help", CR, LF
 		db	"S[addr] : Set Memory [addr]", CR, LF
 		db	"R[reg] : Set or Dump [reg]", CR, LF
 		db	"G[addr][,stop addr] : Go and Stop specified address", CR, LF
-		db	"L : Load Hex File", CR, LF
+		db	"L[<offset>] :Load HexFile", CR, LF
 		db	"P[I|S] : Save Hex File (I:Intel, S:Motorola", CR, LF
 		db	"#L|Number : Launch program", CR, LF
 		db	"B[1|2[,BP addr]] : Set Break Point", CR, LF
 		db	"BC[1|2] : Clear Break Point", CR, LF
 		db	"T[addr][,steps|-1] : Trace command", CR, LF
 		db	"TP[ON|OFF] : Trace Print Mode", CR, LF
-		db	"TM[I|S] : Trace Option for CALL", CR, LF, 00h
+		db	"TM[I|S] : Trace Option for CALL", CR, LF
+		db	"I<port> : Input from port", CR, LF
+		db	"O<port>,<data> : Output data to port", CR, LF, 00h
 
 OPNMSG:
 	DB	CR,LF
@@ -3612,7 +3673,6 @@ GADDR:	DS	2	; Go address
 SADDR:	DS	2	; Set address
 HEXMOD:	DS	1	; HEX file mode
 RECTYP:	DS	1	; Record type
-SIZE:	DS	1	; I/O Size 00H,'W','S'
 
 REG_B:	
 REGAF:	DS	2
