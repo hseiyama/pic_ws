@@ -105,8 +105,10 @@ ROM_B	equ	0000H	;EMUZ80_K22 ROM base address
 RAM_B	equ	3400H	;EMUZ80_K22 RAM base address
 RAM_E	equ	3FFFH	;EMUZ80_K22 RAM END address
 IO_B	equ	4000H	;EMUZ80_K22 I/O base address
-ENTRY	EQU	0040H	; Entry point
+ENTRY	EQU	0070H	; Entry point
 	ENDIF
+
+NMI_OF	equ	0010H	; NMI offset
 
 	IF	SuperMEZ80 = 0
 RAM_SIZ		EQU	(RAM_E + 1) - RAM_B
@@ -185,6 +187,10 @@ E_WSTART:
 	ELSE
 	JP	RST38H_IN
 	ENDIF
+
+	db	0066H - $ dup(00H)	; nop
+;	ORG	0066H
+	jp	RAM_B + NMI_OF
 
 	db	ENTRY - $ dup(00H)
 	;	ORG	ENTRY
@@ -376,7 +382,7 @@ dbg_wini:
 	ld	(bpt1_op), a
 	ld	(bpt2_op), a
 	ld	(tmpb_op), a
-	
+
 ;; Opening message
 
 	LD	HL,OPNMSG
@@ -1885,7 +1891,7 @@ set_bp:
 	ld	a, 0FFH
 	ld	(bc), a	; insert RST 38H code
 	ret
-	
+
 ;;;
 ;;; SET memory
 ;;; 
@@ -2152,6 +2158,7 @@ LHS3:
 LHSE:
 	LD	HL,SHEMSG
 	jr	LHSR
+
 ;;;
 ;;; SAVE HEX file
 ;;;
@@ -2980,7 +2987,6 @@ RST38H_IN:
 	ld	d, a
 	ld	e, a		;clear msg pointer
 
-
 ; check go, end operation
 	ld	a, (tmpb_f)
 	or	a
@@ -3031,7 +3037,7 @@ bp_chk_end:
 	jr	nz, no_rst38_msg
 
 	; set RST 38H message
-	LD	de,RST38MSG
+	LD	de, RST38MSG
 
 no_rst38_msg:
 	ld	a, (de)		; get first char of message
@@ -3077,7 +3083,7 @@ backTomon:
 	ld	l, a
 	ld	(TC_cnt), hl
 	JP	WSTART
-	
+
 	; check trace forever
 t_no_ky:
 	ld	a, (fever_t)
@@ -3439,11 +3445,9 @@ cmd_hlp:	db	"? :Command Help", CR, LF
 	if (SuperMEZ80=0) || (SMEZ80Full=1)
 		db	"#L|<num> :Launch program", CR, LF
 	endif
-		db	"A[<address>] : Mini Assemble mode", CR, LF
 		db	"B[1|2[,<adr>]] :Set or List Break Point", CR, LF
 		db	"BC[1|2] :Clear Break Point", CR, LF
 		db	"D[<adr>] :Dump Memory", CR, LF
-		db	"DI[<adr>][,s<steps>|<adr>] :Disassemble", CR, LF
 		db	"G[<adr>][,<stop adr>] :Go and Stop", CR, LF
 		db	"I<port> : Input from port", CR, LF
 		db	"L[G|<offset>] :Load HexFile (and GO)", CR, LF
