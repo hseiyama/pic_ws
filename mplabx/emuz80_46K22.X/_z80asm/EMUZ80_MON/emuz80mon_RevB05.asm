@@ -108,7 +108,7 @@ IO_B	equ	4000H	;EMUZ80_K22 I/O base address
 ENTRY	EQU	0070H	; Entry point
 	ENDIF
 
-NMI_OF	equ	0010H	; NMI offset
+NMI_OFS	equ	0010H	; NMI offset
 
 	IF	SuperMEZ80 = 0
 RAM_SIZ		EQU	(RAM_E + 1) - RAM_B
@@ -190,7 +190,7 @@ E_WSTART:
 
 	db	0066H - $ dup(00H)	; nop
 ;	ORG	0066H
-	jp	RAM_B + NMI_OF
+	jp	RAM_B + NMI_OFS
 
 	db	ENTRY - $ dup(00H)
 	;	ORG	ENTRY
