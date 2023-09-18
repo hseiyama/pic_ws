@@ -21,7 +21,7 @@ void comErr(char *fmt, ...);
 void flsprintf(FILE* f, char *fmt, ...);
 
 char * COM = "";
-char * PP_VERSION = "0.99";
+char * PP_VERSION_NO = "0.99";
 
 #define	PROGMEM_LEN	260000
 #define	CONFIG_LEN	35
@@ -621,7 +621,7 @@ int main(int argc, char *argv[])
     unsigned char * pm_point, * cm_point;
     unsigned char tdat[200];
     parseArgs(argc,argv);
-    if (verbose>0) printf ("PP programmer for Q43/Q8x, version %s\n",PP_VERSION);
+    if (verbose>0) printf ("PP programmer for Q43/Q8x, version %s\n",PP_VERSION_NO);
     if (verbose>1) printf ("Opening serial port\n");
     initSerialPort();
     if (sleep_time>0)
