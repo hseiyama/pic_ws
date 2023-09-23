@@ -323,6 +323,7 @@ void __interrupt(irq(U3RX),base(8)) URT3Rx_ISR(){
 			U3TXIE = 1;
 		}
 	}
+
 //test
 //	else {
 //		tx_buf[tx_wp] = 'c';
@@ -517,7 +518,7 @@ void main(void) {
 	CLCnSEL0 = 0;		// CLCIN0PPS <- /MREQ
 	CLCnSEL1 = 2;		// CLCIN2PPS <- /RFSH
 	CLCnSEL2 = 4;		// CLCIN4PPS <- /RD
-	CLCnSEL3 = 127;	 	// NC
+	CLCnSEL3 = 127;		// NC
 
 	CLCnGLS0 = 0x01;	// /MREQ inverted
 	CLCnGLS1 = 0x08;	// /RFSH noninverted
