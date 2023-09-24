@@ -310,10 +310,10 @@ void main(void) {
 	// transmitted. 
 	// The transmitter remains disabled until an XON character is received.
 
-	U3BRG = 416;		// 9600bps @ 64MHz
+//	U3BRG = 416;		// 9600bps @ 64MHz
 //	U3BRG = 208;		// 19200bps @ 64MHz
 //	U3BRG = 104;		// 38400bps @ 64MHz
-//	U3BRG = 34			// 115200bps @ 64MHz
+	U3BRG = 34;			// 115200bps @ 64MHz
 	U3CON2 = 0x81;		// RUNOVF=1: the XON and XOFF characters continue to be
 						//           received and processed without the need to clear
 						//           the input FIFO by reading UxRXB.
