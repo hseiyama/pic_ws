@@ -356,22 +356,22 @@ void main(void) {
 	WPUC = 0xff; // Week pull up
 	TRISC = 0xff; // Set as input(default)
 
-	// WR input pin
+	// BUSRQ(RE0) output pin
 	ANSELE0 = 0; // Disable analog function
-	WPUE0 = 1; // Week pull up
-	TRISE0 = 1; // Set as input
+	LATE0 = 1; // No bus request
+	TRISE0 = 0; // Set as output
 
-	// RESET output pin
+	// RESET(RE1) output pin
 	ANSELE1 = 0; // Disable analog function
 	LATE1 = 0; // Reset
 	TRISE1 = 0; // Set as output
 
-	// INT output pin
+	// CS(RE2) output pin
 	ANSELE2 = 0; // Disable analog function
-	LATE2 = 1; // No interrupt request
+	LATE2 = 1; // No chip select LED
 	TRISE2 = 0; // Set as output
 
-	// IOREQ input pin
+	// BUSAK(RA0) input pin
 	ANSELA0 = 0; // Disable analog function
 	WPUA0 = 1; // Week pull up
 	TRISA0 = 1; // Set as input
