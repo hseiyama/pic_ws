@@ -163,7 +163,7 @@
 #pragma config CRCERESL = hFF   // Non-Boot Sector Expected Result for CRC on boot bits 7-0 (Bits 7:0 of CRCERES are 0xFF)
 
 #include <xc.h>
-//#include <stdio.h>
+#include <stdio.h>
 
 /*define memory map
 
@@ -220,6 +220,58 @@ RAM area : 0xc000 - 0xefff : 12K
 #define CLC8POL_SET 0x82
 #define CLC8POL_RESET 0x86
 
+// 0xf000-0xf003 hex disp
+//
+// 0xf004 disp mode
+//   0x00 off
+//   0x01 bank1
+//   0x02 bank2
+//   0x03 hex dump at 0xf000 - 0xf003
+//   0x04 Trace mode
+//   0xff "8888 8888"
+//
+// 0xf005 LED Intensity
+//   0x00(min) - 0x0f(max)
+//
+// 0xf006 Trace mode
+//   0x00 off
+//   0x01 LED Display
+//   0x02 UART
+//   0x03 LED & UART
+//
+// 0xf010 - 0xf017 bank1
+// 0xf018 - 0xf01f bank2
+
+unsigned char LED_CTL[32] = {0};	// 0xf000 - 0xf01f
+
+#define LED_REG_TOP 0xF000
+#define LED_REG_END 0xF01F
+#define LED_DISP_MODE LED_CTL[4]
+#define LED_INTENSITY LED_CTL[5]
+#define TRACE_MODE LED_CTL[6]
+
+#define WAIT_LED_TRACE 150	// 150 msec
+
+// 7 segment hex font
+const unsigned char LED_PAT[16]={
+	0b01111110, // 0
+	0b00110000, // 1
+	0b01101101, // 2
+	0b01111001, // 3
+	0b00110011, // 4
+	0b01011011, // 5
+	0b01011111, // 6
+	0b01110000, // 7
+	0b01111111, // 8
+	0b01111011, // 9
+	0b01110111, // A
+	0b00011111, // b
+	0b01001110, // C
+	0b00111101, // d
+	0b01001111, // E
+	0b01000111  // F
+};
+
 //Z80 ROM equivalent, see end of this file
 extern const unsigned char rom[];
 
@@ -265,6 +317,10 @@ union {
 	};
 } adjCnt;
 
+unsigned char buf_bus;
+unsigned char buf_hex;
+unsigned char bus_direction;
+
 /*
 // UART3 Transmit
 void putch(char c) {
@@ -278,6 +334,93 @@ char getch(void) {
 	return U3RXB; // Read data
 }
 */
+
+void ledwrite(char r, char c) {
+	unsigned int i;
+
+	bus_direction = TRISC;
+	LATE0 = 0;		// /BUSREQ = Low
+//	while(RA0)		// Confirm /BUSACK
+
+	TRISC = TRISC & 0xfc;	// DIN(RC0) and CLK(RC1) output pin
+
+	LATC0 = 0;		// MAX7219 DIN=0
+	LATE2 = 0;		// MAX7219 /CS=Low
+
+	for(i = 0; i < 8; i++) {
+		LATC1 = 0;		// MAX7219 CLK=0
+		if(r & 0x80)
+			LATC0 = 1;
+		else
+			LATC0 = 0;
+		LATC1 = 1;		// MX7219 CLK=High
+		r = (char)(r << 1);
+	}
+	for(i = 0; i < 8; i++) {
+		LATC1 = 0;		// MAX7219 CLK=0
+		if(c & 0x80)
+			LATC0 = 1;
+		else
+			LATC0 = 0;
+		LATC1 = 1;		// MX7219 CLK=High
+		c = (char)(c << 1);
+	}
+	LATE2 = 1;		// MX7219 /CS=High
+	LATE0 = 1;		// /BUSREQ = High
+	TRISC = bus_direction;
+}
+
+void led_off(void) {
+	ledwrite(1, 0);
+	ledwrite(2, 0);
+	ledwrite(3, 0);
+	ledwrite(4, 0);
+	ledwrite(5, 0);
+	ledwrite(6, 0);
+	ledwrite(7, 0);
+	ledwrite(8, 0);
+}
+
+void led_on(void) {
+	ledwrite(1, 0xff);
+	ledwrite(2, 0xff);
+	ledwrite(3, 0xff);
+	ledwrite(4, 0xff);
+	ledwrite(5, 0xff);
+	ledwrite(6, 0xff);
+	ledwrite(7, 0xff);
+	ledwrite(8, 0xff);
+}
+
+void led_disp_hex(char pos, unsigned char data) {
+	buf_hex = data & 0x0f;
+	ledwrite(7-pos*2, LED_PAT[buf_hex]);
+	buf_hex = data >> 4;
+	ledwrite(8-pos*2, LED_PAT[buf_hex]);
+}
+
+void led_dump(void) {
+	led_disp_hex(0, LED_CTL[0]);
+	led_disp_hex(1, LED_CTL[1]);
+	led_disp_hex(2, LED_CTL[2]);
+	led_disp_hex(3, LED_CTL[3]);
+}
+
+void led_disp_bus(unsigned int addr, unsigned char data, int write_flag) {
+	buf_bus = addr >> 8;
+	led_disp_hex(0, buf_bus);
+	buf_bus = addr & 0xff;
+	led_disp_hex(1, buf_bus);
+	if(write_flag) {
+		ledwrite(4, 0x80);
+		ledwrite(3, 0x80);
+	} else {
+		ledwrite(4, 0x00);
+		ledwrite(3, 0x00);
+	}
+	led_disp_hex(3, data);
+	__delay_ms(WAIT_LED_TRACE);
+}
 
 /////////////////////
 // main routine
@@ -662,6 +805,15 @@ void main(void) {
 	U3RXIE = 1; // enable Receive interrupt
 //	U3TXIE = 1; // enable Trancemit interrupt
 
+	ledwrite(0x0F, 0x00);	// display test , normal operation
+	ledwrite(0x0A, 0x00);	// Intensity , Duty Cycle 0x00=1/32 .. 0x0F=31/32
+	ledwrite(0x0B, 0x07);	// scan limit , display 0 to 7
+	ledwrite(0x0C, 0x01);	// shutdown mode register , normal operation
+	ledwrite(0x09, 0x00);	// No decode for digits 0-7
+	led_off();
+
+//	TRACE_MODE = 1;			// LED Display
+//	LED_DISP_MODE = 4;		// Trace mode
 
 	// Z80 start
 	LATE1 = 1; // Release reset
@@ -837,6 +989,7 @@ void __interrupt(irq(CLC6),base(8)) CLC6_ISR(){
 /////////////////////////////////////////////////////////////////
 
 void __interrupt(irq(CLC8),base(8)) CLC8_ISR(){
+	unsigned int i;
 
 	CLC8IF = 0; // Clear interrupt flag
 	ab.h = PORTD; // Read address high
@@ -888,7 +1041,17 @@ void __interrupt(irq(CLC8),base(8)) CLC8_ISR(){
 					break;
 
 				default:
-					LATC = 0xff; // address is illegal
+					if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END))
+						LATC = LED_CTL[ab.w - LED_REG_TOP];
+					else
+						LATC = 0xff; // address is illegal
+			}
+
+			if(LED_DISP_MODE == 0x04) { // Trace mode
+				if(TRACE_MODE & 0x01)
+					led_disp_bus(ab.w, LATC, 0);
+				if(TRACE_MODE & 0x02)
+					printf("RD ADDR:%04X,DATA:%02X\r\n", ab.w, LATC);
 			}
 
 			// RESET CLC8  DFF
@@ -934,6 +1097,39 @@ void __interrupt(irq(CLC8),base(8)) CLC8_ISR(){
 					break;
 				case TIM0_ADJH: //timer0 adjust counter(MSB)
 					adjCnt.h = PORTC;
+
+				default:
+					if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END)) {
+						LED_CTL[ab.w - LED_REG_TOP] = PORTC; // Write into LED Registor
+						if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_TOP+3)){
+							led_dump();
+							LED_DISP_MODE = 3;
+						}
+						if(ab.w == LED_REG_TOP+4) {
+							if(LED_DISP_MODE == 0)			// off
+								led_off();
+							else if(LED_DISP_MODE == 1)		// bank1
+								for (i = 0; i < 8; i++)
+									ledwrite((char)(i+1), LED_CTL[0x17-i]);
+							else if(LED_DISP_MODE == 2)		// bank 2
+								for (i = 0; i < 8; i++)
+									ledwrite((char)(i+1), LED_CTL[0x1f-i]);
+							else if(LED_DISP_MODE == 3)		// dump 0xf000 - 0xf003
+								led_dump();
+							else if(LED_DISP_MODE == 0xff)	// "8888 8888"
+								led_on();
+						}
+						if(ab.w == LED_REG_TOP+5) {
+							ledwrite(0x0A, LED_INTENSITY);	// Intensity , Duty Cycle 0x00=1/32 .. 0x0F=31/32
+						}
+					}
+			}
+
+			if(LED_DISP_MODE == 0x04) { // Trace mode
+				if(TRACE_MODE & 0x01)
+					led_disp_bus(ab.w, PORTC, 1);
+				if(TRACE_MODE & 0x02)
+					printf("WR ADDR:%04X,DATA:%02X\r\n", ab.w, PORTC);
 			}
 
 			// RESET CLC8  DFF
