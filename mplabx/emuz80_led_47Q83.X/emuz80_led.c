@@ -1,4 +1,4 @@
-/*!
+/*
  * PIC18F47Q43/PIC18F47Q83/PIC18F47Q84 ROM RAM and UART emulation & MAX7219 control firmware
  * This single source file contains all code
  *
@@ -166,7 +166,9 @@ const unsigned char LED_PAT[16]={
 extern const unsigned char rom[];
 
 // Z80 RAM equivalent
-volatile unsigned char ram[RAM_SIZE];
+//volatile unsigned char ram[RAM_SIZE];
+asm("PSECT Z80RAM,class=BIGRAM,reloc=100h");
+volatile unsigned char __section("Z80RAM") ram[RAM_SIZE]; // Equivalent to RAM
 
 /////////////////////////////////////////////////////////////
 // UART ring buffer for XON/XOFF
@@ -184,11 +186,11 @@ unsigned int tx_wp, tx_rp, tx_cnt;
 
 // Address Bus
 union {
-    unsigned int w;			// 16 bits Address
-    struct {
-        unsigned char l;	// Address low
-        unsigned char h;	// Address high
-    };
+	unsigned int w;			// 16 bits Address
+	struct {
+		unsigned char l;	// Address low
+		unsigned char h;	// Address high
+	};
 } ab;
 
 //TIMER0 seconds counter
@@ -213,25 +215,25 @@ unsigned char bus_direction;
 
 // UART3 Transmit
 void putch(char c) {
-    while(!U3TXIF);		// Wait or Tx interrupt flag set
-    U3TXB = c;			// Write data
+	while(!U3TXIF);		// Wait or Tx interrupt flag set
+	U3TXB = c;			// Write data
 }
 
 /*
 // UART3 Recive
 char getch(void) {
-    while(!U3RXIF); 	// Wait for Rx interrupt flag set
-    return U3RXB;		// Read data
+	while(!U3RXIF); 	// Wait for Rx interrupt flag set
+	return U3RXB;		// Read data
 }
 */
 
 void ledwrite(char r, char c) {
 	int i;
 	bus_direction = TRISC;
-    LATE0 = 0;		// /BUSREQ = Low
+	LATE0 = 0;		// /BUSREQ = Low
 //	while(RA0)		// Confirm /BUSACK
 
-    TRISC = TRISC & 0xfc;	// DIN(RC0) and CLK(RC1) output pin
+	TRISC = TRISC & 0xfc;	// DIN(RC0) and CLK(RC1) output pin
 
 	LATC0 = 0;		// MAX7219 DIN=0
 	LATE2 = 0;		// MAX7219 /CS=Low
@@ -289,26 +291,26 @@ void led_disp_hex(char pos, unsigned char data) {
 }
 
 void led_dump(void) {
-	led_disp_hex(0,LED_CTL[0]);
-	led_disp_hex(1,LED_CTL[1]);
-	led_disp_hex(2,LED_CTL[2]);
-	led_disp_hex(3,LED_CTL[3]);
+	led_disp_hex(0, LED_CTL[0]);
+	led_disp_hex(1, LED_CTL[1]);
+	led_disp_hex(2, LED_CTL[2]);
+	led_disp_hex(3, LED_CTL[3]);
 }
 
 void led_disp_bus(unsigned int addr, unsigned char data, int write_flag) {
-    buf_bus = addr >> 8;
-	led_disp_hex(0,buf_bus);
-    buf_bus = addr & 0xff;
-	led_disp_hex(1,buf_bus);
+	buf_bus = addr >> 8;
+	led_disp_hex(0, buf_bus);
+	buf_bus = addr & 0xff;
+	led_disp_hex(1, buf_bus);
 	if(write_flag) {
-		ledwrite(4,0x80);
-		ledwrite(3,0x80);
+		ledwrite(4, 0x80);
+		ledwrite(3, 0x80);
 	} else {
-		ledwrite(4,0x00);
-		ledwrite(3,0x00);
+		ledwrite(4, 0x00);
+		ledwrite(3, 0x00);
 	}
-	led_disp_hex(3,data);
-    __delay_ms(WAIT_LED_TRACE);
+	led_disp_hex(3, data);
+	__delay_ms(WAIT_LED_TRACE);
 }
 
 // Never called, logically
@@ -319,10 +321,10 @@ void __interrupt(irq(CLC1),base(8)) CLC_ISR(){
 	unsigned char rd_data;
 	char i;
 
-    CLC1IF = 0;		// Clear interrupt flag
+	CLC1IF = 0;		// Clear interrupt flag
 
-    ab.h = PORTD;	// Read address high
-    ab.l = PORTB;	// Read address low
+	ab.h = PORTD;	// Read address high
+	ab.l = PORTB;	// Read address low
 
 	if(!RA5) {		// RA5=/RD
 		// Z80 memory read cycle
@@ -330,7 +332,7 @@ void __interrupt(irq(CLC1),base(8)) CLC_ISR(){
 		if(CLC3OUT)							// ROM area
 			rd_data = rom[ab.w];			// Out ROM data
 		else if(CLC2OUT)					// RAM area
-	    	rd_data = ram[ab.w - RAM_TOP];	// Out RAM data
+			rd_data = ram[ab.w - RAM_TOP];	// Out RAM data
 		else if(ab.w == UART_CREG)			// PIR9
 			//////////////// UART3 buffer status ////////////////////////////
 			rd_data = (unsigned char)(((tx_cnt != U3TB_SIZE) << 1) | (rx_cnt != 0));
@@ -368,13 +370,13 @@ void __interrupt(irq(CLC1),base(8)) CLC_ISR(){
 		else if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END))
 			rd_data = LED_CTL[ab.w - LED_REG_TOP];
 		else								// Empty
-	    	rd_data = 0xff;					// Invalid data
+			rd_data = 0xff;					// Invalid data
 
 		if(LED_DISP_MODE == 0x04) {			// Trace mode
 			if(TRACE_MODE & 0x01)
-				led_disp_bus(ab.w,rd_data,0);
+				led_disp_bus(ab.w, rd_data, 0);
 			if(TRACE_MODE & 0x02)
-				printf("RD ADDR:%04X,DATA:%02X\r\n",ab.w,rd_data);
+				printf("RD ADDR:%04X,DATA:%02X\r\n", ab.w, rd_data);
 		}
 		LATC = rd_data;
 		// Release wait (D-FF reset)
@@ -408,9 +410,9 @@ void __interrupt(irq(CLC1),base(8)) CLC_ISR(){
 	else if(ab.w == TIMER0_CNTH) //timer0 16bit counter(MSB)
 		TMR0H = PORTC;
 	else if(ab.w == TIMER0_SCTL) //timer0 seconds counter(LSB)
-		secCnt.l  = PORTC;
+		secCnt.l = PORTC;
 	else if(ab.w == TIMER0_SCTH) //timer0 seconds counter(LSB)
-		secCnt.h  = PORTC;
+		secCnt.h = PORTC;
 	else if(ab.w == TIM0_ADJL) //timer0 adjust counter(LSB)
 		adjCnt.l = PORTC;
 	else if(ab.w == TIM0_ADJH) //timer0 adjust counter(MSB)
@@ -419,37 +421,37 @@ void __interrupt(irq(CLC1),base(8)) CLC_ISR(){
 		LED_CTL[ab.w - LED_REG_TOP] = PORTC; // Write into LED Registor
 		if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_TOP+3)){
 			led_dump();
-            LED_DISP_MODE = 3;
-        }
-		if(ab.w == LED_REG_TOP+4) {
+			LED_DISP_MODE = 3;
+		}
+		else if(ab.w == LED_REG_TOP+4) {
 			if(LED_DISP_MODE == 0)			// off
 				led_off();
-			else if(LED_DISP_MODE == 1)     // bank1
+			else if(LED_DISP_MODE == 1)		// bank1
 				for (i = 0; i < 8; i++)
 					ledwrite(i+1, LED_CTL[0x17-i]);
-			else if(LED_DISP_MODE == 2)     // bank 2
+			else if(LED_DISP_MODE == 2)		// bank 2
 				for (i = 0; i < 8; i++)
 					ledwrite(i+1, LED_CTL[0x1f-i]);
-			else if(LED_DISP_MODE == 3)     // dump 0xf000 - 0xf003
+			else if(LED_DISP_MODE == 3)		// dump 0xf000 - 0xf003
 				led_dump();
 			else if(LED_DISP_MODE == 0xff)	// "8888 8888"
 				led_on();
 		}
-		if(ab.w == LED_REG_TOP+5) {
+		else if(ab.w == LED_REG_TOP+5) {
 			ledwrite(0x0A, LED_INTENSITY);	// Intensity , Duty Cycle 0x00=1/32 .. 0x0F=31/32
 		}
 	}
 
 	if(LED_DISP_MODE == 0x04) {			// Trace mode
-		if(TRACE_MODE  & 0x01)
-			led_disp_bus(ab.w,PORTC,1);
-		if(TRACE_MODE  & 0x02)
-			printf("WR ADDR:%04X,DATA:%02X\r\n",ab.w,PORTC);
+		if(TRACE_MODE & 0x01)
+			led_disp_bus(ab.w, PORTC, 1);
+		if(TRACE_MODE & 0x02)
+			printf("WR ADDR:%04X,DATA:%02X\r\n", ab.w, PORTC);
 	}
 
 	// Release wait (D-FF reset)
-    G3POL = 1;
-    G3POL = 0;
+	G3POL = 1;
+	G3POL = 0;
 }
 
 ////////////// UART3 Transmit interrupt /////////////////////////
@@ -460,10 +462,10 @@ void __interrupt(irq(U3TX),base(8)) URT3Tx_ISR(){
 	if ( rx_xreq ) {
 		U3TXB = rx_xreq;
 		rx_xreq = 0;
-		if ( !tx_cnt ) U3TXIE = 0;  	// disable Tx interrupt
+		if ( !tx_cnt ) U3TXIE = 0;		// disable Tx interrupt
 	}
 	else {
-		if ( !tx_cnt ) U3TXIE = 0;  	// disable Tx interrupt
+		if ( !tx_cnt ) U3TXIE = 0;		// disable Tx interrupt
 		else {
 			U3TXB = tx_buf[tx_rp];
 			tx_rp = (tx_rp + 1) & ( U3TB_SIZE - 1);
@@ -504,7 +506,7 @@ void __interrupt(irq(TMR0),base(8)) TIMER0_ISR(){
 		};
 	} tmpCnt;
 
-	TMR0IF =0; // Clear timer0 interrupt flag
+	TMR0IF = 0; // Clear timer0 interrupt flag
 
 	// adjust timer conter
 
@@ -522,73 +524,73 @@ void __interrupt(irq(TMR0),base(8)) TIMER0_ISR(){
 // main routine
 void main(void) {
 
-    // System initialize
-    OSCFRQ = 0x08;	// 64MHz internal OSC
+	// System initialize
+	OSCFRQ = 0x08;	// 64MHz internal OSC
 
-    // Address bus A15-A8 pin
-    ANSELD = 0x00;	// Disable analog function
-    WPUD = 0xff;	// Week pull up
-    TRISD = 0xff;	// Set as input
+	// Address bus A15-A8 pin
+	ANSELD = 0x00;	// Disable analog function
+	WPUD = 0xff;	// Week pull up
+	TRISD = 0xff;	// Set as input
 
-    // Address bus A7-A0 pin
-    ANSELB = 0x00;	// Disable analog function
-    WPUB = 0xff;	// Week pull up
-    TRISB = 0xff;	// Set as input
+	// Address bus A7-A0 pin
+	ANSELB = 0x00;	// Disable analog function
+	WPUB = 0xff;	// Week pull up
+	TRISB = 0xff;	// Set as input
 
-    // Data bus D7-D0 pin
-    ANSELC = 0x00;	// Disable analog function
-    WPUC = 0xff;	// Week pull up
-    TRISC = 0xff;	// Set as input(default)
+	// Data bus D7-D0 pin
+	ANSELC = 0x00;	// Disable analog function
+	WPUC = 0xff;	// Week pull up
+	TRISC = 0xff;	// Set as input(default)
 
-    // /BUSRQ(RE0) output pin
-    ANSELE0 = 0;	// Disable analog function
-    LATE0 = 0;		// /BUSREQ
-    TRISE0 = 0;		// Set as output
+	// /BUSRQ(RE0) output pin
+	ANSELE0 = 0;	// Disable analog function
+	LATE0 = 0;		// /BUSREQ
+	TRISE0 = 0;		// Set as output
 
-    // /RESET(RE1) output pin
-    ANSELE1 = 0;	// Disable analog function
-    LATE1 = 0;		// Reset
-    TRISE1 = 0;		// Set as output
+	// /RESET(RE1) output pin
+	ANSELE1 = 0;	// Disable analog function
+	LATE1 = 0;		// Reset
+	TRISE1 = 0;		// Set as output
 
-    // /CS(RE2) output pin
-    ANSELE2 = 0;	// Disable analog function
-    LATE2 = 1;		// LED /CS
-    TRISE2 = 0;		// Set as output
+	// /CS(RE2) output pin
+	ANSELE2 = 0;	// Disable analog function
+	LATE2 = 1;		// LED /CS
+	TRISE2 = 0;		// Set as output
 
-    // /MREQ(RA1) input pin
-    ANSELA1 = 0;	// Disable analog function
-    WPUA1 = 1;		// Week pull up
-    TRISA1 = 1;		// Set as input
+	// /MREQ(RA1) input pin
+	ANSELA1 = 0;	// Disable analog function
+	WPUA1 = 1;		// Week pull up
+	TRISA1 = 1;		// Set as input
 
-    // /BUSACK(RA0) input pin
-    ANSELA0 = 0; // Disable analog function
-    WPUA0 = 1; // Week pull up
-    TRISA0 = 1; // Set as input
+	// /BUSACK(RA0) input pin
+	ANSELA0 = 0;	// Disable analog function
+	WPUA0 = 1;		// Week pull up
+	TRISA0 = 1;		// Set as input
 
-    // /RD(RA5)  input pin
-    ANSELA5 = 0;	// Disable analog function
-    WPUA5 = 1;		// Week pull up
-    TRISA5 = 1;		// Set as intput
+	// /RD(RA5) input pin
+	ANSELA5 = 0;	// Disable analog function
+	WPUA5 = 1;		// Week pull up
+	TRISA5 = 1;		// Set as intput
 
-    // /RFSH(RA2) input pin
-    ANSELA2 = 0;	// Disable analog function
-    WPUA2 = 1;		// Week pull up
-    TRISA2 = 1;		// Set as input
+	// /RFSH(RA2) input pin
+	ANSELA2 = 0;	// Disable analog function
+	WPUA2 = 1;		// Week pull up
+	TRISA2 = 1;		// Set as input
 
-    // /WAIT(RA4) output pin
-    ANSELA4 = 0;	// Disable analog function
-    LATA4 = 1;		// Default level
-    TRISA4 = 0;		// Set as output
+	// /WAIT(RA4) output pin
+	ANSELA4 = 0;	// Disable analog function
+	LATA4 = 1;		// Default level
+	TRISA4 = 0;		// Set as output
 
-    // Z80 clock(RA3) by NCO FDC mode
-    RA3PPS = 0x3f;	// RA3 asign NCO1
-    ANSELA3 = 0;	// Disable analog function
-    TRISA3 = 0;		// NCO output pin
-    NCO1INC = Z80_CLK * 2 / 61;
-    NCO1CLK = 0x00;	// Clock source Fosc
-    NCO1PFM = 0;	// FDC mode
-    NCO1OUT = 1;	// NCO output enable
-    NCO1EN = 1;		// NCO enable
+	// Z80 clock(RA3) by NCO FDC mode
+	RA3PPS = 0x3f;	// RA3 asign NCO1
+	ANSELA3 = 0;	// Disable analog function
+	TRISA3 = 0;		// NCO output pin
+	NCO1INC = Z80_CLK * 2 / 61;
+	NCO1CLK = 0x00;	// Clock source Fosc
+	NCO1PFM = 0;	// FDC mode
+	NCO1OUT = 1;	// NCO output enable
+	NCO1EN = 1;		// NCO enable
 
 	// UART3 initialize
 	U3BRG = 416;	// 9600bps @ 64MHz
@@ -606,30 +608,30 @@ void main(void) {
 	rx_wp = rx_rp = rx_cnt = 0;
 	tx_wp = tx_rp = tx_cnt = 0;
 
-	U3RXEN = 1;         // Receiver enable
-    U3TXEN = 1;         // Transmitter enable
+	U3RXEN = 1;			// Receiver enable
+	U3TXEN = 1;			// Transmitter enable
 
-    // UART3 Receiver
-    ANSELA7 = 0;        // Disable analog function
-    TRISA7 = 1;         // RX set as input
-    U3RXPPS = 0x07;     // RA7->UART3:RX3;
+	// UART3 Receiver
+	ANSELA7 = 0;		// Disable analog function
+	TRISA7 = 1;			// RX set as input
+	U3RXPPS = 0x07;		// RA7->UART3:RX3;
 
-    // UART3 Transmitter
-    ANSELA6 = 0;        // Disable analog function
-    LATA6 = 1;          // Default level
-    TRISA6 = 0;         // TX set as output
-    RA6PPS = 0x26;      // RA6->UART3:TX3;
+	// UART3 Transmitter
+	ANSELA6 = 0;		// Disable analog function
+	LATA6 = 1;			// Default level
+	TRISA6 = 0;			// TX set as output
+	RA6PPS = 0x26;		// RA6->UART3:TX3;
 
-    U3ON = 1;           // Serial port enable
+	U3ON = 1;			// Serial port enable
 
-    //========== CLC input pin assign ===========
-    CLCIN0PPS = 0x01;	// RA1 <- /MREQ
-    CLCIN1PPS = 0x02;	// RA2 <- /RFSH
-    CLCIN2PPS = 0x1f;	// RD7 <- A15
-    CLCIN3PPS = 0x1e;	// RD6 <- A14
-    CLCIN4PPS = 0x05;	// RA5 <- /RD
-    CLCIN6PPS = 0x1d;	// RD5 <- A13
-    CLCIN7PPS = 0x1c;	// RD4 <- A12
+	//========== CLC input pin assign ===========
+	CLCIN0PPS = 0x01;	// RA1 <- /MREQ
+	CLCIN1PPS = 0x02;	// RA2 <- /RFSH
+	CLCIN2PPS = 0x1f;	// RD7 <- A15
+	CLCIN3PPS = 0x1e;	// RD6 <- A14
+	CLCIN4PPS = 0x05;	// RA5 <- /RD
+	CLCIN6PPS = 0x1d;	// RD5 <- A13
+	CLCIN7PPS = 0x1c;	// RD4 <- A12
 
 	//========== CLC1 /WAIT ==========
 	CLCSELECT = 0;		// CLC1 select
@@ -647,40 +649,40 @@ void main(void) {
 	CLCnPOL = 0x82;		// inverted the CLC1 output, G0 inverted
 	CLCnCON = 0x8c;		// Select D-FF, falling edge inturrupt
 
-    //========== CLC2 RAM address decoder 0xC000 - 0xEFFF ==========
-    CLCSELECT = 1;      // CLC2 select
+	//========== CLC2 RAM address decoder 0xC000 - 0xEFFF ==========
+	CLCSELECT = 1;		// CLC2 select
 
-    CLCnSEL0 = 2;       // CLCIN2PPS <- A15
-    CLCnSEL1 = 3;       // CLCIN3PPS <- A14
-    CLCnSEL2 = 6;       // CLCIN6PPS <- A13
-    CLCnSEL3 = 7;       // CLCIN7PPS <- A12
+	CLCnSEL0 = 2;		// CLCIN2PPS <- A15
+	CLCnSEL1 = 3;		// CLCIN3PPS <- A14
+	CLCnSEL2 = 6;		// CLCIN6PPS <- A13
+	CLCnSEL3 = 7;		// CLCIN7PPS <- A12
 
-	CLCnGLS0 = 0x05;    // OR(not(A15), not(A14)),
-					    // G1POL=1 -> (A15 AND A14)
-	CLCnGLS1 = 0x50;    // OR(not(A13), not(A12))
-    CLCnGLS2 = 0x00;    // Connect none, G3POL=1 -> 1
-    CLCnGLS3 = 0x00;    // Connect none, G4POL=1 -> 1
+	CLCnGLS0 = 0x05;	// OR(not(A15), not(A14)),
+						// G1POL=1 -> (A15 AND A14)
+	CLCnGLS1 = 0x50;	// OR(not(A13), not(A12))
+	CLCnGLS2 = 0x00;	// Connect none, G3POL=1 -> 1
+	CLCnGLS3 = 0x00;	// Connect none, G4POL=1 -> 1
 
-	CLCnPOL = 0x0d;     // Noninverted the CLC2 output,
-					    // G1POL=1, G3POL=1, G4POL=1
-    CLCnCON = 0x82;     // 4 input AND
+	CLCnPOL = 0x0d;		// Noninverted the CLC2 output,
+						// G1POL=1, G3POL=1, G4POL=1
+	CLCnCON = 0x82;		// 4 input AND
 
-    //========== CLC3 ROM address decoder 0x0000 - 0xBFFF ==========
-    CLCSELECT = 2;      // CLC3 select
+	//========== CLC3 ROM address decoder 0x0000 - 0xBFFF ==========
+	CLCSELECT = 2;		// CLC3 select
 
-    CLCnSEL0 = 2;       // CLCIN2PPS <- A15
-    CLCnSEL1 = 3;       // CLCIN3PPS <- A14
-    CLCnSEL2 = 4;       // CLCIN4PPS <- /RD
-    CLCnSEL3 = 127;     // NC
+	CLCnSEL0 = 2;		// CLCIN2PPS <- A15
+	CLCnSEL1 = 3;		// CLCIN3PPS <- A14
+	CLCnSEL2 = 4;		// CLCIN4PPS <- /RD
+	CLCnSEL3 = 127;		// NC
 
-    CLCnGLS0 = 0x05;    // OR(not(A15), not(A14))
-    CLCnGLS1 = 0x10;    // /RD inverted
-    CLCnGLS2 = 0x00;    // Connect none, G3POL=1 -> 1
-    CLCnGLS3 = 0x00;    // Connect none, G4POL=1 -> 1
+	CLCnGLS0 = 0x05;	// OR(not(A15), not(A14))
+	CLCnGLS1 = 0x10;	// /RD inverted
+	CLCnGLS2 = 0x00;	// Connect none, G3POL=1 -> 1
+	CLCnGLS3 = 0x00;	// Connect none, G4POL=1 -> 1
 
-    CLCnPOL = 0x0c;     // Noninverted the CLC3 output,
-					    // G3POL=1, G4POL=1
-    CLCnCON = 0x82;     // 4 input AND
+	CLCnPOL = 0x0c;		// Noninverted the CLC3 output,
+						// G3POL=1, G4POL=1
+	CLCnCON = 0x82;		// 4 input AND
 
 	//========== CLC output pin assign ===========
 	// 1,2,5,6 = Port A, C
@@ -694,28 +696,28 @@ void main(void) {
 	T0CON1 = 0x80;	// sorce clk:LFINTOSC, 1:1 Prescaler
 
 	TMR0L = TIMER0_INITCL;
-	TMR0H = TIMER0_INITCH;		//	timer counter set to 0x86e8
-								//  LFINTOSC = 31Khz!!
+	TMR0H = TIMER0_INITCH;		// timer counter set to 0x86e8
+								// LFINTOSC = 31Khz!!
 	secCnt.w = 0;				// clear seconds counter
 	adjCnt.w = TIMER0_INITC;	// set initial adjust timer counter
 								// LFINTOSC = 31KHz
 
-    // Unlock IVT
-    IVTLOCK = 0x55;
-    IVTLOCK = 0xAA;
-    IVTLOCKbits.IVTLOCKED = 0x00;
+	// Unlock IVT
+	IVTLOCK = 0x55;
+	IVTLOCK = 0xAA;
+	IVTLOCKbits.IVTLOCKED = 0x00;
 
-    // Default IVT base address
-    IVTBASE = 0x000008;
+	// Default IVT base address
+	IVTBASE = 0x000008;
 
-    // Lock IVT
-    IVTLOCK = 0x55;
-    IVTLOCK = 0xAA;
-    IVTLOCKbits.IVTLOCKED = 0x01;
+	// Lock IVT
+	IVTLOCK = 0x55;
+	IVTLOCK = 0xAA;
+	IVTLOCKbits.IVTLOCKED = 0x01;
 
-    // CLC VI enable
-    CLC1IF = 0;		// Clear the CLC interrupt flag
-    CLC1IE = 1;		// Enabling CLC1 interrupt
+	// CLC VI enable
+	CLC1IF = 0;		// Clear the CLC interrupt flag
+	CLC1IE = 1;		// Enabling CLC1 interrupt
 
 /////// Set UART3 to XON and enable interrupt ////////////////////
 	while(!U3TXIF) {}	// Wait or Tx interrupt flag set
@@ -728,7 +730,7 @@ void main(void) {
 	TMR0IE = 1;		// Enable timer0 interrupt
 
 	// Z80 start
-    GIE = 1;		// Global interrupt enable
+	GIE = 1;		// Global interrupt enable
 
 	ledwrite(0x0F, 0x00);	// display test , normal operation
 	ledwrite(0x0A, 0x00);	// Intensity , Duty Cycle 0x00=1/32 .. 0x0F=31/32
@@ -740,9 +742,9 @@ void main(void) {
 //	TRACE_MODE = 1;			// LED Display
 //	LED_DISP_MODE = 4;		// Trace mode
 
-    LATE1 = 1;		// Release reset
+	LATE1 = 1;		// Release reset
 
-    while(1);
+	while(1);
 };
 
 //const unsigned char rom[ROM_SIZE] = {
