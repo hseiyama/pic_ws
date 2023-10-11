@@ -3,10 +3,10 @@
 ;;;
 
 INIT:
-	MOVE.B	#$03,ACIAC	; Master reset
-	NOP
-	NOP
-	MOVE.B	#CR_V,ACIAC	; x16 8bit N 1
+;	MOVE.B	#$03,ACIAC	; Master reset
+;	NOP
+;	NOP
+;	MOVE.B	#CR_V,ACIAC	; x16 8bit N 1
 
 	RTS
 

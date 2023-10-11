@@ -75,7 +75,7 @@ nobrk		EQU	0					; null response to INPUT causes a break
 ;************************************************************************************
 
 
-	CPU	68000
+	CPU	68030
 	SUPMODE	ON
 
 	ORG	$00000000
@@ -94,8 +94,8 @@ INIVEC:
 ; Use this value to run out of RAM
 	ORG		$0000c0				; past the vectors in a real system
 
-ACIAC:	EQU	$0000E001
-ACIAD:	EQU	$0000E000
+ACIAC:	EQU	$40000001
+ACIAD:	EQU	$40000000
 
 ;************************************************************************************
 ;
@@ -156,6 +156,9 @@ code_start
 ;        LEA.L   ACIA_2,A0      ; A0 points to aux. ACIA
 ;        MOVE.B  #$15,(A0)      ; Set up ACIA2 constants (no IRQ,
 ;                               ; RTS* low, 8 bit, no parity, 1 stop)
+
+	MOVE.l	#$00000001,d0			; [add] Set instruction cache enable
+	MOVEC	d0,cacr				; [add] at cache control register
 
 ; to tell EhBASIC where and how much RAM it has pass the address in a0 and the size
 ; in d0. these values are at the end of the .inc file

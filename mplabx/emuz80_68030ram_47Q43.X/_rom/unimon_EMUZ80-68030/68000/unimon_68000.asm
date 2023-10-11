@@ -3,7 +3,7 @@
 ;;;   Copyright (C) 2021 Haruo Asano
 ;;;
 
-	CPU	68000
+	CPU	68030
 	SUPMODE	ON
 
 	INCLUDE	"config.inc"
