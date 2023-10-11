@@ -90,6 +90,9 @@ INIVEC:
 INIVECE:
 
 CSTART:
+	MOVE.L	#$00000001,D0	; [add] Set instruction cache enable
+	MOVEC	D0,CACR		; [add] at cache control register
+
 	BSR	INIT
 
 	IF INIVEC <> $00000000
