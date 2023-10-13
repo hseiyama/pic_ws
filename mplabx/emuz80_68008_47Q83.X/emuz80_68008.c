@@ -227,7 +227,6 @@ void main(void) {
 	LATA3 = 1;			// IPL2=High
 	TRISA3= 0;			// Set as output
 
-
 	// UART3 initialize
 	U3BRG = 416;		// 9600bps @ 64MHz
 	U3RXEN = 1;			// Receiver enable
@@ -294,7 +293,6 @@ void main(void) {
 	CLCnPOL = 0x00;		// Not inverted the CLC3 output
 	CLCnCON = 0x82;		// 4 input AND
 
-
 	// RAM clear
 	for(i = 0; i < RAM_SIZE; i++) {
 		ram[i] = 0;
@@ -333,14 +331,14 @@ void main(void) {
 
 			else if(ab.w == UART_DREG) {	// U3TXB
 				U3TXB = PORTC;				// Write into  U3TXB
-			printf("ASC:%c ",PORTC);
+				printf("ASC:%c ",PORTC);
 			}
 
-		printf("WR ADDR:%04X,DATA:%02X\r\n",ab.w,PORTC);
+			printf("WR ADDR:%04X,DATA:%02X\r\n",ab.w,PORTC);
 
 			LATA4 = 0;					// DTACK=Low
 			while(!RA0);				// /AS
-			LATA4 = 1;					// DTACK=Low
+			LATA4 = 1;					// DTACK=High
 			return;
 		}
 
@@ -419,6 +417,7 @@ void main(void) {
 			}
 		}
 #endif
+#if 0
 		LATA4 = 0;		// DTACK=Low
 
 //		NOP();			// 6MHz - 10MHz
@@ -428,6 +427,15 @@ void main(void) {
 
 		TRISC = 0xff;	// Set data bus as input
 		LATA4 = 1;		// DTACK=High
+#endif
+		asm(
+		"bcf   LATA,4,c			\n"			// DTACK=Low
+		"RA0_check:				\n"
+		"btfss PORTA,0,c		\n"			// /AS  Less than 6.5MHz
+		"bra   RA0_check		\n"
+		"setf  TRISC,c			\n"			// Set data bus as input
+		"bsf   LATA,4,c			\n"			// DTACK=High
+		);
 	}
 }
 

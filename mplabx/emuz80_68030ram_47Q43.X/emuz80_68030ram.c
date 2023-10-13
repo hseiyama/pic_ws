@@ -242,7 +242,7 @@ void main(void) {
 	WPUC = 0xff;		// Week pull up
 	TRISC = 0xff;		// Set as input(default)
 
-    printf("\r\nMEZ68030RAM %2.3fMHz\r\n",NCO1INC * 30.5175781 / 1000000);
+	printf("\r\nMEZ68030RAM %2.3fMHz\r\n",NCO1INC * 30.5175781 / 1000000);
 
 	//========== CLC pin assign ===========
 	CLCIN0PPS = 0x00;	// RA0 <- AS
