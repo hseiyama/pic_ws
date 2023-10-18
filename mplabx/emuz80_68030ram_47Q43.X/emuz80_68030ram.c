@@ -19,69 +19,159 @@
 	Written by Tetsuya Suzuki
 */
 
-
 // CONFIG1
-#pragma config FEXTOSC = OFF    // External Oscillator Selection (Oscillator not enabled)
+#pragma config FEXTOSC = OFF	// External Oscillator Selection (Oscillator not enabled)
 #pragma config RSTOSC = HFINTOSC_64MHZ// Reset Oscillator Selection (HFINTOSC with HFFRQ = 64 MHz and CDIV = 1:1)
 
 // CONFIG2
-#pragma config CLKOUTEN = OFF   // Clock out Enable bit (CLKOUT function is disabled)
-#pragma config PR1WAY = ON      // PRLOCKED One-Way Set Enable bit (PRLOCKED bit can be cleared and set only once)
-#pragma config CSWEN = ON       // Clock Switch Enable bit (Writing to NOSC and NDIV is allowed)
-#pragma config FCMEN = ON       // Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor enabled)
+#pragma config CLKOUTEN = OFF	// Clock out Enable bit (CLKOUT function is disabled)
+#pragma config PR1WAY = ON		// PRLOCKED One-Way Set Enable bit (PRLOCKED bit can be cleared and set only once)
+#pragma config CSWEN = ON		// Clock Switch Enable bit (Writing to NOSC and NDIV is allowed)
+#pragma config FCMEN = ON		// Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor enabled)
 #ifndef _18F47Q43
-#pragma config JTAGEN = OFF
-#pragma config FCMENP = OFF
-#pragma config FCMENS = OFF
+#pragma config JTAGEN = OFF		// JTAG Enable bit (Disable JTAG Boundary Scan mode, JTAG pins revert to user functions)
+#pragma config FCMENP = OFF		// Fail-Safe Clock Monitor -Primary XTAL Enable bit (FSCM timer will set FSCMP bit and OSFIF interrupt on Primary XTAL failure)
+#pragma config FCMENS = OFF		// Fail-Safe Clock Monitor -Secondary XTAL Enable bit (FSCM timer will set FSCMS bit and OSFIF interrupt on Secondary XTAL failure)
 #endif
 
 // CONFIG3
-#pragma config MCLRE = EXTMCLR  // MCLR Enable bit (If LVP = 0, MCLR pin is MCLR; If LVP = 1, RE3 pin function is MCLR )
-#pragma config PWRTS = PWRT_OFF // Power-up timer selection bits (PWRT is disabled)
-#pragma config MVECEN = ON      // Multi-vector enable bit (Multi-vector enabled, Vector table used for interrupts)
-#pragma config IVT1WAY = ON     // IVTLOCK bit One-way set enable bit (IVTLOCKED bit can be cleared and set only once)
-#pragma config LPBOREN = OFF    // Low Power BOR Enable bit (Low-Power BOR disabled)
-#pragma config BOREN = SBORDIS  // Brown-out Reset Enable bits (Brown-out Reset enabled , SBOREN bit is ignored)
+#pragma config MCLRE = EXTMCLR	// MCLR Enable bit (If LVP = 0, MCLR pin is MCLR; If LVP = 1, RE3 pin function is MCLR )
+#pragma config PWRTS = PWRT_OFF	// Power-up timer selection bits (PWRT is disabled)
+#pragma config MVECEN = ON		// Multi-vector enable bit (Multi-vector enabled, Vector table used for interrupts)
+#pragma config IVT1WAY = ON		// IVTLOCK bit One-way set enable bit (IVTLOCKED bit can be cleared and set only once)
+#pragma config LPBOREN = OFF	// Low Power BOR Enable bit (Low-Power BOR disabled)
+#pragma config BOREN = SBORDIS	// Brown-out Reset Enable bits (Brown-out Reset enabled , SBOREN bit is ignored)
 
 // CONFIG4
-#pragma config BORV = VBOR_1P9  // Brown-out Reset Voltage Selection bits (Brown-out Reset Voltage (VBOR) set to 1.9V)
-#pragma config ZCD = OFF        // ZCD Disable bit (ZCD module is disabled. ZCD can be enabled by setting the ZCDSEN bit of ZCDCON)
-#pragma config PPS1WAY = OFF    // PPSLOCK bit One-Way Set Enable bit (PPSLOCKED bit can be set and cleared repeatedly (subject to the unlock sequence))
-#pragma config STVREN = ON      // Stack Full/Underflow Reset Enable bit (Stack full/underflow will cause Reset)
-#pragma config LVP = ON         // Low Voltage Programming Enable bit (Low voltage programming enabled. MCLR/VPP pin function is MCLR. MCLRE configuration bit is ignored)
-#pragma config XINST = OFF      // Extended Instruction Set Enable bit (Extended Instruction Set and Indexed Addressing Mode disabled)
+#pragma config BORV = VBOR_1P9	// Brown-out Reset Voltage Selection bits (Brown-out Reset Voltage (VBOR) set to 1.9V)
+#pragma config ZCD = OFF		// ZCD Disable bit (ZCD module is disabled. ZCD can be enabled by setting the ZCDSEN bit of ZCDCON)
+#pragma config PPS1WAY = OFF	// PPSLOCK bit One-Way Set Enable bit (PPSLOCKED bit can be set and cleared repeatedly (subject to the unlock sequence))
+#pragma config STVREN = ON		// Stack Full/Underflow Reset Enable bit (Stack full/underflow will cause Reset)
+#pragma config LVP = ON			// Low Voltage Programming Enable bit (Low voltage programming enabled. MCLR/VPP pin function is MCLR. MCLRE configuration bit is ignored)
+#pragma config XINST = OFF		// Extended Instruction Set Enable bit (Extended Instruction Set and Indexed Addressing Mode disabled)
 
 // CONFIG5
 #pragma config WDTCPS = WDTCPS_31// WDT Period selection bits (Divider ratio 1:65536; software control of WDTPS)
-#pragma config WDTE = OFF       // WDT operating mode (WDT Disabled; SWDTEN is ignored)
+#pragma config WDTE = OFF		// WDT operating mode (WDT Disabled; SWDTEN is ignored)
 
 // CONFIG6
 #pragma config WDTCWS = WDTCWS_7// WDT Window Select bits (window always open (100%); software control; keyed access not required)
-#pragma config WDTCCS = SC      // WDT input clock selector (Software Control)
+#pragma config WDTCCS = SC		// WDT input clock selector (Software Control)
 
 // CONFIG7
 #pragma config BBSIZE = BBSIZE_512// Boot Block Size selection bits (Boot Block size is 512 words)
-#pragma config BBEN = OFF       // Boot Block enable bit (Boot block disabled)
-#pragma config SAFEN = OFF      // Storage Area Flash enable bit (SAF disabled)
-#ifdef _18F47Q43
-#pragma config DEBUG = OFF
-#endif
+#pragma config BBEN = OFF		// Boot Block enable bit (Boot block disabled)
+#pragma config SAFEN = OFF		// Storage Area Flash enable bit (SAF disabled)
+#pragma config DEBUG = OFF		// Background Debugger (Background Debugger disabled)
 
 // CONFIG8
-#pragma config WRTB = OFF       // Boot Block Write Protection bit (Boot Block not Write protected)
-#pragma config WRTC = OFF       // Configuration Register Write Protection bit (Configuration registers not Write protected)
-#pragma config WRTD = OFF       // Data EEPROM Write Protection bit (Data EEPROM not Write protected)
-#pragma config WRTSAF = OFF     // SAF Write protection bit (SAF not Write Protected)
-#pragma config WRTAPP = OFF     // Application Block write protection bit (Application Block not write protected)
+#pragma config WRTB = OFF		// Boot Block Write Protection bit (Boot Block not Write protected)
+#pragma config WRTC = OFF		// Configuration Register Write Protection bit (Configuration registers not Write protected)
+#pragma config WRTD = OFF		// Data EEPROM Write Protection bit (Data EEPROM not Write protected)
+#pragma config WRTSAF = OFF		// SAF Write protection bit (SAF not Write Protected)
+#pragma config WRTAPP = OFF		// Application Block write protection bit (Application Block not write protected)
+
+#ifndef _18F47Q43
+// CONFIG9
+#pragma config BOOTPINSEL = RC5	// CRC on boot output pin selection (CRC on boot output pin is RC5)
+#pragma config BPEN = OFF		// CRC on boot output pin enable bit (CRC on boot output pin disabled)
+#pragma config ODCON = OFF		// CRC on boot output pin open drain bit (Pin drives both high-going and low-going signals)
+#endif
 
 // CONFIG10
-#pragma config CP = OFF         // PFM and Data EEPROM Code Protection bit (PFM and Data EEPROM code protection disabled)
+#pragma config CP = OFF			// PFM and Data EEPROM Code Protection bit (PFM and Data EEPROM code protection disabled)
+
+#ifndef _18F47Q43
+// CONFIG11
+#pragma config BOOTSCEN = OFF	// CRC on boot scan enable for boot area (CRC on boot will not include the boot area of program memory in its calculation)
+#pragma config BOOTCOE = HALT	// CRC on boot Continue on Error for boot areas bit (CRC on boot will stop device if error is detected in boot areas)
+#pragma config APPSCEN = OFF	// CRC on boot application code scan enable (CRC on boot will not include the application area of program memory in its calculation)
+#pragma config SAFSCEN = OFF	// CRC on boot SAF area scan enable (CRC on boot will not include the SAF area of program memory in its calculation)
+#pragma config DATASCEN = OFF	// CRC on boot Data EEPROM scan enable (CRC on boot will not include data EEPROM in its calculation)
+#pragma config CFGSCEN = OFF	// CRC on boot Config fuses scan enable (CRC on boot will not include the configuration fuses in its calculation)
+#pragma config COE = HALT		// CRC on boot Continue on Error for non-boot areas bit (CRC on boot will stop device if error is detected in non-boot areas)
+#pragma config BOOTPOR = OFF	// Boot on CRC Enable bit (CRC on boot will not run)
+
+// CONFIG12
+#pragma config BCRCPOLT = hFF	// Boot Sector Polynomial for CRC on boot bits 31-24 (Bits 31:24 of BCRCPOL are 0xFF)
+
+// CONFIG13
+#pragma config BCRCPOLU = hFF	// Boot Sector Polynomial for CRC on boot bits 23-16 (Bits 23:16 of BCRCPOL are 0xFF)
+
+// CONFIG14
+#pragma config BCRCPOLH = hFF	// Boot Sector Polynomial for CRC on boot bits 15-8 (Bits 15:8 of BCRCPOL are 0xFF)
+
+// CONFIG15
+#pragma config BCRCPOLL = hFF	// Boot Sector Polynomial for CRC on boot bits 7-0 (Bits 7:0 of BCRCPOL are 0xFF)
+
+// CONFIG16
+#pragma config BCRCSEEDT = hFF	// Boot Sector Seed for CRC on boot bits 31-24 (Bits 31:24 of BCRCSEED are 0xFF)
+
+// CONFIG17
+#pragma config BCRCSEEDU = hFF	// Boot Sector Seed for CRC on boot bits 23-16 (Bits 23:16 of BCRCSEED are 0xFF)
+
+// CONFIG18
+#pragma config BCRCSEEDH = hFF	// Boot Sector Seed for CRC on boot bits 15-8 (Bits 15:8 of BCRCSEED are 0xFF)
+
+// CONFIG19
+#pragma config BCRCSEEDL = hFF	// Boot Sector Seed for CRC on boot bits 7-0 (Bits 7:0 of BCRCSEED are 0xFF)
+
+// CONFIG20
+#pragma config BCRCEREST = hFF	// Boot Sector Expected Result for CRC on boot bits 31-24 (Bits 31:24 of BCRCERES are 0xFF)
+
+// CONFIG21
+#pragma config BCRCERESU = hFF	// Boot Sector Expected Result for CRC on boot bits 23-16 (Bits 23:16 of BCRCERES are 0xFF)
+
+// CONFIG22
+#pragma config BCRCERESH = hFF	// Boot Sector Expected Result for CRC on boot bits 15-8 (Bits 15:8 of BCRCERES are 0xFF)
+
+// CONFIG23
+#pragma config BCRCERESL = hFF	// Boot Sector Expected Result for CRC on boot bits 7-0 (Bits 7:0 of BCRCERES are 0xFF)
+
+// CONFIG24
+#pragma config CRCPOLT = hFF	// Non-Boot Sector Polynomial for CRC on boot bits 31-24 (Bits 31:24 of CRCPOL are 0xFF)
+
+// CONFIG25
+#pragma config CRCPOLU = hFF	// Non-Boot Sector Polynomial for CRC on boot bits 23-16 (Bits 23:16 of CRCPOL are 0xFF)
+
+// CONFIG26
+#pragma config CRCPOLH = hFF	// Non-Boot Sector Polynomial for CRC on boot bits 15-8 (Bits 15:8 of CRCPOL are 0xFF)
+
+// CONFIG27
+#pragma config CRCPOLL = hFF	// Non-Boot Sector Polynomial for CRC on boot bits 7-0 (Bits 7:0 of CRCPOL are 0xFF)
+
+// CONFIG28
+#pragma config CRCSEEDT = hFF	// Non-Boot Sector Seed for CRC on boot bits 31-24 (Bits 31:24 of CRCSEED are 0xFF)
+
+// CONFIG29
+#pragma config CRCSEEDU = hFF	// Non-Boot Sector Seed for CRC on boot bits 23-16 (Bits 23:16 of CRCSEED are 0xFF)
+
+// CONFIG30
+#pragma config CRCSEEDH = hFF	// Non-Boot Sector Seed for CRC on boot bits 15-8 (Bits 15:8 of CRCSEED are 0xFF)
+
+// CONFIG31
+#pragma config CRCSEEDL = hFF	// Non-Boot Sector Seed for CRC on boot bits 7-0 (Bits 7:0 of CRCSEED are 0xFF)
+
+// CONFIG32
+#pragma config CRCEREST = hFF	// Non-Boot Sector Expected Result for CRC on boot bits 31-24 (Bits 31:24 of CRCERES are 0xFF)
+
+// CONFIG33
+#pragma config CRCERESU = hFF	// Non-Boot Sector Expected Result for CRC on boot bits 23-16 (Bits 23:16 of CRCERES are 0xFF)
+
+// CONFIG34
+#pragma config CRCERESH = hFF	// Non-Boot Sector Expected Result for CRC on boot bits 15-8 (Bits 15:8 of CRCERES are 0xFF)
+
+// CONFIG35
+#pragma config CRCERESL = hFF	// Non-Boot Sector Expected Result for CRC on boot bits 7-0 (Bits 7:0 of CRCERES are 0xFF)
+#endif
 
 // #pragma config statements should precede project file includes.
 // Use project enums instead of #define for ON and OFF.
 
 #include <xc.h>
 #include <stdio.h>
+
+#define ASMBL
 
 #define CLK_68030 10000000UL	// 68030 clock frequency(Max 16MHz)
 
@@ -94,6 +184,20 @@
 
 //68030 ROM equivalent, see end of this file
 extern const unsigned char rom[];
+
+/////////////////////////////////////////////////////////////
+// UART ring buffer for XON/XOFF
+#define XON  0x11		// code DC1
+#define XOFF 0x13		// code DC3
+#define U3TB_SIZE 128
+#define U3RB_SIZE 128
+
+volatile unsigned char tx_buf[U3TB_SIZE];	//UART Tx ring buffer
+volatile unsigned char rx_buf[U3RB_SIZE];	//UART Rx ring buffer
+volatile unsigned char rx_xflg, rx_xreq;
+volatile unsigned int rx_wp, rx_rp, rx_cnt;
+volatile unsigned int tx_wp, tx_rp, tx_cnt;
+/////////////////////////////////////////////////////////////
 
 //Address Bus
 union {
@@ -121,6 +225,45 @@ char getch(void) {
 
 // Never called, logically
 void __interrupt(irq(default),base(8)) Default_ISR(){}
+
+////////////// UART3 Transmit interrupt /////////////////////////
+//UART3 Tx interrupt
+/////////////////////////////////////////////////////////////////
+void __interrupt(irq(U3TX),base(8)) URT3Tx_ISR(){
+
+	if (rx_xreq) {
+		U3TXB = rx_xreq;
+		rx_xreq = 0;
+		if (!tx_cnt) U3TXIE = 0;		// disable Tx interrupt
+	}
+	else {
+		if (!tx_cnt) U3TXIE = 0;		// disable Tx interrupt
+		else {
+			U3TXB = tx_buf[tx_rp];
+			tx_rp = (tx_rp + 1) & (U3TB_SIZE - 1);
+			tx_cnt--;
+		}
+	}
+}
+
+////////////// UART3 Receive interrupt //////////////////////////
+//UART3 Rx interrupt
+/////////////////////////////////////////////////////////////////
+void __interrupt(irq(U3RX),base(8)) URT3Rx_ISR(){
+
+	unsigned char rx_data;
+
+	rx_data = U3RXB;			// get rx data
+	if (rx_cnt < U3RB_SIZE) {
+		rx_buf[rx_wp] = rx_data;
+		rx_wp = (rx_wp + 1) & (U3RB_SIZE - 1);
+		rx_cnt++;
+		if ((rx_xflg == XON) && (rx_cnt == U3RB_SIZE - 64)) {
+			rx_xreq = rx_xflg = XOFF;
+			U3TXIE = 1;
+		}
+	}
+}
 
 // main routine
 void main(void) {
@@ -186,7 +329,6 @@ void main(void) {
 	LATE0 = 1;			// BERR=High
 	TRISE0= 0;			// Set as output
 
-
 	// /WE (RA1) output pin
 	ANSELA1 = 0;		// Disable analog function
 	RA1PPS = 0x00;		// LATA1 -> RA1
@@ -199,9 +341,22 @@ void main(void) {
 	LATA3 = 1;			// /OE = Low
 	TRISA3 = 0;			// Set as output
 
-
 	// UART3 initialize
-	U3BRG = 416;		// 9600bps @ 64MHz
+//	U3BRG = 416;		// 9600bps @ 64MHz
+//	U3BRG = 208;		// 19200bps @ 64MHz
+//	U3BRG = 104;		// 38400bps @ 64MHz
+	U3BRG = 34;			// 115200bps @ 64MHz
+	U3CON2 = 0x81;		// RUNOVF=1: the XON and XOFF characters continue to be
+						//           received and processed without the need to clear
+						//           the input FIFO by reading UxRXB.
+						// FLO = 01: XON/XOFF Software flow control
+
+	// UART ring buffer init
+	rx_xreq = 0;
+	rx_xflg = XON;
+	rx_wp = rx_rp = rx_cnt = 0;
+	tx_wp = tx_rp = tx_cnt = 0;
+
 	U3RXEN = 1;			// Receiver enable
 	U3TXEN = 1;			// Transmitter enable
 
@@ -338,6 +493,13 @@ void main(void) {
 	IVTLOCK = 0xAA;
 	IVTLOCKbits.IVTLOCKED = 0x01;
 
+/////// Set UART3 to XON and enable interrupt ///////////////////
+	while(!U3TXIF) {}	// Wait or Tx interrupt flag set
+	U3TXB = XON;		// Write data
+	U3RXIE = 1;			// enable Receive interrupt
+//	U3TXIE = 1;			// enable Trancemit interrupt
+/////////////////////////////////////////////////////////////////
+
 	GIE = 1;			// Global interrupt enable
 	LATE1 = 1;			// BR = High
 	LATE2 = 1;			// Release reset
@@ -351,7 +513,16 @@ void main(void) {
 
 		if(!RA5) {						// Write cycle (RD inactive)
 			if(ab.w == UART_DREG) {		// UART data register
-				U3TXB = PORTC;			// Write into U3 TX buffer
+				GIE = 0;				// Global interrupt disenable
+				//////////////// Write Tx data form Tx buffer //////////////////
+				if (tx_cnt < U3TB_SIZE) {
+					tx_buf[tx_wp] = PORTC;
+					tx_wp = (tx_wp + 1) & (U3TB_SIZE - 1);
+					tx_cnt++;
+					U3TXIE = 1;
+				}
+				////////////////////////////////////////////////////////////////
+				GIE = 1;				// Global interrupt enable
 //			} else {
 //				LATE0 = 0;				// /BERR=Low
 			}
@@ -361,21 +532,55 @@ void main(void) {
 		} else {
 			TRISC = 0x00;					// Set data bus as output
 			if(ab.w == UART_CREG){			// UART control register
-				LATC = PIR9;				// U3 flag
+				GIE = 0;					// Global interrupt disenable
+				//////////////// UART3 buffer status ///////////////////////////
+				LATC = (unsigned char)(((tx_cnt != U3TB_SIZE) << 1) | (rx_cnt != 0));
+				////////////////////////////////////////////////////////////////
+				GIE = 1;					// Global interrupt enable
 			} else if(ab.w == UART_DREG){	// UART data register
-				LATC = U3RXB;				// U3 RX buffer
+				GIE = 0;					// Global interrupt disenable
+				//////////////// Read Rx data form Rx buffer ///////////////////
+				if (!rx_cnt) LATC = 0;
+				else {
+					LATC = rx_buf[rx_rp];
+					rx_rp = (rx_rp + 1) & (U3RB_SIZE - 1);
+					rx_cnt--;
+					if ((rx_xflg == XOFF) && (rx_cnt == 10)) {
+						rx_xreq = rx_xflg = XON;
+						U3TXIE = 1;
+					}
+				}
+				////////////////////////////////////////////////////////////////
+				GIE = 1;					// Global interrupt enable
 			} else {						// Out of memory
 //				LATE0 = 0;					// /BERR=Low
 				LATC = 0xff;				// Invalid data
 			}
+			GIE = 0;			// Global interrupt disenable
+#ifndef ASMBL
 			// Detect CLK falling edge
 			while(RA2);
-			//Release DSACK0 (D-FF reset)
+			// Release DSACK0 (D-FF reset)
 			G3POL = 1;
 			G3POL = 0;
 			while(RA0);			// /AS
 			TRISC = 0xff;		// Set as input
 //			LATE0 = 1;			// /BERR=High
+#else
+			asm(
+			"RA2_check:				\n"
+			"btfsc PORTA,2,c		\n"			// Detect CLK falling edge
+			"bra   RA2_check		\n"
+			"movlb 0				\n"			// banked 0
+			"bsf   CLCnPOL,2,b		\n"			// Release DSACK0 (D-FF reset)
+			"bcf   CLCnPOL,2,b		\n"
+			"RA0_check:				\n"
+			"btfsc PORTA,0,c		\n"			// /AS
+			"bra   RA0_check		\n"
+			"setf  TRISC,c			\n"			// Set as input
+			);
+#endif
+			GIE = 1;			// Global interrupt enable
 		}
 	}
 }

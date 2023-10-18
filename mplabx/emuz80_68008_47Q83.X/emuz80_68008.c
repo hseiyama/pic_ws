@@ -31,7 +31,6 @@
  *  https://github.com/yyhayami/emuz80_hayami/tree/main/emuz80_clc.X
 */
 
-
 // CONFIG1
 #pragma config FEXTOSC = OFF	// External Oscillator Selection (Oscillator not enabled)
 #pragma config RSTOSC = HFINTOSC_64MHZ// Reset Oscillator Selection (HFINTOSC with HFFRQ = 64 MHz and CDIV = 1:1)
@@ -185,6 +184,7 @@
 #include <stdio.h>
 
 //#define DEBUG
+#define ASMBL
 
 #define CLK_68k8 6000000UL  // 68008 clock frequency(Max 16MHz)
 
@@ -299,7 +299,7 @@ void __interrupt(irq(U3RX),base(8)) URT3Rx_ISR(){
 // main routine
 void main(void) {
 
-	int i;
+	unsigned int i;
 
 	// System initialize
 	OSCFRQ = 0x08;		// 64MHz internal OSC
@@ -606,7 +606,8 @@ void main(void) {
 			}
 		}
 #endif
-#if 0
+		GIE = 0;		// Global interrupt disenable
+#ifndef ASMBL
 		LATA4 = 0;		// DTACK=Low
 
 //		NOP();			// 6MHz - 10MHz
@@ -616,8 +617,7 @@ void main(void) {
 
 		TRISC = 0xff;	// Set data bus as input
 		LATA4 = 1;		// DTACK=High
-#endif
-		GIE = 0;		// Global interrupt disenable
+#else
 		asm(
 		"bcf   LATA,4,c			\n"			// DTACK=Low
 		"RA0_check:				\n"
@@ -626,6 +626,7 @@ void main(void) {
 		"setf  TRISC,c			\n"			// Set data bus as input
 		"bsf   LATA,4,c			\n"			// DTACK=High
 		);
+#endif
 		GIE = 1;		// Global interrupt enable
 	}
 }
