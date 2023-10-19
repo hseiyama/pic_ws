@@ -1,26 +1,21 @@
 /*
-  PIC18F47Q84 ROM RAM and UART emulation firmware
+ * PIC18F47Q43/PIC18F47Q83/PIC18F47Q84 ROM RAM and UART emulation & MAX7219 control firmware
+ * This single source file contains all code
+ *
+ * Target: EMUZ80 with MEZ80LED
+ * Compiler: MPLAB XC8 v2.40
+ *
+ * Modified by Satoshi Okue https://twitter.com/S_Okue
+ * Version 0.1 2023/1/8
+ */
+
+/*
+  PIC18F47Q43 ROM RAM and UART emulation firmware
   This single source file contains all code
 
-  Target: EMUZ80 - The computer with only Z80 and PIC18F47Q84
-  IDE: MPLAB X v6.0
-  Compiler: XC8 v2.40
-  Modified 12K RAM by Akihito Honda
-
-  address map
-
-  0xff00 : UART DATA REGISTOR
-  0xff01 : UART CONTROL REGISTOR
-
-  ROM area
-
-  0x0000 - 0xbfff	: 48K
-
-  RAM area
-
-  0xc000 - 0xefff : 12K
-
- Thanks for Tetsuya Suzuki and yyhayami
+  Target: EMUZ80 - The computer with only Z80 and PIC18F47Q43
+  Compiler: MPLAB XC8 v2.36
+  Written by Tetsuya Suzuki
 */
 
 // CONFIG1
@@ -31,10 +26,12 @@
 #pragma config CLKOUTEN = OFF   // Clock out Enable bit (CLKOUT function is disabled)
 #pragma config PR1WAY = ON      // PRLOCKED One-Way Set Enable bit (PRLOCKED bit can be cleared and set only once)
 #pragma config CSWEN = ON       // Clock Switch Enable bit (Writing to NOSC and NDIV is allowed)
-#pragma config JTAGEN = OFF     // JTAG Enable bit (Disable JTAG Boundary Scan mode, JTAG pins revert to user functions)
 #pragma config FCMEN = ON       // Fail-Safe Clock Monitor Enable bit (Fail-Safe Clock Monitor enabled)
-#pragma config FCMENP = ON      // Fail-Safe Clock Monitor -Primary XTAL Enable bit (FSCM timer will set FSCMP bit and OSFIF interrupt on Primary XTAL failure)
-#pragma config FCMENS = ON      // Fail-Safe Clock Monitor -Secondary XTAL Enable bit (FSCM timer will set FSCMS bit and OSFIF interrupt on Secondary XTAL failure)
+#ifdef _18F47Q83
+#pragma config JTAGEN = OFF
+#pragma config FCMENP = OFF
+#pragma config FCMENS = OFF
+#endif
 
 // CONFIG3
 #pragma config MCLRE = EXTMCLR  // MCLR Enable bit (If LVP = 0, MCLR pin is MCLR; If LVP = 1, RE3 pin function is MCLR )
@@ -64,6 +61,9 @@
 #pragma config BBSIZE = BBSIZE_512// Boot Block Size selection bits (Boot Block size is 512 words)
 #pragma config BBEN = OFF       // Boot Block enable bit (Boot block disabled)
 #pragma config SAFEN = OFF      // Storage Area Flash enable bit (SAF disabled)
+#ifndef _18F47Q83
+#pragma config DEBUG = OFF      // Background Debugger (Background Debugger disabled)
+#endif
 
 // CONFIG8
 #pragma config WRTB = OFF       // Boot Block Write Protection bit (Boot Block not Write protected)
@@ -72,119 +72,24 @@
 #pragma config WRTSAF = OFF     // SAF Write protection bit (SAF not Write Protected)
 #pragma config WRTAPP = OFF     // Application Block write protection bit (Application Block not write protected)
 
-// CONFIG9
-#pragma config BOOTPINSEL = RC5 // CRC on boot output pin selection (CRC on boot output pin is RC5)
-#pragma config BPEN = OFF       // CRC on boot output pin enable bit (CRC on boot output pin disabled)
-#pragma config ODCON = OFF      // CRC on boot output pin open drain bit (Pin drives both high-going and low-going signals)
-
 // CONFIG10
 #pragma config CP = OFF         // PFM and Data EEPROM Code Protection bit (PFM and Data EEPROM code protection disabled)
 
-// CONFIG11
-#pragma config BOOTSCEN = OFF   // CRC on boot scan enable for boot area (CRC on boot will not include the boot area of program memory in its calculation)
-#pragma config BOOTCOE = HALT   // CRC on boot Continue on Error for boot areas bit (CRC on boot will stop device if error is detected in boot areas)
-#pragma config APPSCEN = OFF    // CRC on boot application code scan enable (CRC on boot will not include the application area of program memory in its calculation)
-#pragma config SAFSCEN = OFF    // CRC on boot SAF area scan enable (CRC on boot will not include the SAF area of program memory in its calculation)
-#pragma config DATASCEN = OFF   // CRC on boot Data EEPROM scan enable (CRC on boot will not include data EEPROM in its calculation)
-#pragma config CFGSCEN = OFF    // CRC on boot Config fuses scan enable (CRC on boot will not include the configuration fuses in its calculation)
-#pragma config COE = HALT       // CRC on boot Continue on Error for non-boot areas bit (CRC on boot will stop device if error is detected in non-boot areas)
-#pragma config BOOTPOR = OFF    // Boot on CRC Enable bit (CRC on boot will not run)
-
-// CONFIG12
-#pragma config BCRCPOLT = hFF   // Boot Sector Polynomial for CRC on boot bits 31-24 (Bits 31:24 of BCRCPOL are 0xFF)
-
-// CONFIG13
-#pragma config BCRCPOLU = hFF   // Boot Sector Polynomial for CRC on boot bits 23-16 (Bits 23:16 of BCRCPOL are 0xFF)
-
-// CONFIG14
-#pragma config BCRCPOLH = hFF   // Boot Sector Polynomial for CRC on boot bits 15-8 (Bits 15:8 of BCRCPOL are 0xFF)
-
-// CONFIG15
-#pragma config BCRCPOLL = hFF   // Boot Sector Polynomial for CRC on boot bits 7-0 (Bits 7:0 of BCRCPOL are 0xFF)
-
-// CONFIG16
-#pragma config BCRCSEEDT = hFF  // Boot Sector Seed for CRC on boot bits 31-24 (Bits 31:24 of BCRCSEED are 0xFF)
-
-// CONFIG17
-#pragma config BCRCSEEDU = hFF  // Boot Sector Seed for CRC on boot bits 23-16 (Bits 23:16 of BCRCSEED are 0xFF)
-
-// CONFIG18
-#pragma config BCRCSEEDH = hFF  // Boot Sector Seed for CRC on boot bits 15-8 (Bits 15:8 of BCRCSEED are 0xFF)
-
-// CONFIG19
-#pragma config BCRCSEEDL = hFF  // Boot Sector Seed for CRC on boot bits 7-0 (Bits 7:0 of BCRCSEED are 0xFF)
-
-// CONFIG20
-#pragma config BCRCEREST = hFF  // Boot Sector Expected Result for CRC on boot bits 31-24 (Bits 31:24 of BCRCERES are 0xFF)
-
-// CONFIG21
-#pragma config BCRCERESU = hFF  // Boot Sector Expected Result for CRC on boot bits 23-16 (Bits 23:16 of BCRCERES are 0xFF)
-
-// CONFIG22
-#pragma config BCRCERESH = hFF  // Boot Sector Expected Result for CRC on boot bits 15-8 (Bits 15:8 of BCRCERES are 0xFF)
-
-// CONFIG23
-#pragma config BCRCERESL = hFF  // Boot Sector Expected Result for CRC on boot bits 7-0 (Bits 7:0 of BCRCERES are 0xFF)
-
-// CONFIG24
-#pragma config CRCPOLT = hFF    // Non-Boot Sector Polynomial for CRC on boot bits 31-24 (Bits 31:24 of CRCPOL are 0xFF)
-
-// CONFIG25
-#pragma config CRCPOLU = hFF    // Non-Boot Sector Polynomial for CRC on boot bits 23-16 (Bits 23:16 of CRCPOL are 0xFF)
-
-// CONFIG26
-#pragma config CRCPOLH = hFF    // Non-Boot Sector Polynomial for CRC on boot bits 15-8 (Bits 15:8 of CRCPOL are 0xFF)
-
-// CONFIG27
-#pragma config CRCPOLL = hFF    // Non-Boot Sector Polynomial for CRC on boot bits 7-0 (Bits 7:0 of CRCPOL are 0xFF)
-
-// CONFIG28
-#pragma config CRCSEEDT = hFF   // Non-Boot Sector Seed for CRC on boot bits 31-24 (Bits 31:24 of CRCSEED are 0xFF)
-
-// CONFIG29
-#pragma config CRCSEEDU = hFF   // Non-Boot Sector Seed for CRC on boot bits 23-16 (Bits 23:16 of CRCSEED are 0xFF)
-
-// CONFIG30
-#pragma config CRCSEEDH = hFF   // Non-Boot Sector Seed for CRC on boot bits 15-8 (Bits 15:8 of CRCSEED are 0xFF)
-
-// CONFIG31
-#pragma config CRCSEEDL = hFF   // Non-Boot Sector Seed for CRC on boot bits 7-0 (Bits 7:0 of CRCSEED are 0xFF)
-
-// CONFIG32
-#pragma config CRCEREST = hFF   // Non-Boot Sector Expected Result for CRC on boot bits 31-24 (Bits 31:24 of CRCERES are 0xFF)
-
-// CONFIG33
-#pragma config CRCERESU = hFF   // Non-Boot Sector Expected Result for CRC on boot bits 23-16 (Bits 23:16 of CRCERES are 0xFF)
-
-// CONFIG34
-#pragma config CRCERESH = hFF   // Non-Boot Sector Expected Result for CRC on boot bits 15-8 (Bits 15:8 of CRCERES are 0xFF)
-
-// CONFIG35
-#pragma config CRCERESL = hFF   // Non-Boot Sector Expected Result for CRC on boot bits 7-0 (Bits 7:0 of CRCERES are 0xFF)
+// #pragma config statements should precede project file includes.
+// Use project enums instead of #define for ON and OFF.
 
 #include <xc.h>
-//#include <stdio.h>
+#include <stdio.h>
 
-/*define memory map
+#define Z80_CLK 2500000UL	// Z80 clock frequency(Max 16MHz)
 
-I/O area  : 0XF000 - 0xFFFF
-0xff00 : UART DATA REGISTOR
-0xff01 : UART CONTROL REGISTOR
+#define ROM_SIZE 0xC000		// 48K bytes
+#define RAM_SIZE 0x3000		// 12K bytes
 
-ROM area : 0x0000 - 0xbfff	: 48K
-RAM area : 0xc000 - 0xefff : 12K
-*/
+#define RAM_TOP 0xC000		// RAM top address
 
-#define ROM_TOP 0x0000 //48K bytes
-#define ROM_SIZE 0xc000 //48K bytes
-
-#define RAM_TOP 0xc000 //RAM top address
-#define RAM_MSK 0x3fff //RAM mask bit
-#define RAM_SIZE 0x3000 //12K bytes
-#define RAM_END (RAM_TOP + RAM_SIZE)
-
-#define UART_DREG 0xFF00 //Data REG
-#define UART_CREG 0xFF01 //Control REG
+#define UART_DREG 0xFF00	// Data REG
+#define UART_CREG 0xFF01	// Control REG
 
 #define TIM0_CTL0	0xF800	//timer0 control0 register
 #define TIM0_CTL1	0xF801	//timer0 control1 register
@@ -205,29 +110,67 @@ RAM area : 0xc000 - 0xefff : 12K
 
 #define _XTAL_FREQ 64000000UL
 
-#define CLC1POL_SET 0x80
-#define CLC1POL_RESET 0x84
+// 0xf000-0xf003 hex disp
+//
+// 0xf004 disp mode
+//   0x00 off
+//   0x01 bank1
+//   0x02 bank2
+//   0x03 hex dump at 0xf000 - 0xf003
+//   0x04 Trace mode
+//   0xff "8888 8888"
+//
+// 0xf005 LED Intensity
+//   0x00(min) - 0x0f(max)
+//
+// 0xf006 Trace mode
+//   0x00 off
+//   0x01 LED Display
+//   0x02 UART
+//   0x03 LED & UART
+//
+// 0xf010 - 0xf017 bank1
+// 0xf018 - 0xf01f bank2
 
-#define CLC4POL_SET 0x83
-#define CLC4POL_RESET 0x87
+unsigned char LED_CTL[32] = {0};	// 0xf000 - 0xf01f
 
-#define CLC5POL_SET 0x82	//POL=1, G2POL=1
-#define CLC5POL_RESET 0x86	//POL=1, G3POL,G2POL=1
+#define LED_REG_TOP 0xF000
+#define LED_REG_END 0xF01F
+#define LED_DISP_MODE LED_CTL[4]
+#define LED_INTENSITY LED_CTL[5]
+#define TRACE_MODE LED_CTL[6]
 
-#define CLC6POL_SET 0x83
-#define CLC6POL_RESET 0x87
+#define WAIT_LED_TRACE 150	// 150 msec
 
-#define CLC8POL_SET 0x82
-#define CLC8POL_RESET 0x86
+// 7 segment hex font
+const unsigned char LED_PAT[16]={
+	0b01111110, // 0
+	0b00110000, // 1
+	0b01101101, // 2
+	0b01111001, // 3
+	0b00110011, // 4
+	0b01011011, // 5
+	0b01011111, // 6
+	0b01110000, // 7
+	0b01111111, // 8
+	0b01111011, // 9
+	0b01110111, // A
+	0b00011111, // b
+	0b01001110, // C
+	0b00111101, // d
+	0b01001111, // E
+	0b01000111  // F
+};
 
-//Z80 ROM equivalent, see end of this file
+// Z80 ROM equivalent, see end of this file
 extern const unsigned char rom[];
 
-//Z80 RAM equivalent
-//unsigned char ram[RAM_SIZE];
+// Z80 RAM equivalent
+//volatile unsigned char ram[RAM_SIZE];
 asm("PSECT Z80RAM,class=BIGRAM,reloc=100h");
-unsigned char __section("Z80RAM") ram[RAM_SIZE]; // Equivalent to RAM
+volatile unsigned char __section("Z80RAM") ram[RAM_SIZE]; // Equivalent to RAM
 
+/////////////////////////////////////////////////////////////
 // UART ring buffer for XON/XOFF
 #define XON  0x11		// code DC1
 #define XOFF 0x13		// code DC3
@@ -236,16 +179,17 @@ unsigned char __section("Z80RAM") ram[RAM_SIZE]; // Equivalent to RAM
 
 unsigned char tx_buf[U3TB_SIZE];	//UART Tx ring buffer
 unsigned char rx_buf[U3RB_SIZE];	//UART Rx ring buffer
-unsigned char rx_xreq, rx_xflg;
+unsigned char rx_xflg, rx_xreq;
 unsigned int rx_wp, rx_rp, rx_cnt;
 unsigned int tx_wp, tx_rp, tx_cnt;
+/////////////////////////////////////////////////////////////
 
-//Address Bus
+// Address Bus
 union {
-	unsigned int w; //16 bits Address
+	unsigned int w;			// 16 bits Address
 	struct {
-		unsigned char l; //Address low
-		unsigned char h; //Address high
+		unsigned char l;	// Address low
+		unsigned char h;	// Address high
 	};
 } ab;
 
@@ -265,416 +209,250 @@ union {
 	};
 } adjCnt;
 
-/*
+unsigned char buf_bus;
+unsigned char buf_hex;
+unsigned char bus_direction;
+
 // UART3 Transmit
 void putch(char c) {
-	while(!U3TXIF); // Wait or Tx interrupt flag set
-	U3TXB = c; // Write data
+	while(!U3TXIF);		// Wait or Tx interrupt flag set
+	U3TXB = c;			// Write data
 }
 
+/*
 // UART3 Recive
 char getch(void) {
-	while(!U3RXIF); // Wait for Rx interrupt flag set
-	return U3RXB; // Read data
+	while(!U3RXIF); 	// Wait for Rx interrupt flag set
+	return U3RXB;		// Read data
 }
 */
 
-/////////////////////
-// main routine
-/////////////////////
-void main(void) {
-
-	// System initialize
-	OSCFRQ = 0x08; // 64MHz internal OSC
-
-	// Z80 clock(RA3) by NCO FDC mode
-	RA3PPS = 0x3f; // RA3 asign NCO1
-	ANSELA3 = 0; // Disable analog function
-	TRISA3 = 0; // NCO output pin
-
-//Z80_CLK (Max 16MHz)
-//
-//	NCO1INC = 524288;   // 16MHz
-//	NCO1INC = 327680;   // 10MHz
-//	NCO1INC = 196608;   // 6MHz
-//	NCO1INC = 131072;   // 4MHz
-	NCO1INC = 81920;    // 2.5MHz
-
-	NCO1CLK = 0x00; // Clock source Fosc
-	NCO1PFM = 0;  // FDC mode
-	NCO1EN = 1;   // NCO enable
-
-	// UART3 initialize XON/XOFF flow Control mode
-	// When an XOFF character is received, the transmitter stops
-	// transmitting after completing the character actively being
-	// transmitted. 
-	// The transmitter remains disabled until an XON character is received.
-
-//	U3BRG = 416;		// 9600bps @ 64MHz
-//	U3BRG = 208;		// 19200bps @ 64MHz
-//	U3BRG = 104;		// 38400bps @ 64MHz
-	U3BRG = 34;			// 115200bps @ 64MHz
-	U3CON2 = 0x81;		// RUNOVF=1: the XON and XOFF characters continue to be
-						//           received and processed without the need to clear
-						//           the input FIFO by reading UxRXB.
-						// FLO = 01: XON/XOFF Software flow control
-
-	// UART ring buffer init
-	rx_xreq = 0;
-	rx_xflg = XON;
-	rx_wp = rx_rp = rx_cnt = 0;
-	tx_wp = tx_rp = tx_cnt = 0;
-
-	U3RXEN = 1; // Receiver enable
-	U3TXEN = 1; // Transmitter enable
-
-	// UART3 Receiver
-	ANSELA7 = 0; // Disable analog function
-	TRISA7 = 1; // RX set as input
-	U3RXPPS = 0x07; //RA7->UART3:RX3;
-
-	// UART3 Transmitter
-	ANSELA6 = 0; // Disable analog function
-	LATA6 = 1; // Default level
-	TRISA6 = 0; // TX set as output
-	RA6PPS = 0x26;  //RA6->UART3:TX3;
-
-	U3ON = 1; // Serial port enable
-
-	// Address bus A15-A8 pin
-	ANSELD = 0x00; // Disable analog function
-	WPUD = 0xff; // Week pull up
-	TRISD = 0xff; // Set as input
-
-	// Address bus A7-A0 pin
-	ANSELB = 0x00; // Disable analog function
-	WPUB = 0xff; // Week pull up
-	TRISB = 0xff; // Set as input
-
-	// Data bus D7-D0 pin
-	ANSELC = 0x00; // Disable analog function
-	WPUC = 0xff; // Week pull up
-	TRISC = 0xff; // Set as input(default)
-
-	// WR input pin
-	ANSELE0 = 0; // Disable analog function
-	WPUE0 = 1; // Week pull up
-	TRISE0 = 1; // Set as input
-
-	// RESET output pin
-	ANSELE1 = 0; // Disable analog function
-	LATE1 = 0; // Reset
-	TRISE1 = 0; // Set as output
-
-	// INT output pin
-	ANSELE2 = 0; // Disable analog function
-	LATE2 = 1; // No interrupt request
-	TRISE2 = 0; // Set as output
-
-	// IOREQ input pin
-	ANSELA0 = 0; // Disable analog function
-	WPUA0 = 1; // Week pull up
-	TRISA0 = 1; // Set as input
-
-	// RD(RA5)  input pin
-	ANSELA5 = 0; // Disable analog function
-	WPUA5 = 1; // Week pull up
-	TRISA5 = 1; // Set as intput
-
-	// MREQ(RA1) CLC input pin
-	ANSELA1 = 0; // Disable analog function
-	WPUA1 = 1; // Week pull up
-	TRISA1 = 1; // Set as input
-
-	// RFSH(RA2) CLC input pin
-	ANSELA2 = 0; // Disable analog function
-	WPUA2 = 1; // Week pull up
-	TRISA2 = 1; // Set as input
-
-	// WAIT(RA4) CLC output pin
-	ANSELA4 = 0; // Disable analog function
-	LATA4 = 1; // Default level
-	TRISA4 = 0; // Set as output
-
-///////////////////////////////////////////////
-// Start CLC logic configuration
-
-//*** configure input signal for CLCINnPPS
-	CLCIN0PPS = 0x1; //MREQ(RA1)->CLCn_input(n:1), CLCIN0;
-	CLCIN1PPS = 0x2; //RFSH(RA2)->CLCn_input(n:1), CLCIN1;
-
-	CLCIN4PPS = 0x5; //RD(RA5)->CLCn_input(n:4,5,6,8)
-
-	CLCIN2PPS = 0x1f; //RD7(A15)->CLCn_input(n:2,3)
-	CLCIN3PPS = 0x1e; //RD6(A14)->CLCn_input(n:2,3)
-	CLCIN6PPS = 0x1d; //RD5(A13)->CLCn_input(n:2)
-	CLCIN7PPS = 0x1c; //RD4(A12)->CLCn_input(n:2)
-
-//*** configure CLCn output to out port register
-	RA4PPS = 0x01;  //CLC1_OUT -> WAIT(RA4):
-
-//-------------------CLC1 ---------------------
-// Make WAIT signal
-
-	CLCSELECT = 0x0; // select CLC1
-
-	CLCnPOL = 0x0;	// POL =0, G1POL=0,G2POL=0,G3POL=0,G4POL=0
-
-	// CLC data inputs select
-	CLCnSEL0 = 54; // CLC4OUT
-	CLCnSEL1 = 55; // CLC5OUT
-	CLCnSEL2 = 56; // CLC6OUT
-	CLCnSEL3 = 58; // CLC8OUT
-
-	CLCnGLS0 = 0x2;  // CLC4OUT
-	CLCnGLS1 = 0x8;  // CLC5OUT
-	CLCnGLS2 = 0x20; // CLC6OUT
-	CLCnGLS3 = 0x80; // CLC8OUT
-
-	CLCnCON = 0x82; // EN=1: (enable lcxq)
-					// Select 4-input AND
-
-//-------------------CLC2 ---------------------
-// RAM address decoder
-
-	CLCSELECT = 0x1; // select CLC2
-
-	CLCnPOL = 0x0D;	// POL =0, G1POL=1, G3POL=1, G4POL=1
-
-	// CLC data inputs select
-	CLCnSEL0 = 2; // CLCIN2PPS(A15)
-	CLCnSEL1 = 3; // CLCIN3PPS(A14)
-	CLCnSEL2 = 6; // CLCIN6PPS(A13)
-	CLCnSEL3 = 7; // CLCIN7PPS(A12)
-
-	CLCnGLS0 = 0x5;   // OR(not(A15), not(A14))
-					  // G1POL=1, then lcxg1 is inverted.
-					  // it's same to (A15 AND A14)
-	CLCnGLS1 = 0x50;  // OR(not(A13), not(A12))
-	CLCnGLS2 = 0;     // only 0
-	CLCnGLS3 = 0;     // only 0
-
-	CLCnCON = 0x82; // EN=1: (enable lcxq)
-					// Select 4-input AND
-
-//-------------------CLC3 ---------------------
-// ROM address decoder
-
-	CLCSELECT = 0x2; // select CLC3
-
-	CLCnPOL = 0x8c;  // POL = 1, G4POL=1, G3POL=1
-
-	// CLC data inputs select
-	CLCnSEL0 = 2; // CLCIN2PPS(A15)
-	CLCnSEL1 = 3; // CLCIN3PPS(A14)
-	CLCnSEL2 = 127; // not assign
-	CLCnSEL3 = 127; // not assign
-
-	CLCnGLS0 = 0x2;  // Connect only CLCIN3PPS(A15)
-	CLCnGLS1 = 0x8;  // Connect only CLCIN4PPS(A14)
-	CLCnGLS2 = 0x0;  // Connect none (output 0)
-	CLCnGLS3 = 0x0;  // Connect none (output 0)
-
-	CLCnCON = 0x82; // EN=1: (enable lcxq)
-					// Select 4-input AND
-
-//-------------------CLC4 ---------------------
-// RAM-READ request logic
-
-	CLCSELECT = 0x3; // select CLC4
-
-	CLCnPOL = CLC4POL_SET;  // POL=1, G1POL=1, G2POL=1
-
-	// CLC data inputs select
-	CLCnSEL0 = 0;   // CLCIN0PPS(MREQ)
-
-	CLCnSEL1 = 1;   // CLCIN1PPS(RFSH)
-	CLCnSEL2 = 52;  // CLC2_out( RAM area signal )
-	CLCnSEL3 = 4;   // CLCIN4PPS(RD)
-
-	CLCnGLS0 = 0x82; // OR(MREQ, RD), G1POL=1
-					 // Same meaning NOR(MREQ, RD)
-	CLCnGLS1 = 0x14; // OR( not(RFSH), not CLCC2_out ), G2POL=1
-					 // Same meaning AND(RFSH, CLCC2_out)
-	CLCnGLS2 = 0x0;  // Connect none (output 0)
-	CLCnGLS3 = 0x0;  // Connect none (output 0)
-
-	CLCnCON = 0x04; // Select D-FF
-
-	G3POL = 1;
-	G3POL = 0;
-
-	CLCnCON = 0x8c; // EN=1: (enable lcxq)
-					// INTN=1: (falling edge inturrupt)
-
-//-------------------CLC5 ---------------------
-// RAM-WRITE request logic
-
-	CLCSELECT = 0x4; // select CLC5
-
-	CLCnPOL = CLC5POL_SET;  // POL=1, G2POL=1
-
-	// CLC data inputs select
-
-	CLCnSEL0 = 57;   // CLC7_out
-
-	CLCnSEL1 = 1;   // CLCIN1PPS(RFSH)
-	CLCnSEL2 = 52;  // CLC2_out( RAM area signal )
-	CLCnSEL3 = 4;   // CLCIN4PPS(RD)
-
-	CLCnGLS0 = 0x01; // not CLC7_out
-	CLCnGLS1 = 0x54; // OR(not(RFSH), not(CLCC2_out), not(RD)), G2POL=1
-					 // Same meaning AND(RFSH, CLCC2_out, RD)
-	CLCnGLS2 = 0x0;  // Connect none (output 0)
-	CLCnGLS3 = 0x0;  // Connect none (output 0)
-
-	CLCnCON = 0x04; // Select D-FF
-
-	// Reset D-FF
-	G3POL = 1;
-	G3POL = 0;
-
-	CLCnCON = 0x8c; // EN=1: (enable lcxq)
-					// INTN=1: (falling edge inturrupt)
-
-//-------------------CLC6 ---------------------
-// ROM-READ request logic
-
-	CLCSELECT = 0x5; // select CLC6
-
-	CLCnPOL = CLC6POL_SET;  // POL=1, G1POL=1, G2POL=1
-
-	// CLC data inputs select
-	CLCnSEL0 = 0;   // CLCIN0PPS(MREQ)
-
-	CLCnSEL1 = 1;   // CLCIN1PPS(RFSH)
-	CLCnSEL2 = 53;  // CLC3_out( ROM area signal )
-	CLCnSEL3 = 4;   // CLCIN4PPS(RD)
-
-	CLCnGLS0 = 0x82; // OR(MREQ, RD), G1POL=1
-					 // Same meaning NOR(MREQ, RD)
-	CLCnGLS1 = 0x14; // OR( not(RFSH), not CLCC3_out ), G2POL=1
-					 // Same meaning AND(RFSH, CLCC3_out)
-	CLCnGLS2 = 0x0;  // Connect none (output 0)
-	CLCnGLS3 = 0x0;  // Connect none (output 0)
-
-	CLCnCON = 0x04;  // Select D-FF
-	G3POL = 1;
-	G3POL = 0;
-
-	CLCnCON = 0x8c; // EN=1: (enable lcxq)
-					// INTN=1: (falling edge inturrupt)
-
-//-------------------CLC7 ---------------------
-// wait MREQ for RAM-Write CLK
-
-	CLCSELECT = 0x6; // select CLC7
-
-	CLCnPOL = 0;  // all POL=0
-
-	// CLC data inputs select
-	CLCnSEL0 = 8;   // FOSC
-	CLCnSEL1 = 0;   // CLCIN0PPS(MREQ)
-	CLCnSEL2 = 127; // not assign
-	CLCnSEL3 = 127; // not assign
-
-	CLCnGLS0 = 0x02; // not invert
-	CLCnGLS1 = 0x08; // MREQ( not invert )
-	CLCnGLS2 = 0x0;  // Connect none (output 0)
-	CLCnGLS3 = 0x0;  // Connect none (output 0)
-
-	CLCnCON = 0x04;  // Select D-FF
-	CLCnCON = 0x84; // EN=1: (enable lcxq)
-
-//-------------------CLC8 ---------------------
-// I/O Accsess Request logic
-
-	CLCSELECT = 0x7; // select CLC8
-
-	CLCnPOL = CLC8POL_SET; // POL=1,  G2POL=1
-
-	// CLC data inputs select
-	CLCnSEL0 = 0;   // CLCIN0PPS(MREQ)
-	CLCnSEL1 = 1;   // CLCIN1PPS(RFSH)
-	CLCnSEL2 = 52;  // CLC2_out
-	CLCnSEL3 = 53;  // CLC3_out
-
-	CLCnGLS0 = 0x1;  // MREQ is negated
-	CLCnGLS1 = 0xA4; // OR(not(RFSH), CLC2_out, CLC3_out), G2POL
-					 // Same meaning AND(RFSH, not(CLC2_out), not(CLCC3_out))
-	CLCnGLS2 = 0x0;  // Connect none (output 0)
-	CLCnGLS3 = 0x0;  // Connect none (output 0)
-
-	CLCnCON = 0x04;  // Select D-FF
-
-	G3POL = 1;
-	G3POL = 0;
-
-	CLCnCON = 0x8c; // EN=1: (enable lcxq)
-					// INTN=1: (falling edge inturrupt)
-
-// END CLC logic configuration
-///////////////////////////////////////////////
-
-	// timer0 setup
-	T0CON0 = 0x10;	// timer disable, 16bit counter mode , 1:1 Postscaler
-	T0CON1 = 0x80;	// sorce clk:LFINTOSC, 1:1 Prescaler
-
-	TMR0L = TIMER0_INITCL;
-	TMR0H = TIMER0_INITCH;		//	timer counter set to 0x86e8
-								//  LFINTOSC = 31Khz!!
-	secCnt.w = 0;				// clear seconds counter
-	adjCnt.w = TIMER0_INITC;	// set initial adjust timer counter
-								// LFINTOSC = 31KHz
-	// Unlock IVT
-	IVTLOCK = 0x55;
-	IVTLOCK = 0xAA;
-	IVTLOCKbits.IVTLOCKED = 0x00;
-
-	// Default IVT base address
-	IVTBASE = 0x000008;
-
-	// Lock IVT
-	IVTLOCK = 0x55;
-	IVTLOCK = 0xAA;
-	IVTLOCKbits.IVTLOCKED = 0x01;
-
-	CLC4IF = 0; // Clear the CLC4 interrupt flag
-	CLC5IF = 0; // Clear the CLC5 interrupt flag
-	CLC6IF = 0; // Clear the CLC6 interrupt flag
-	CLC8IF = 0; // Clear the CLC8 interrupt flag
-
-	TMR0IF =0; // Clear timer0 interrupt flag
-
-	GIE = 1;					// Global interrupt enable
-
-	CLC4IE = 1; // Enabling CLC4 interrupt
-	CLC5IE = 1; // Enabling CLC5 interrupt
-	CLC6IE = 1; // Enabling CLC6 interrupt
-	CLC8IE = 1; // Enabling CLC8 interrupt
-
-	TMR0IE = 1;	// Enable timer0 interrupt
-
-	// UART ready to start
-	while(!U3TXIF);		// Wait or Tx interrupt flag set
-	U3TXB = XON; 		// Write XON data
-
-	U3RXIE = 1; // enable Receive interrupt
-//	U3TXIE = 1; // enable Trancemit interrupt
-
-
-	// Z80 start
-	LATE1 = 1; // Release reset
-
-	////////////////////////////////////////////
-	// LOOP forever
-	////////////////////////////////////////////
-
-	while(1) {}
+void ledwrite(char r, char c) {
+	int i;
+	bus_direction = TRISC;
+	LATE0 = 0;		// /BUSREQ = Low
+//	while(RA0)		// Confirm /BUSACK
+
+	TRISC = TRISC & 0xfc;	// DIN(RC0) and CLK(RC1) output pin
+
+	LATC0 = 0;		// MAX7219 DIN=0
+	LATE2 = 0;		// MAX7219 /CS=Low
+
+	for(i = 0; i < 8; i++) {
+		LATC1 = 0;		// MAX7219 CLK=0
+		if(r & 0x80)
+			LATC0 = 1;
+		else
+			LATC0 = 0;
+		LATC1 = 1;		// MX7219 CLK=High
+		r = (char)(r << 1);
+	}
+	for(i = 0; i < 8; i++) {
+		LATC1 = 0;		// MAX7219 CLK=0
+		if(c & 0x80)
+			LATC0 = 1;
+		else
+			LATC0 = 0;
+		LATC1 = 1;		// MX7219 CLK=High
+		c = (char)(c << 1);
+	}
+	LATE2 = 1;		// MX7219 /CS=High
+	LATE0 = 1;		// /BUSREQ = High
+	TRISC = bus_direction;
+}
+
+void led_off(void) {
+	ledwrite(1, 0);
+	ledwrite(2, 0);
+	ledwrite(3, 0);
+	ledwrite(4, 0);
+	ledwrite(5, 0);
+	ledwrite(6, 0);
+	ledwrite(7, 0);
+	ledwrite(8, 0);
+}
+
+void led_on(void) {
+	ledwrite(1, 0xff);
+	ledwrite(2, 0xff);
+	ledwrite(3, 0xff);
+	ledwrite(4, 0xff);
+	ledwrite(5, 0xff);
+	ledwrite(6, 0xff);
+	ledwrite(7, 0xff);
+	ledwrite(8, 0xff);
+}
+
+void led_disp_hex(char pos, unsigned char data) {
+	buf_hex = data & 0x0f;
+	ledwrite(7-pos*2, LED_PAT[buf_hex]);
+	buf_hex = data >> 4;
+	ledwrite(8-pos*2, LED_PAT[buf_hex]);
+}
+
+void led_dump(void) {
+	led_disp_hex(0, LED_CTL[0]);
+	led_disp_hex(1, LED_CTL[1]);
+	led_disp_hex(2, LED_CTL[2]);
+	led_disp_hex(3, LED_CTL[3]);
+}
+
+void led_disp_bus(unsigned int addr, unsigned char data, int write_flag) {
+	buf_bus = addr >> 8;
+	led_disp_hex(0, buf_bus);
+	buf_bus = addr & 0xff;
+	led_disp_hex(1, buf_bus);
+	if(write_flag) {
+		ledwrite(4, 0x80);
+		ledwrite(3, 0x80);
+	} else {
+		ledwrite(4, 0x00);
+		ledwrite(3, 0x00);
+	}
+	led_disp_hex(3, data);
+	__delay_ms(WAIT_LED_TRACE);
 }
 
 // Never called, logically
 void __interrupt(irq(default),base(8)) Default_ISR(){}
+
+// Called at WAIT falling edge(Immediately after Z80 MREQ falling)
+void __interrupt(irq(CLC1),base(8)) CLC_ISR(){
+	unsigned char rd_data;
+	char i;
+
+	CLC1IF = 0;		// Clear interrupt flag
+
+	ab.h = PORTD;	// Read address high
+	ab.l = PORTB;	// Read address low
+
+	if(!RA5) {		// RA5=/RD
+		// Z80 memory read cycle
+		TRISC = 0x00;						// Set data bus as output
+		if(CLC3OUT)							// ROM area
+			rd_data = rom[ab.w];			// Out ROM data
+		else if(CLC2OUT)					// RAM area
+			rd_data = ram[ab.w - RAM_TOP];	// Out RAM data
+		else if(ab.w == UART_CREG)			// PIR9
+			//////////////// UART3 buffer status ////////////////////////////
+			rd_data = (unsigned char)(((tx_cnt != U3TB_SIZE) << 1) | (rx_cnt != 0));
+			////////////////////////////////////////////////////////////////
+		else if(ab.w == UART_DREG) {		// U3RXB
+			//////////////// Read Rx data form Rx buffer ///////////////////
+			if ( !rx_cnt ) rd_data = 0;
+			else {
+				rd_data = rx_buf[rx_rp];
+				rx_rp = (rx_rp + 1) & ( U3RB_SIZE - 1);
+				rx_cnt--;
+				if ( (rx_xflg == XOFF) && (rx_cnt == 10) ) {
+					rx_xreq = rx_xflg = XON;
+					U3TXIE = 1;
+				}
+			}
+			////////////////////////////////////////////////////////////////
+		}
+		else if(ab.w == TIM0_CTL0) //timer0 control0
+			rd_data = T0CON0;
+		else if(ab.w == TIM0_CTL1) //timer0 control0
+			rd_data = T0CON1;
+		else if(ab.w == TIMER0_CNTL) //timer0 16bit counter(LSB)
+			rd_data = TMR0L;
+		else if(ab.w == TIMER0_CNTH) //timer0 16bit counter(MSB)
+			rd_data = TMR0H;
+		else if(ab.w == TIMER0_SCTL) //timer0 seconds counter(LSB)
+			rd_data = secCnt.l;
+		else if(ab.w == TIMER0_SCTH) //timer0 seconds counter(LSB)
+			rd_data = secCnt.h;
+		else if(ab.w == TIM0_ADJL) //timer0 adjust counter(LSB)
+			rd_data = adjCnt.l;
+		else if(ab.w == TIM0_ADJH) //timer0 adjust counter(MSB)
+			rd_data = adjCnt.h;
+		else if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END))
+			rd_data = LED_CTL[ab.w - LED_REG_TOP];
+		else								// Empty
+			rd_data = 0xff;					// Invalid data
+
+		if(LED_DISP_MODE == 0x04) {			// Trace mode
+			if(TRACE_MODE & 0x01)
+				led_disp_bus(ab.w, rd_data, 0);
+			if(TRACE_MODE & 0x02)
+				printf("RD ADDR:%04X,DATA:%02X\r\n", ab.w, rd_data);
+		}
+		LATC = rd_data;
+		// Release wait (D-FF reset)
+		G3POL = 1;
+		G3POL = 0;
+
+		// Post processing
+		while(!RA1);
+		TRISC = 0xff; //Set as input
+		return;
+	}
+	// Z80 memory write cycle
+	if(CLC2OUT)							// RAM area
+		ram[ab.w - RAM_TOP] = PORTC;	// Write into RAM
+	else if(ab.w == UART_DREG) {		// U3TXB
+		//////////////// Write Tx data form Tx buffer ///////////////////
+		if (tx_cnt < U3TB_SIZE) {
+			tx_buf[tx_wp] = PORTC;
+			tx_wp = (tx_wp + 1) & (U3TB_SIZE - 1);
+			tx_cnt++;
+			U3TXIE = 1;
+		}
+		////////////////////////////////////////////////////////////////
+	}
+	else if(ab.w == TIM0_CTL0) //timer0 control0
+		T0CON0 = PORTC;
+	else if(ab.w == TIM0_CTL1) //timer0 control0
+		T0CON1 = PORTC;
+	else if(ab.w == TIMER0_CNTL) //timer0 16bit counter(LSB)
+		TMR0L = PORTC;
+	else if(ab.w == TIMER0_CNTH) //timer0 16bit counter(MSB)
+		TMR0H = PORTC;
+	else if(ab.w == TIMER0_SCTL) //timer0 seconds counter(LSB)
+		secCnt.l = PORTC;
+	else if(ab.w == TIMER0_SCTH) //timer0 seconds counter(LSB)
+		secCnt.h = PORTC;
+	else if(ab.w == TIM0_ADJL) //timer0 adjust counter(LSB)
+		adjCnt.l = PORTC;
+	else if(ab.w == TIM0_ADJH) //timer0 adjust counter(MSB)
+		adjCnt.h = PORTC;
+	else if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END)) {
+		LED_CTL[ab.w - LED_REG_TOP] = PORTC; // Write into LED Registor
+		if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_TOP+3)){
+			led_dump();
+			LED_DISP_MODE = 3;
+		}
+		else if(ab.w == LED_REG_TOP+4) {
+			if(LED_DISP_MODE == 0)			// off
+				led_off();
+			else if(LED_DISP_MODE == 1)		// bank1
+				for (i = 0; i < 8; i++)
+					ledwrite(i+1, LED_CTL[0x17-i]);
+			else if(LED_DISP_MODE == 2)		// bank 2
+				for (i = 0; i < 8; i++)
+					ledwrite(i+1, LED_CTL[0x1f-i]);
+			else if(LED_DISP_MODE == 3)		// dump 0xf000 - 0xf003
+				led_dump();
+			else if(LED_DISP_MODE == 0xff)	// "8888 8888"
+				led_on();
+		}
+		else if(ab.w == LED_REG_TOP+5) {
+			ledwrite(0x0A, LED_INTENSITY);	// Intensity , Duty Cycle 0x00=1/32 .. 0x0F=31/32
+		}
+	}
+
+	if(LED_DISP_MODE == 0x04) {			// Trace mode
+		if(TRACE_MODE & 0x01)
+			led_disp_bus(ab.w, PORTC, 1);
+		if(TRACE_MODE & 0x02)
+			printf("WR ADDR:%04X,DATA:%02X\r\n", ab.w, PORTC);
+	}
+
+	// Release wait (D-FF reset)
+	G3POL = 1;
+	G3POL = 0;
+}
 
 ////////////// UART3 Transmit interrupt /////////////////////////
 //UART3 Tx interrupt
@@ -683,19 +461,11 @@ void __interrupt(irq(U3TX),base(8)) URT3Tx_ISR(){
 
 	if ( rx_xreq ) {
 		U3TXB = rx_xreq;
-
-/*/test
-		if (rx_xreq == XON) tx_buf[tx_wp] = 'b';
-		else tx_buf[tx_wp] = 'a';   // XOFF
-		tx_wp = (tx_wp + 1) & (U3TB_SIZE - 1);
-		tx_cnt++;
-*///test
-
 		rx_xreq = 0;
-		if ( !tx_cnt ) U3TXIE = 0;  	// disable Tx interrupt
+		if ( !tx_cnt ) U3TXIE = 0;		// disable Tx interrupt
 	}
 	else {
-		if ( !tx_cnt ) U3TXIE = 0;  	// disable Tx interrupt
+		if ( !tx_cnt ) U3TXIE = 0;		// disable Tx interrupt
 		else {
 			U3TXB = tx_buf[tx_rp];
 			tx_rp = (tx_rp + 1) & ( U3TB_SIZE - 1);
@@ -721,16 +491,6 @@ void __interrupt(irq(U3RX),base(8)) URT3Rx_ISR(){
 			U3TXIE = 1;
 		}
 	}
-
-/* test
-	else {
-		tx_buf[tx_wp] = 'c';
-		tx_wp = (tx_wp + 1) & (U3TB_SIZE - 1);
-		tx_cnt++;
-		U3TXIE = 1;
-	}
-*/
-
 }
 
 ////////////// TIMER0 vector interrupt ////////////////////////////
@@ -746,7 +506,7 @@ void __interrupt(irq(TMR0),base(8)) TIMER0_ISR(){
 		};
 	} tmpCnt;
 
-	TMR0IF =0; // Clear timer0 interrupt flag
+	TMR0IF = 0; // Clear timer0 interrupt flag
 
 	// adjust timer conter
 
@@ -761,192 +521,231 @@ void __interrupt(irq(TMR0),base(8)) TIMER0_ISR(){
 	secCnt.w += 1;	// count seconds timer
 }
 
+// main routine
+void main(void) {
 
-////////////// CLC4 vector interrupt ////////////////////////////
-// RAM READ  request occurrs.
+	// System initialize
+	OSCFRQ = 0x08;	// 64MHz internal OSC
+
+	// Address bus A15-A8 pin
+	ANSELD = 0x00;	// Disable analog function
+	WPUD = 0xff;	// Week pull up
+	TRISD = 0xff;	// Set as input
+
+	// Address bus A7-A0 pin
+	ANSELB = 0x00;	// Disable analog function
+	WPUB = 0xff;	// Week pull up
+	TRISB = 0xff;	// Set as input
+
+	// Data bus D7-D0 pin
+	ANSELC = 0x00;	// Disable analog function
+	WPUC = 0xff;	// Week pull up
+	TRISC = 0xff;	// Set as input(default)
+
+	// /BUSRQ(RE0) output pin
+	ANSELE0 = 0;	// Disable analog function
+	LATE0 = 0;		// /BUSREQ
+	TRISE0 = 0;		// Set as output
+
+	// /RESET(RE1) output pin
+	ANSELE1 = 0;	// Disable analog function
+	LATE1 = 0;		// Reset
+	TRISE1 = 0;		// Set as output
+
+	// /CS(RE2) output pin
+	ANSELE2 = 0;	// Disable analog function
+	LATE2 = 1;		// LED /CS
+	TRISE2 = 0;		// Set as output
+
+	// /MREQ(RA1) input pin
+	ANSELA1 = 0;	// Disable analog function
+	WPUA1 = 1;		// Week pull up
+	TRISA1 = 1;		// Set as input
+
+	// /BUSACK(RA0) input pin
+	ANSELA0 = 0;	// Disable analog function
+	WPUA0 = 1;		// Week pull up
+	TRISA0 = 1;		// Set as input
+
+	// /RD(RA5) input pin
+	ANSELA5 = 0;	// Disable analog function
+	WPUA5 = 1;		// Week pull up
+	TRISA5 = 1;		// Set as intput
+
+	// /RFSH(RA2) input pin
+	ANSELA2 = 0;	// Disable analog function
+	WPUA2 = 1;		// Week pull up
+	TRISA2 = 1;		// Set as input
+
+	// /WAIT(RA4) output pin
+	ANSELA4 = 0;	// Disable analog function
+	LATA4 = 1;		// Default level
+	TRISA4 = 0;		// Set as output
+
+	// Z80 clock(RA3) by NCO FDC mode
+	RA3PPS = 0x3f;	// RA3 asign NCO1
+	ANSELA3 = 0;	// Disable analog function
+	TRISA3 = 0;		// NCO output pin
+	NCO1INC = Z80_CLK * 2 / 61;
+	NCO1CLK = 0x00;	// Clock source Fosc
+	NCO1PFM = 0;	// FDC mode
+	NCO1OUT = 1;	// NCO output enable
+	NCO1EN = 1;		// NCO enable
+
+	// UART3 initialize
+	U3BRG = 416;	// 9600bps @ 64MHz
+//	U3BRG = 208;	// 19200bps @ 64MHz
+//	U3BRG = 104;	// 38400bps @ 64MHz
+//	U3BRG = 34;		// 115200bps @ 64MHz
+	U3CON2 = 0x81;	// RUNOVF=1: the XON and XOFF characters continue to be
+					//           received and processed without the need to clear
+					//           the input FIFO by reading UxRXB.
+					// FLO = 01: XON/XOFF Software flow control
+
+	// UART ring buffer init
+	rx_xreq = 0;
+	rx_xflg = XON;
+	rx_wp = rx_rp = rx_cnt = 0;
+	tx_wp = tx_rp = tx_cnt = 0;
+
+	U3RXEN = 1;			// Receiver enable
+	U3TXEN = 1;			// Transmitter enable
+
+	// UART3 Receiver
+	ANSELA7 = 0;		// Disable analog function
+	TRISA7 = 1;			// RX set as input
+	U3RXPPS = 0x07;		// RA7->UART3:RX3;
+
+	// UART3 Transmitter
+	ANSELA6 = 0;		// Disable analog function
+	LATA6 = 1;			// Default level
+	TRISA6 = 0;			// TX set as output
+	RA6PPS = 0x26;		// RA6->UART3:TX3;
+
+	U3ON = 1;			// Serial port enable
+
+	//========== CLC input pin assign ===========
+	CLCIN0PPS = 0x01;	// RA1 <- /MREQ
+	CLCIN1PPS = 0x02;	// RA2 <- /RFSH
+	CLCIN2PPS = 0x1f;	// RD7 <- A15
+	CLCIN3PPS = 0x1e;	// RD6 <- A14
+	CLCIN4PPS = 0x05;	// RA5 <- /RD
+	CLCIN6PPS = 0x1d;	// RD5 <- A13
+	CLCIN7PPS = 0x1c;	// RD4 <- A12
+
+	//========== CLC1 /WAIT ==========
+	CLCSELECT = 0;		// CLC1 select
+
+	CLCnSEL0 = 0;		// D-FF CLK CLCIN0PPS <- /MREQ
+	CLCnSEL1 = 1;		// D-FF D CLCIN1PPS <- /RFSH
+	CLCnSEL2 = 127;		// D-FF S NC
+	CLCnSEL3 = 127;		// D-FF R NC
+
+	CLCnGLS0 = 0x01;	// LCG1D1N
+	CLCnGLS1 = 0x04;	// LCG2D1N
+	CLCnGLS2 = 0x00;	// Connect none
+	CLCnGLS3 = 0x00;	// Connect none
+
+	CLCnPOL = 0x82;		// inverted the CLC1 output, G0 inverted
+	CLCnCON = 0x8c;		// Select D-FF, falling edge inturrupt
+
+	//========== CLC2 RAM address decoder 0xC000 - 0xEFFF ==========
+	CLCSELECT = 1;		// CLC2 select
+
+	CLCnSEL0 = 2;		// CLCIN2PPS <- A15
+	CLCnSEL1 = 3;		// CLCIN3PPS <- A14
+	CLCnSEL2 = 6;		// CLCIN6PPS <- A13
+	CLCnSEL3 = 7;		// CLCIN7PPS <- A12
+
+	CLCnGLS0 = 0x05;	// OR(not(A15), not(A14)),
+						// G1POL=1 -> (A15 AND A14)
+	CLCnGLS1 = 0x50;	// OR(not(A13), not(A12))
+	CLCnGLS2 = 0x00;	// Connect none, G3POL=1 -> 1
+	CLCnGLS3 = 0x00;	// Connect none, G4POL=1 -> 1
+
+	CLCnPOL = 0x0d;		// Noninverted the CLC2 output,
+						// G1POL=1, G3POL=1, G4POL=1
+	CLCnCON = 0x82;		// 4 input AND
+
+	//========== CLC3 ROM address decoder 0x0000 - 0xBFFF ==========
+	CLCSELECT = 2;		// CLC3 select
+
+	CLCnSEL0 = 2;		// CLCIN2PPS <- A15
+	CLCnSEL1 = 3;		// CLCIN3PPS <- A14
+	CLCnSEL2 = 4;		// CLCIN4PPS <- /RD
+	CLCnSEL3 = 127;		// NC
+
+	CLCnGLS0 = 0x05;	// OR(not(A15), not(A14))
+	CLCnGLS1 = 0x10;	// /RD inverted
+	CLCnGLS2 = 0x00;	// Connect none, G3POL=1 -> 1
+	CLCnGLS3 = 0x00;	// Connect none, G4POL=1 -> 1
+
+	CLCnPOL = 0x0c;		// Noninverted the CLC3 output,
+						// G3POL=1, G4POL=1
+	CLCnCON = 0x82;		// 4 input AND
+
+	//========== CLC output pin assign ===========
+	// 1,2,5,6 = Port A, C
+	// 3,4,7,8 = Port B, D
+	RA4PPS = 0x01;		// CLC1OUT -> RA4 -> /WAIT
+
+	CLCSELECT = 0;		// CLC1 select
+
+	// timer0 setup
+	T0CON0 = 0x10;	// timer disable, 16bit counter mode , 1:1 Postscaler
+	T0CON1 = 0x80;	// sorce clk:LFINTOSC, 1:1 Prescaler
+
+	TMR0L = TIMER0_INITCL;
+	TMR0H = TIMER0_INITCH;		// timer counter set to 0x86e8
+								// LFINTOSC = 31Khz!!
+	secCnt.w = 0;				// clear seconds counter
+	adjCnt.w = TIMER0_INITC;	// set initial adjust timer counter
+								// LFINTOSC = 31KHz
+
+	// Unlock IVT
+	IVTLOCK = 0x55;
+	IVTLOCK = 0xAA;
+	IVTLOCKbits.IVTLOCKED = 0x00;
+
+	// Default IVT base address
+	IVTBASE = 0x000008;
+
+	// Lock IVT
+	IVTLOCK = 0x55;
+	IVTLOCK = 0xAA;
+	IVTLOCKbits.IVTLOCKED = 0x01;
+
+	// CLC VI enable
+	CLC1IF = 0;		// Clear the CLC interrupt flag
+	CLC1IE = 1;		// Enabling CLC1 interrupt
+
+/////// Set UART3 to XON and enable interrupt ////////////////////
+	while(!U3TXIF) {}	// Wait or Tx interrupt flag set
+	U3TXB = XON;		// Write data
+	U3RXIE = 1;			// enable Receive interrupt
+//	U3TXIE = 1;			// enable Trancemit interrupt
 /////////////////////////////////////////////////////////////////
-void __interrupt(irq(CLC4),base(8)) CLC4_ISR(){
 
-	CLC4IF = 0; // Clear interrupt flag
-	TRISC = 0x00; // Set data bus as output
+	TMR0IF =0;		// Clear timer0 interrupt flag
+	TMR0IE = 1;		// Enable timer0 interrupt
 
-	ab.h = PORTD; // Read address high
-	ab.l = PORTB; // Read address low
+	// Z80 start
+	GIE = 1;		// Global interrupt enable
 
-	LATC = ram[ab.w & RAM_MSK];
+	ledwrite(0x0F, 0x00);	// display test , normal operation
+	ledwrite(0x0A, 0x00);	// Intensity , Duty Cycle 0x00=1/32 .. 0x0F=31/32
+	ledwrite(0x0B, 0x07);	// scan limit , display 0 to 7
+	ledwrite(0x0C, 0x01);	// shutdown mode register , normal operation
+	ledwrite(0x09, 0x00);	// No decode for digits 0-7
+	led_off();
 
-	// RESET CLC4 DFF
-	CLCSELECT = 0x3; // select CLC4
-	G3POL = 1;
-	G3POL = 0;
+//	TRACE_MODE = 1;			// LED Display
+//	LED_DISP_MODE = 4;		// Trace mode
 
-	//Post processing
-	while(!RA1);
-	TRISC = 0xff; // Set data bus as output
-}
+	LATE1 = 1;		// Release reset
 
-////////////// CLC5 vector interrupt ////////////////////////////
-// RAM WRITE  request occurrs.
-/////////////////////////////////////////////////////////////////
-void __interrupt(irq(CLC5),base(8)) CLC5_ISR(){
-
-	CLC5IF = 0; // Clear interrupt flag
-
-	ab.h = PORTD; // Read address high
-	ab.l = PORTB; // Read address low
-
-	ram[ab.w & RAM_MSK] = PORTC;
-
-	// RESET CLC5(RAM WRITE) DFF
-	CLCSELECT = 0x4; // select CLC5
-	G3POL = 1;
-	G3POL = 0;
-
-}
-
-////////////// CLC6 vector interrupt ////////////////////////////
-// ROM READ  request occurrs
-/////////////////////////////////////////////////////////////////
-void __interrupt(irq(CLC6),base(8)) CLC6_ISR(){
-
-	CLC6IF = 0;		// Clear interrupt flag
-	TRISC = 0x00;	// Set data bus as output
-
-	ab.h = PORTD; // Read address high
-	ab.l = PORTB; // Read address low
-
-	LATC = rom[ab.w];
-
-	// RESET CLC6(ROM READ) DFF
-	CLCSELECT = 0x5; 			// select CLC6
-	G3POL = 1;
-	G3POL = 0;
-
-	//Post processing
-	while(!RA1);
-	TRISC = 0xff; //Set as input
-}
-
-////////////// CLC8 vector interrupt ////////////////////////////
-// I/O READ/WRITE request occurrs.
-//
-// Check UART address.
-// if it's UART read/write request, 
-//    then UART read operation can do it.
-/////////////////////////////////////////////////////////////////
-
-void __interrupt(irq(CLC8),base(8)) CLC8_ISR(){
-
-	CLC8IF = 0; // Clear interrupt flag
-	ab.h = PORTD; // Read address high
-	ab.l = PORTB; // Read address low
-
-	switch (RA5) {	// check RD signal
-		case 0: // Read reauest
-
-			TRISC = 0x00; // Set data bus as output
-			switch (ab.w) {
-				case UART_CREG:
-					LATC = (unsigned char)(((tx_cnt != U3TB_SIZE) << 1) | (rx_cnt != 0));
-					break;
-				case UART_DREG:
-					if ( !rx_cnt ) LATC = 0;
-					else {
-						LATC = rx_buf[rx_rp];
-						rx_rp = (rx_rp + 1) & ( U3RB_SIZE - 1);
-						rx_cnt--;
-						if ( (rx_xflg == XOFF) && (rx_cnt == 10) ) {
-							rx_xreq = rx_xflg = XON;
-							U3TXIE = 1;
-						}
-					}
-					break;
-				case TIM0_CTL0: //timer0 control0
-					LATC = T0CON0;
-					break;
-				case TIM0_CTL1: //timer0 control0
-					LATC = T0CON1;
-					break;
-				case TIMER0_CNTL: //timer0 16bit counter(LSB)
-					LATC = TMR0L;
-					break;
-				case TIMER0_CNTH: //timer0 16bit counter(MSB)
-					LATC = TMR0H;
-					break;
-				case TIMER0_SCTL: //timer0 seconds counter(LSB)
-					LATC = secCnt.l;
-					break;
-				case TIMER0_SCTH: //timer0 seconds counter(LSB)
-					LATC = secCnt.h;
-					break;
-				case TIM0_ADJL: //timer0 adjust counter(LSB)
-					LATC = adjCnt.l;
-					break;
-				case TIM0_ADJH: //timer0 adjust counter(MSB)
-					LATC = adjCnt.h;
-					break;
-
-				default:
-					LATC = 0xff; // address is illegal
-			}
-
-			// RESET CLC8  DFF
-			CLCSELECT = 0x7; // select CLC8
-			G3POL = 1;
-			G3POL = 0;
-
-			//Post processing
-			while(!RA1);
-			TRISC = 0xff; //Set as input
-			break;
-
-		case 1: // Write reauest
-			switch (ab.w) {
-				case UART_DREG:
-					if ( tx_cnt < U3TB_SIZE ) {
-						tx_buf[tx_wp] = PORTC;
-						tx_wp = (tx_wp + 1) & (U3TB_SIZE - 1);
-						tx_cnt++;
-						U3TXIE = 1;
-					}
-					break;
-				case TIM0_CTL0: //timer0 control0
-					T0CON0 = PORTC;
-					break;
-				case TIM0_CTL1: //timer0 control0
-					T0CON1 = PORTC;
-					break;
-				case TIMER0_CNTL: //timer0 16bit counter(LSB)
-					TMR0L = PORTC;
-					break;
-				case TIMER0_CNTH: //timer0 16bit counter(MSB)
-					TMR0H = PORTC;
-					break;
-				case TIMER0_SCTL: //timer0 seconds counter(LSB)
-					secCnt.l  = PORTC;
-					break;
-				case TIMER0_SCTH: //timer0 seconds counter(LSB)
-					secCnt.h  = PORTC;
-					break;
-				case TIM0_ADJL: //timer0 adjust counter(LSB)
-					adjCnt.l = PORTC;
-					break;
-				case TIM0_ADJH: //timer0 adjust counter(MSB)
-					adjCnt.h = PORTC;
-			}
-
-			// RESET CLC8  DFF
-			CLCSELECT = 0x7; // select CLC8
-			G3POL = 1;
-			G3POL = 0;
-	}
-}
-
-///////////////////////////////////////////////
-//
-// define ROM DATA
-//
-///////////////////////////////////////////////
+	while(1);
+};
 
 //const unsigned char rom[ROM_SIZE] = {
 asm("PSECT Z80ROM,class=CODE");

@@ -1,4 +1,4 @@
-/*
+/*!
  * PIC18F47Q43/PIC18F47Q83/PIC18F47Q84 ROM image uploader and UART emulation firmware
  * This single source file contains all code
  *
@@ -267,13 +267,12 @@ void __interrupt(irq(CLC3),base(8)) CLC_ISR(){
 	else LATC = 0xff;	// Empty
 						// Invalid data
 
-
 	//Release wait (D-FF reset)
 	G3POL = 1;
 	G3POL = 0;
 	//Post processing
 //	while(!RA0);				// /IORQ <5.6MHz
-//	while(!RD7);				// /WAIT >=5.6MHz and <10MHz
+	while(!RD7);				// /WAIT >=5.6MHz
 	TRISC = 0xff;				// Set as input
 	CLC3IF = 0;					// Clear interrupt flag
 }
@@ -386,7 +385,6 @@ void main(void) {
 //
 //	NCO1INC = 524288;   // 16MHz
 	NCO1INC = 327680;   // 10MHz
-//	NCO1INC = 262144;   // 8MHz
 //	NCO1INC = 196608;   // 6MHz
 //	NCO1INC = 131072;   // 4MHz
 //	NCO1INC = 81920;    // 2.5MHz
@@ -416,7 +414,7 @@ void main(void) {
 					//           the input FIFO by reading UxRXB.
 					// FLO = 01: XON/XOFF Software flow control
 
-// UART ring buffer init
+	// UART ring buffer init
 	rx_xreq = 0;
 	rx_xflg = XON;
 	rx_wp = rx_rp = rx_cnt = 0;
