@@ -244,6 +244,20 @@ extern const unsigned char rom[];
 // Z80 RAM equivalent
 volatile unsigned char ram[RAM_SIZE];
 
+/////////////////////////////////////////////////////////////
+// UART ring buffer for XON/XOFF
+#define XON  0x11		// code DC1
+#define XOFF 0x13		// code DC3
+#define U3TB_SIZE 128
+#define U3RB_SIZE 128
+
+volatile unsigned char tx_buf[U3TB_SIZE];	//UART Tx ring buffer
+volatile unsigned char rx_buf[U3RB_SIZE];	//UART Rx ring buffer
+volatile unsigned char rx_xflg, rx_xreq;
+volatile unsigned int rx_wp, rx_rp, rx_cnt;
+volatile unsigned int tx_wp, tx_rp, tx_cnt;
+/////////////////////////////////////////////////////////////
+
 // Address Bus
 union {
 	unsigned int w;			// 16 bits Address
@@ -360,6 +374,45 @@ void led_disp_bus(unsigned int addr, unsigned char data, int write_flag) {
 // Never called, logically
 void __interrupt(irq(default),base(8)) Default_ISR(){}
 
+////////////// UART3 Transmit interrupt /////////////////////////
+//UART3 Tx interrupt
+/////////////////////////////////////////////////////////////////
+void __interrupt(irq(U3TX),base(8)) URT3Tx_ISR(){
+
+	if (rx_xreq) {
+		U3TXB = rx_xreq;
+		rx_xreq = 0;
+		if (!tx_cnt) U3TXIE = 0;		// disable Tx interrupt
+	}
+	else {
+		if (!tx_cnt) U3TXIE = 0;		// disable Tx interrupt
+		else {
+			U3TXB = tx_buf[tx_rp];
+			tx_rp = (tx_rp + 1) & (U3TB_SIZE - 1);
+			tx_cnt--;
+		}
+	}
+}
+
+////////////// UART3 Receive interrupt //////////////////////////
+//UART3 Rx interrupt
+/////////////////////////////////////////////////////////////////
+void __interrupt(irq(U3RX),base(8)) URT3Rx_ISR(){
+
+	unsigned char rx_data;
+
+	rx_data = U3RXB;			// get rx data
+	if (rx_cnt < U3RB_SIZE) {
+		rx_buf[rx_wp] = rx_data;
+		rx_wp = (rx_wp + 1) & (U3RB_SIZE - 1);
+		rx_cnt++;
+		if ((rx_xflg == XON) && (rx_cnt == U3RB_SIZE - 64)) {
+			rx_xreq = rx_xflg = XOFF;
+			U3TXIE = 1;
+		}
+	}
+}
+
 // main routine
 void main(void) {
 
@@ -435,7 +488,21 @@ void main(void) {
 	NCO1EN = 1;		// NCO enable
 
 	// UART3 initialize
-	U3BRG = 416;		// 9600bps @ 64MHz
+//	U3BRG = 416;		// 9600bps @ 64MHz
+//	U3BRG = 208;		// 19200bps @ 64MHz
+//	U3BRG = 104;		// 38400bps @ 64MHz
+	U3BRG = 34;			// 115200bps @ 64MHz
+	U3CON2 = 0x81;		// RUNOVF=1: the XON and XOFF characters continue to be
+						//           received and processed without the need to clear
+						//           the input FIFO by reading UxRXB.
+						// FLO = 01: XON/XOFF Software flow control
+
+	// UART ring buffer init
+	rx_xreq = 0;
+	rx_xflg = XON;
+	rx_wp = rx_rp = rx_cnt = 0;
+	tx_wp = tx_rp = tx_cnt = 0;
+
 	U3RXEN = 1;			// Receiver enable
 	U3TXEN = 1;			// Transmitter enable
 
@@ -533,6 +600,13 @@ void main(void) {
 	IVTLOCK = 0xAA;
 	IVTLOCKbits.IVTLOCKED = 0x01;
 
+/////// Set UART3 to XON and enable interrupt ///////////////////
+	while(!U3TXIF) {}	// Wait or Tx interrupt flag set
+	U3TXB = XON;		// Write data
+	U3RXIE = 1;			// enable Receive interrupt
+//	U3TXIE = 1;			// enable Trancemit interrupt
+/////////////////////////////////////////////////////////////////
+
 	// Z80 start
 	GIE = 1;		// Global interrupt enable
 
@@ -561,11 +635,28 @@ void main(void) {
 				rd_data = rom[ab.w];			// Out ROM data
 			else if(CLC2OUT)					// RAM area
 				rd_data = ram[ab.w - RAM_TOP];	// Out RAM data
-			else if(ab.w == UART_CREG)			// PIR9
-				rd_data = PIR9;					// Out PIR9
-			else if(ab.w == UART_DREG)			// U3RXB
-				rd_data = U3RXB;				// Out U3RXB
-			else if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END))
+			else if(ab.w == UART_CREG) {		// PIR9
+				GIE = 0;						// Global interrupt disenable
+				//////////////// UART3 buffer status ///////////////////////////
+				rd_data = (unsigned char)(((tx_cnt != U3TB_SIZE) << 1) | (rx_cnt != 0));
+				////////////////////////////////////////////////////////////////
+				GIE = 1;						// Global interrupt enable
+			} else if(ab.w == UART_DREG) {		// U3RXB
+				GIE = 0;						// Global interrupt disenable
+				//////////////// Read Rx data form Rx buffer ///////////////////
+				if (!rx_cnt) rd_data = 0;
+				else {
+					rd_data = rx_buf[rx_rp];
+					rx_rp = (rx_rp + 1) & (U3RB_SIZE - 1);
+					rx_cnt--;
+					if ((rx_xflg == XOFF) && (rx_cnt == 10)) {
+						rx_xreq = rx_xflg = XON;
+						U3TXIE = 1;
+					}
+				}
+				////////////////////////////////////////////////////////////////
+				GIE = 1;						// Global interrupt enable
+			} else if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END))
 				rd_data = LED_CTL[ab.w - LED_REG_TOP];
 			else								// Empty
 				rd_data = 0xff;					// Invalid data
@@ -577,6 +668,7 @@ void main(void) {
 					printf("RD ADDR:%04X,DATA:%02X\r\n", ab.w, rd_data);
 			}
 			LATC = rd_data;
+			GIE = 0;							// Global interrupt disenable
 			// Release wait (D-FF reset)
 			G3POL = 1;
 			G3POL = 0;
@@ -584,13 +676,23 @@ void main(void) {
 			// Post processing
 			while(!RA1);
 			TRISC = 0xff; //Set as input
+			GIE = 1;							// Global interrupt enable
 		} else {
 			// Z80 memory write cycle
 			if(CLC2OUT)							// RAM area
 				ram[ab.w - RAM_TOP] = PORTC;	// Write into RAM
-			else if(ab.w == UART_DREG)			// U3TXB
-				U3TXB = PORTC;					// Write into U3TXB
-			else if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END)) {
+			else if(ab.w == UART_DREG) {		// U3TXB
+				GIE = 0;						// Global interrupt disenable
+				//////////////// Write Tx data form Tx buffer //////////////////
+				if (tx_cnt < U3TB_SIZE) {
+					tx_buf[tx_wp] = PORTC;
+					tx_wp = (tx_wp + 1) & (U3TB_SIZE - 1);
+					tx_cnt++;
+					U3TXIE = 1;
+				}
+				////////////////////////////////////////////////////////////////
+				GIE = 1;						// Global interrupt enable
+			} else if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_END)) {
 				LED_CTL[ab.w - LED_REG_TOP] = PORTC; // Write into LED Registor
 				if((ab.w >= LED_REG_TOP) && (ab.w <= LED_REG_TOP+3)){
 					led_dump();
