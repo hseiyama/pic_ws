@@ -526,9 +526,19 @@ void main(void) {
 //			} else {
 //				LATE0 = 0;				// /BERR=Low
 			}
-			//Release DSACK0 (D-FF reset)
+			GIE = 0;			// Global interrupt disenable
+#ifndef ASMBL
+			// Release DSACK0 (D-FF reset)
 			G3POL = 1;
 			G3POL = 0;
+#else
+			asm(
+			"movlb 0				\n"			// banked 0
+			"bsf   CLCnPOL,2,b		\n"			// Release DSACK0 (D-FF reset)
+			"bcf   CLCnPOL,2,b		\n"
+			);
+#endif
+			GIE = 1;			// Global interrupt enable
 		} else {
 			TRISC = 0x00;					// Set data bus as output
 			if(ab.w == UART_CREG){			// UART control register

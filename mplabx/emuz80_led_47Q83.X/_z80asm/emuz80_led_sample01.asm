@@ -1,6 +1,6 @@
 LED_HEX_TOP	EQU	0F000h		;0xF000-0xF003 HEX data
 
-	ORG	08000h			;ram“®ì—p
+	ORG	0C000h			;ram“®ì—p
 
 START:
 	LD	IX, LED_HEX_TOP
