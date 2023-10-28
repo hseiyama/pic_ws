@@ -1,0 +1,2061 @@
+ AS V1.42 Beta [Bld 246] - Source File vtlz80.asm - Page 1 - 9/2/2023 3:19:50
+
+
+       1/       0 :                     	page 0
+       2/       0 :                     	cpu z80
+       3/       0 :                     	
+       4/       0 :                     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+       5/       0 :                     ;
+       6/       0 :                     ;  Very Tiny Language
+       7/       0 :                     ;
+       8/       0 :                     ;  Original Source Code was written by T. Nakagawa
+       9/       0 :                     ;  Source code Language : C
+      10/       0 :                     ;  	2004/05/23
+      11/       0 :                     ;  	2004/06/26
+      12/       0 :                     ;	http://middleriver.chagasi.com/electronics/vtl.html
+      13/       0 :                     ;
+      14/       0 :                     ; This code was compiled by SDCC 4.2.0(X64)
+      15/       0 :                     ; and converted assemble source code by Akihito Honda
+      16/       0 :                     ;	2023/03/31
+      17/       0 :                     ;
+      18/       0 :                     ; Useing Assembler : The Macroassembler AS (1.42 Beta [Bld 227])
+      19/       0 :                     ; http://john.ccac.rwth-aachen.de:8000/as/
+      20/       0 :                     ;
+      21/       0 :                     ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+      22/       0 :                     
+      23/       0 :                     
+      24/       0 :                     ; target AKI-80, EMUZ80, SuperMEZ80, MEZZ180
+      25/       0 :                     
+      26/       0 : =0H                 AKI80 = 0
+      27/       0 : =1H                 RAM12K = 1
+      28/       0 : =0H                 RAM8K = 0
+      29/       0 : =0H                 SUPER_MEZ = 0
+      30/       0 : =0H                 SUPER_MEZ_FULL = 0
+      31/       0 : =0H                 SBCZ80 = 0
+      32/       0 :                     
+      33/       0 : =>FALSE             	if AKI80
+      34/       0 :                     RAM_B		equ	8000h
+      35/       0 :                     WORK_B		equ	RAM_B
+      36/       0 :                     WORK_END	equ	0FE00H
+      37/       0 :                     USTACK		equ	0FE90H
+      38/       0 :                     MSIZE		equ	7d00h
+      39/       0 :                     S_CODE		equ	7500h
+      40/       0 : [33]                	endif
+      41/       0 :                     
+      42/       0 : =>TRUE              	if RAM12K
+      43/       0 : =0C000H             RAM_B		equ	0C000h
+      44/       0 : =0C000H             WORK_B		equ	RAM_B
+      45/       0 : =0EE00H             WORK_END	equ	0EE00H
+      46/       0 : =0EE90H             USTACK		equ	0EE90H
+      47/       0 : =2D00H              MSIZE		equ	2d00h
+      48/       0 : =7500H              S_CODE		equ	7500h
+      49/       0 : [42]                	endif
+      50/       0 :                     
+      51/       0 : =>FALSE             	if RAM8K
+      52/       0 :                     RAM_B		equ	8000h
+      53/       0 :                     WORK_B		equ	RAM_B
+      54/       0 :                     WORK_END	equ	9E00H
+      55/       0 :                     USTACK		equ	9E90H
+      56/       0 :                     MSIZE		equ	1E00h
+      57/       0 :                     S_CODE		equ	7500h
+      58/       0 : [51]                	endif
+      59/       0 :                     
+      60/       0 : =>FALSE             	if SUPER_MEZ
+      61/       0 :                     RAM_B		equ	40h
+      62/       0 :                     ;WORK_B		equ	end_code
+      63/       0 :                     WORK_END	equ	0FE00H
+      64/       0 :                     USTACK		equ	0FE90H
+      65/       0 :                     MSIZE		equ	0F400h
+      66/       0 :                     S_CODE		equ	RAM_B
+      67/       0 : [60]                	endif
+      68/       0 :                     
+      69/       0 : =>FALSE             	if SUPER_MEZ_FULL
+      70/       0 :                     RAM_B		equ	8000h
+      71/       0 :                     WORK_B		equ	RAM_B
+      72/       0 :                     WORK_END	equ	0FE00H
+      73/       0 :                     USTACK		equ	0FE90H
+      74/       0 :                     MSIZE		equ	7d00h
+      75/       0 :                     S_CODE		equ	7500h
+      76/       0 : [69]                	endif
+      77/       0 :                     
+      78/       0 : =>FALSE             	if SBCZ80
+      79/       0 :                     RAM_B		equ	8000h
+      80/       0 :                     WORK_B		equ	RAM_B
+      81/       0 :                     WORK_END	equ	0BE00H
+      82/       0 :                     USTACK		equ	0BE90H
+      83/       0 :                     MSIZE		equ	3E00h
+      84/       0 :                     S_CODE		equ	7500h
+      85/       0 : [78]                	endif
+      86/       0 :                     
+      87/    7500 :                     	org	S_CODE
+      88/    7500 :                     
+      89/    7500 :                     INIT:
+      90/    7500 : C3 8C 75            	jp	ENTRY		;COLD START
+      91/    7503 : C3 95 75            	jp	_warm_boot	;WARM START
+      92/    7506 :                     
+      93/    7506 :                     _putchr:
+      94/    7506 : CF                  	rst	8
+      95/    7507 : C9                  	ret
+      96/    7508 :                     
+      97/    7508 :                     _c_getch:
+      98/    7508 : D7                  	rst	10h
+      99/    7509 : C9                  	ret
+     100/    750A :                     
+     101/    750A :                     _c_kbhit:
+     102/    750A : DF                  	rst	18h
+     103/    750B : CA 10 75            	jp	z, nokey
+     104/    750E : 37                  	scf	; key exist : CF = 1
+     105/    750F : C9                  	ret
+     106/    7510 :                     nokey:
+     107/    7510 : B7                  	or	a ; No key : CF= 0
+     108/    7511 : C9                  	ret
+     109/    7512 :                     
+     110/    7512 :                     _getchr:
+     111/    7512 : CD 08 75            	call	_c_getch
+     112/    7515 : CD 06 75            	call	_putchr
+     113/    7518 : C9                  	ret
+     114/    7519 :                     
+     115/    7519 :                     _srand:	; input hl
+     116/    7519 :                     
+     117/    7519 : 22 00 C0            	ld	(SEED), hl
+     118/    751C : 22 02 C0            	ld	(SEEDX), hl
+     119/    751F : C9                  	ret
+     120/    7520 :                     
+     121/    7520 :                     _rand:	; output de
+     122/    7520 : E5                  	push	hl
+     123/    7521 :                     	
+     124/    7521 : ED 5B 02 C0         	ld	de, (SEEDX)
+     125/    7525 : 7A                  	ld	a, d
+     126/    7526 : B3                  	or	e
+     127/    7527 : 20 03               	jr	nz, RND3
+     128/    7529 :                     	
+     129/    7529 : 11 01 00            	ld	de, 1
+     130/    752C :                     RND3:
+     131/    752C : 62                  	ld	h, d
+     132/    752D : 6B                  	ld	l, e	; mov hl, de
+     133/    752E :                     	
+     134/    752E : CB 25               	sla	l
+     135/    7530 : CB 14               	rl	h
+     136/    7532 : CB 25               	sla	l
+     137/    7534 : CB 14               	rl	h
+     138/    7536 : CB 25               	sla	l
+     139/    7538 : CB 14               	rl	h
+     140/    753A : CB 25               	sla	l
+     141/    753C : CB 14               	rl	h
+     142/    753E : CB 25               	sla	l
+     143/    7540 : CB 14               	rl	h	; shl hl, 5
+     144/    7542 :                     
+     145/    7542 : 7B                  	ld	a, e
+     146/    7543 : AD                  	xor	l
+     147/    7544 : 6F                  	ld	l, a
+     148/    7545 : 7A                  	ld	a, d
+     149/    7546 : AC                  	xor	h
+     150/    7547 : 67                  	ld	h, a	; xor hl, de
+     151/    7548 : 54                  	ld	d, h
+     152/    7549 : 5D                  	ld	e, l	; de = hl
+     153/    754A :                     
+     154/    754A : CB 2C               	sra	h
+     155/    754C : CB 1D               	rr	l
+     156/    754E : CB 2C               	sra	h
+     157/    7550 : CB 1D               	rr	l
+     158/    7552 : CB 2C               	sra	h
+     159/    7554 : CB 1D               	rr	l	; sra hl, 3
+     160/    7556 :                     
+     161/    7556 : 7B                  	ld	a, e
+     162/    7557 : AD                  	xor	l
+     163/    7558 : 5F                  	ld	e, a
+     164/    7559 : 7A                  	ld	a, d
+     165/    755A : AC                  	xor	h
+     166/    755B : 57                  	ld	d, a	; xor de, hl
+     167/    755C :                     
+     168/    755C : 42                  	ld	b, d
+     169/    755D : 4B                  	ld	c, e	; push de
+     170/    755E :                     
+     171/    755E : ED 5B 00 C0         	ld	de, (SEED)
+     172/    7562 : 7A                  	ld	a, d
+     173/    7563 : B3                  	or	e
+     174/    7564 : 20 03               	jr	nz, RND4
+     175/    7566 :                     
+     176/    7566 : 11 01 00            	ld	de, 1
+     177/    7569 :                     RND4:
+     178/    7569 : ED 53 02 C0         	ld	(SEEDX), de
+     179/    756D : 62                  	ld	h, d
+     180/    756E : 6B                  	ld	l, e
+     181/    756F :                     
+     182/    756F : CB 2D               	sra	l
+     183/    7571 : CB 1C               	rr	h
+     184/    7573 : 7A                  	ld	a, d
+     185/    7574 : AC                  	xor	h
+     186/    7575 : 57                  	ld	d, a
+     187/    7576 : 7B                  	ld	a, e
+     188/    7577 : AD                  	xor	l
+     189/    7578 : 5F                  	ld	e, a	; xor de, hl
+     190/    7579 :                     
+     191/    7579 : 60                  	ld	h, b
+     192/    757A : 69                  	ld	l, c	; pop hl
+     193/    757B :                     	
+     194/    757B : 7A                  	ld	a, d
+     195/    757C : AC                  	xor	h
+     196/    757D : 57                  	ld	d, a
+     197/    757E : 7B                  	ld	a, e
+     198/    757F : AD                  	xor	l
+     199/    7580 : 5F                  	ld	e, a	; xor de, hl
+     200/    7581 :                     
+     201/    7581 : ED 53 00 C0         	ld	(SEED), de	; 0 - FFFFH : -32768 ~ 32767
+     202/    7585 : 62                  	ld	h, d
+     203/    7586 : 6B                  	ld	l, e
+     204/    7587 : E1                  	pop	hl
+     205/    7588 : C9                  	ret		; output DE
+     206/    7589 :                     
+     207/    7589 :                     _mach_fin:
+     208/    7589 : 0E 01               	ld	c, 1		; return unimon
+     209/    758B : F7                  	rst	30h
+     210/    758C :                     
+     211/    758C :                     ENTRY:		;COLD START
+     212/    758C : 31 90 EE            	ld	sp, USTACK
+     213/    758F : 26 00               	ld	h, 0
+     214/    7591 : 6C                  	ld	l, h
+     215/    7592 : C3 F5 75            	jp	_main
+     216/    7595 :                     
+     217/    7595 :                     _warm_boot:
+     218/    7595 : 31 90 EE            	ld	sp, USTACK
+     219/    7598 : 2E 01               	ld	l, 1
+     220/    759A : C3 F5 75            	jp	_main		;key=1
+     221/    759D :                     
+     222/    759D :                     mulint:
+     223/    759D : 4D                  	ld	c, l
+     224/    759E : 44                  	ld	b, h
+     225/    759F : AF                  	xor	a
+     226/    75A0 : 6F                  	ld	l, a
+     227/    75A1 : B0                  	or	b
+     228/    75A2 : 06 10               	ld	b, 10h
+     229/    75A4 : 20 04               	jr	nz, mul01
+     230/    75A6 : 06 08               	ld	b, 8
+     231/    75A8 : 79                  	ld	a, c
+     232/    75A9 :                     
+     233/    75A9 :                     mul00:
+     234/    75A9 : 29                  	add	hl, hl
+     235/    75AA :                     
+     236/    75AA : CB 11               mul01:	rl	c
+     237/    75AC : 17                  	rla
+     238/    75AD : 30 01               	jr	nc, mul02
+     239/    75AF : 19                  	add	hl,de
+     240/    75B0 :                     
+     241/    75B0 :                     mul02:
+     242/    75B0 : 10 F7               	djnz	mul00
+     243/    75B2 : EB                  	ex	de, hl
+     244/    75B3 : C9                  	ret
+     245/    75B4 :                     
+     246/    75B4 :                     moduint:
+     247/    75B4 : CD B9 75            	call	divuint
+     248/    75B7 : EB                  	ex	de, hl
+     249/    75B8 : C9                  	ret
+     250/    75B9 :                     
+     251/    75B9 :                     divuint:
+     252/    75B9 : 7B                  	ld	a ,e
+     253/    75BA : E6 80               	and	80h
+     254/    75BC : B2                  	or	d
+     255/    75BD : 20 11               	jr	nz, div_2
+     256/    75BF : 06 10               	ld	b, 10h
+     257/    75C1 : ED 6A               	adc	hl, hl
+     258/    75C3 :                     
+     259/    75C3 :                     div_0:
+     260/    75C3 : 17                  	rla
+     261/    75C4 : 93                  	sub	e
+     262/    75C5 : 30 01               	jr	nc, div_1
+     263/    75C7 : 83                  	add	a, e
+     264/    75C8 :                     
+     265/    75C8 :                     div_1:
+     266/    75C8 : 3F                  	ccf
+     267/    75C9 : ED 6A               	adc	hl, hl
+     268/    75CB : 10 F6               	djnz	div_0
+     269/    75CD :                     
+     270/    75CD : 5F                  	ld	e, a
+     271/    75CE : EB                  	ex	de, hl
+     272/    75CF : C9                  	ret
+     273/    75D0 :                     
+     274/    75D0 :                     div_2:
+     275/    75D0 : 06 09               	ld	b, 09
+     276/    75D2 : 7D                  	ld	a, l
+     277/    75D3 : 6C                  	ld	l, h
+     278/    75D4 : 26 00               	ld	h, 00
+     279/    75D6 : CB 1D               	rr	l
+     280/    75D8 :                     
+     281/    75D8 :                     div_3:
+     282/    75D8 : ED 6A               	adc	hl, hl
+     283/    75DA : ED 52               	sbc	hl, de
+     284/    75DC : 30 01               	jr	nc, div_4
+     285/    75DE : 19                  	add	hl, de
+     286/    75DF :                     
+     287/    75DF :                     div_4:
+     288/    75DF : 3F                  	ccf
+     289/    75E0 : 17                  	rla
+     290/    75E1 : 10 F5               	djnz	div_3
+     291/    75E3 : CB 10               	rl	b
+     292/    75E5 : 50                  	ld	d, b
+     293/    75E6 : 5F                  	ld	e, a
+     294/    75E7 : C9                  	ret
+     295/    75E8 :                     
+     296/    75E8 :                     ;vtl.c:61: void breakCheck()
+     297/    75E8 :                     ;----------------------------------
+     298/    75E8 :                     ; Function breakCheck
+     299/    75E8 :                     ; ---------------------------------
+     300/    75E8 :                     _breakCheck:
+     301/    75E8 :                     ;vtl.c:65: if (c_kbhit()) {/* check keyin */
+     302/    75E8 : CD 0A 75            	call	_c_kbhit
+     303/    75EB : D0                  	ret	NC
+     304/    75EC :                     
+     305/    75EC :                     ;vtl.c:66: c = c_getch();
+     306/    75EC : CD 08 75            	call	_c_getch
+     307/    75EF :                     ;vtl.c:67: if(c == 0x03) warm_boot();-		/* force warm boot */
+     308/    75EF : D6 03               	sub	03h
+     309/    75F1 : CA 95 75            	jp	Z,_warm_boot
+     310/    75F4 : C9                  	ret
+     311/    75F5 :                     ;vtl.c:71: int main(int key) {
+     312/    75F5 :                     ;----------------------------------
+     313/    75F5 :                     ; Function main
+     314/    75F5 :                     ; ---------------------------------
+     315/    75F5 :                     _main:
+     316/    75F5 : DD E5               	push	ix
+     317/    75F7 : DD 21 00 00         	ld	ix,0
+     318/    75FB : DD 39               	add	ix,sp
+     319/    75FD : FD 21 F6 FF         	ld	iy, -10
+     320/    7601 : FD 39               	add	iy, sp
+     321/    7603 : FD F9               	ld	sp, iy
+     322/    7605 :                     ;vtl.c:75: if (!key) {
+     323/    7605 : 7C                  	ld	a, h
+     324/    7606 : B5                  	or	l
+     325/    7607 : 20 18               	jr	NZ, ma150
+     326/    7609 :                     ;vtl.c:77: WRITEW(Lmt, MSIZE);-/* RAM End */
+     327/    7609 : 21 00 2D            	ld	hl, MSIZE
+     328/    760C : 22 5C C0            	ld	(_Lct + 88), hl
+     329/    760F :                     ;vtl.c:78: WRITEW(Bnd, Obj);-	/* Program End */
+     330/    760F : 21 08 01            	ld	hl, 0108h
+     331/    7612 : 22 54 C0            	ld	(_Lct + 80), hl
+     332/    7615 :                     ;vtl.c:80: srand(1458); /* for RND function */
+     333/    7615 : 21 B2 05            	ld	hl, 05b2h
+     334/    7618 : CD 19 75            	call	_srand
+     335/    761B :                     ;vtl.c:81: putstr("VTL-C SBCZ80 edition.");
+     336/    761B : 21 7E 7E            	ld	hl, str_0
+     337/    761E : CD 6F 7E            	call	_putstr
+     338/    7621 :                     ma150:
+     339/    7621 :                     ;vtl.c:84: putstr("\r\nOK");
+     340/    7621 : 21 91 7E            	ld	hl, str_1
+     341/    7624 : CD 6F 7E            	call	_putstr
+     342/    7627 :                     ;vtl.c:85: nmsg:
+     343/    7627 :                     ma103:
+     344/    7627 :                     ;vtl.c:86: ptr = Lbf + 2;-			/* ptr = 138 */
+     345/    7627 : 21 8A 00            	ld	hl, 8ah
+     346/    762A : E3                  	ex	(sp), hl
+     347/    762B :                     ;vtl.c:87: getln(ptr);-				/* buffer address = Lct+138 */
+     348/    762B : 21 8A 00            	ld	hl, 8ah
+     349/    762E : CD FB 78            	call	_getln
+     350/    7631 :                     ;vtl.c:88: if (!getnm(&ptr, &n)) {
+     351/    7631 : 21 02 00            	ld	hl, 2
+     352/    7634 : 39                  	add	hl, sp
+     353/    7635 : EB                  	ex	de, hl
+     354/    7636 : 21 00 00            	ld	hl, 0
+     355/    7639 : 39                  	add	hl, sp
+     356/    763A : CD 84 79            	call	_getnm
+     357/    763D : 7A                  	ld	a, d
+     358/    763E : B3                  	or	e
+     359/    763F : C2 EA 76            	jp	NZ, ma133
+     360/    7642 :                     ;vtl.c:91: line = Lbf;
+     361/    7642 : DD 36 FA 88         	ld	(ix-6), 88h
+     362/    7646 : DD 36 FB 00         	ld	(ix-5), 0
+     363/    764A :                     ;vtl.c:92: WRITEW(line, 0);-/* line = 0 */
+     364/    764A : 01 04 C0            	ld	bc, _Lct+0
+     365/    764D : 21 00 00            	ld	hl, 0
+     366/    7650 : 22 8C C0            	ld	(_Lct + 136), hl
+     367/    7653 :                     ;vtl.c:93: WRITEW(Pcc, 0);-	/* Pcc = 0 */
+     368/    7653 : 22 4E C0            	ld	(_Lct + 74), hl
+     369/    7656 :                     ma136:
+     370/    7656 :                     ;vtl.c:95: breakCheck();
+     371/    7656 : C5                  	push	bc
+     372/    7657 : CD E8 75            	call	_breakCheck
+     373/    765A : D1                  	pop	de
+     374/    765B : E1                  	pop	hl
+     375/    765C : E5                  	push	hl
+     376/    765D : D5                  	push	de
+     377/    765E : CD 2D 7A            	call	_ordr
+     378/    7661 : C1                  	pop	bc
+     379/    7662 :                     ;vtl.c:97: if (READW(Pcc) == 0 || READW(Pcc) == READW(line)) {
+     380/    7662 : 2A 4E C0            	ld	hl, (_Lct + 74)
+     381/    7665 : 7C                  	ld	a, h
+     382/    7666 : B5                  	or	l
+     383/    7667 : 28 21               	jr	Z, ma110
+     384/    7669 : ED 5B 4E C0         	ld	de, (_Lct + 74)
+     385/    766D : DD 7E FA            	ld	a, (ix-6)
+     386/    7670 : 81                  	add	a, c
+     387/    7671 : DD 77 FE            	ld	(ix-2), a
+     388/    7674 : DD 7E FB            	ld	a, (ix-5)
+     389/    7677 : 88                  	adc	a, b
+     390/    7678 : DD 77 FF            	ld	(ix-1), a
+     391/    767B : DD 6E FE            	ld	l, (ix-2)
+     392/    767E :                     
+     393/    767E :                     
+     394/    767E : DD 66 FF            	ld	h, (ix-1)
+     395/    7681 :                     
+     396/    7681 :                     
+     397/    7681 : 7E                  	ld	a, (hl)
+     398/    7682 : 23                  	inc	hl
+     399/    7683 : 66                  	ld	h, (hl)
+     400/    7684 :                     
+     401/    7684 : 6F                  	ld	l, a
+     402/    7685 :                     
+     403/    7685 :                     
+     404/    7685 : BF                  	cp	a
+     405/    7686 : ED 52               	sbc	hl, de
+     406/    7688 : 20 27               	jr	NZ, ma111
+     407/    768A :                     ma110:
+     408/    768A :                     ;vtl.c:99: if (line == Lbf) break;-/* ダイレクトモードの場合 */
+     409/    768A : DD 7E FA            	ld	a, (ix-6)
+     410/    768D : DD 56 FB            	ld	d, (ix-5)
+     411/    7690 : D6 88               	sub	88h
+     412/    7692 : B2                  	or	d
+     413/    7693 : 28 8C               	jr	Z, ma150
+     414/    7695 :                     ;vtl.c:100: line = nxtln(line);
+     415/    7695 : C5                  	push	bc
+     416/    7696 : DD 6E FA            	ld	l, (ix-6)
+     417/    7699 :                     
+     418/    7699 :                     
+     419/    7699 : DD 66 FB            	ld	h, (ix-5)
+     420/    769C :                     
+     421/    769C :                     
+     422/    769C : CD EE 78            	call	_nxtln
+     423/    769F : C1                  	pop	bc
+     424/    76A0 : DD 73 FA            	ld	(ix-6), e
+     425/    76A3 : DD 72 FB            	ld	(ix-5), d
+     426/    76A6 :                     ;vtl.c:101: if (line == READW(Bnd)) break;-/* 最終行まで実行した場合 */
+     427/    76A6 : 2A 54 C0            	ld	hl, (_Lct + 80)
+     428/    76A9 : BF                  	cp	a
+     429/    76AA : ED 52               	sbc	hl, de
+     430/    76AC : CA 21 76            	jp	Z,ma150
+     431/    76AF : 18 1C               	jr	ma112
+     432/    76B1 :                     ma111:
+     433/    76B1 :                     ;vtl.c:104: WRITEW(Svp, READW(line) + 1);
+     434/    76B1 : DD 6E FE            	ld	l, (ix-2)
+     435/    76B4 :                     
+     436/    76B4 :                     
+     437/    76B4 : DD 66 FF            	ld	h, (ix-1)
+     438/    76B7 :                     
+     439/    76B7 :                     
+     440/    76B7 : 5E                  	ld	e, (hl)
+     441/    76B8 : 23                  	inc	hl
+     442/    76B9 : 56                  	ld	d, (hl)
+     443/    76BA : 13                  	inc	de
+     444/    76BB : ED 53 4A C0         	ld	(_Lct + 70), de
+     445/    76BF :                     ;vtl.c:105: if (fndln(&line)) break;
+     446/    76BF : C5                  	push	bc
+     447/    76C0 : 21 06 00            	ld	hl, 6
+     448/    76C3 : 39                  	add	hl, sp
+     449/    76C4 : CD 89 78            	call	_fndln
+     450/    76C7 : C1                  	pop	bc
+     451/    76C8 : 7A                  	ld	a, d
+     452/    76C9 : B3                  	or	e
+     453/    76CA : C2 21 76            	jp	NZ, ma150
+     454/    76CD :                     ma112:
+     455/    76CD :                     ;vtl.c:107: WRITEW(Pcc, READW(line));
+     456/    76CD : DD 6E FA            	ld	l, (ix-6)
+     457/    76D0 : DD 66 FB            	ld	h, (ix-5)
+     458/    76D3 : 09                  	add	hl, bc
+     459/    76D4 : 5E                  	ld	e, (hl)
+     460/    76D5 : 23                  	inc	hl
+     461/    76D6 : 56                  	ld	d, (hl)
+     462/    76D7 : ED 53 4E C0         	ld	(_Lct + 74), de
+     463/    76DB :                     ;vtl.c:108: ptr = line + 2 + 1;
+     464/    76DB : DD 5E FA            	ld	e, (ix-6)
+     465/    76DE : DD 56 FB            	ld	d, (ix-5)
+     466/    76E1 : 13                  	inc	de
+     467/    76E2 : 13                  	inc	de
+     468/    76E3 : 13                  	inc	de
+     469/    76E4 : 33                  	inc	sp
+     470/    76E5 : 33                  	inc	sp
+     471/    76E6 : D5                  	push	de
+     472/    76E7 : C3 56 76            	jp	ma136
+     473/    76EA :                     ma133:
+     474/    76EA :                     ;vtl.c:111: if (n == 0) {
+     475/    76EA : DD 7E F9            	ld	a, (ix-7)
+     476/    76ED : DD B6 F8            	or	(ix-8)
+     477/    76F0 : 20 3E               	jr	NZ, ma130
+     478/    76F2 :                     ;vtl.c:113: for (ptr = Obj; ptr != READW(Bnd); ) {
+     479/    76F2 : 21 08 01            	ld	hl, 0108h
+     480/    76F5 : E3                  	ex	(sp), hl
+     481/    76F6 :                     ma139:
+     482/    76F6 : 21 54 C0            	ld	hl, _Lct+80
+     483/    76F9 : 4E                  	ld	c, (hl)
+     484/    76FA : 23                  	inc	hl
+     485/    76FB : 46                  	ld	b, (hl)
+     486/    76FC : E1                  	pop	hl
+     487/    76FD : E5                  	push	hl
+     488/    76FE : BF                  	cp	a
+     489/    76FF : ED 42               	sbc	hl, bc
+     490/    7701 : CA 21 76            	jp	Z,ma150
+     491/    7704 :                     ;vtl.c:114: breakCheck();
+     492/    7704 : CD E8 75            	call	_breakCheck
+     493/    7707 :                     ;vtl.c:115: putnm(READW(ptr));
+     494/    7707 : 3E 04               	ld	a, _Lct & 0ffh
+     495/    7709 : DD 86 F6            	add	a, (ix-10)
+     496/    770C : 6F                  	ld	l, a
+     497/    770D :                     
+     498/    770D :                     
+     499/    770D : 3E C0               	ld	a, _Lct >> 8
+     500/    770F : DD 8E F7            	adc	a, (ix-9)
+     501/    7712 : 67                  	ld	h, a
+     502/    7713 :                     
+     503/    7713 :                     
+     504/    7713 : 4E                  	ld	c, (hl)
+     505/    7714 : 23                  	inc	hl
+     506/    7715 : 66                  	ld	h, (hl)
+     507/    7716 :                     
+     508/    7716 : 69                  	ld	l, c
+     509/    7717 :                     
+     510/    7717 :                     
+     511/    7717 : CD 1F 7E            	call	_putnm
+     512/    771A :                     ;vtl.c:116: ptr += 2;
+     513/    771A : C1                  	pop	bc
+     514/    771B : C5                  	push	bc
+     515/    771C : 03                  	inc	bc
+     516/    771D : 03                  	inc	bc
+     517/    771E : 33                  	inc	sp
+     518/    771F : 33                  	inc	sp
+     519/    7720 : C5                  	push	bc
+     520/    7721 :                     ;vtl.c:117: putl(&ptr, '\0');
+     521/    7721 : AF                  	xor	a
+     522/    7722 : F5                  	push	af
+     523/    7723 : 33                  	inc	sp
+     524/    7724 : 21 01 00            	ld	hl, 1
+     525/    7727 : 39                  	add	hl, sp
+     526/    7728 : CD DB 7D            	call	_putl
+     527/    772B :                     ;vtl.c:118: crlf();
+     528/    772B : CD 15 7E            	call	_crlf
+     529/    772E : 18 C6               	jr	ma139
+     530/    7730 :                     ma130:
+     531/    7730 :                     ;vtl.c:125: WRITEW(Pcc, n);
+     532/    7730 : 01 04 C0            	ld	bc, _Lct
+     533/    7733 : 11 4E C0            	ld	de, _Lct + 74
+     534/    7736 : DD 7E F8            	ld	a, (ix-8)
+     535/    7739 : 12                  	ld	(de), a
+     536/    773A : 13                  	inc	de
+     537/    773B : DD 7E F9            	ld	a, (ix-7)
+     538/    773E : 12                  	ld	(de), a
+     539/    773F :                     ;vtl.c:126: if (!fndln(&cur) && READW(cur) == n) {
+     540/    773F : 21 04 00            	ld	hl, 4
+     541/    7742 : 39                  	add	hl, sp
+     542/    7743 : C5                  	push	bc
+     543/    7744 : CD 89 78            	call	_fndln
+     544/    7747 : C1                  	pop	bc
+     545/    7748 :                     ;vtl.c:128: for (dst = cur; src != READW(Bnd); WRITEB(dst++, READB(src++))) ;
+     546/    7748 :                     ;vtl.c:126: if (!fndln(&cur) && READW(cur) == n) {
+     547/    7748 : 7A                  	ld	a, d
+     548/    7749 : B3                  	or	e
+     549/    774A : 20 5B               	jr	NZ, ma118
+     550/    774C : DD 6E FA            	ld	l, (ix-6)
+     551/    774F : DD 66 FB            	ld	h, (ix-5)
+     552/    7752 : 09                  	add	hl, bc
+     553/    7753 : 5E                  	ld	e, (hl)
+     554/    7754 : 23                  	inc	hl
+     555/    7755 : 56                  	ld	d, (hl)
+     556/    7756 : DD 6E F8            	ld	l, (ix-8)
+     557/    7759 : DD 66 F9            	ld	h, (ix-7)
+     558/    775C : BF                  	cp	a
+     559/    775D : ED 52               	sbc	hl, de
+     560/    775F : 20 46               	jr	NZ, ma118
+     561/    7761 :                     ;vtl.c:127: src = nxtln(cur);
+     562/    7761 : C5                  	push	bc
+     563/    7762 : DD 6E FA            	ld	l, (ix-6)
+     564/    7765 :                     
+     565/    7765 :                     
+     566/    7765 : DD 66 FB            	ld	h, (ix-5)
+     567/    7768 :                     
+     568/    7768 :                     
+     569/    7768 : CD EE 78            	call	_nxtln
+     570/    776B : C1                  	pop	bc
+     571/    776C :                     ;vtl.c:128: for (dst = cur; src != READW(Bnd); WRITEB(dst++, READB(src++))) ;
+     572/    776C : DD 7E FA            	ld	a, (ix-6)
+     573/    776F : DD 77 FE            	ld	(ix-2), a
+     574/    7772 : DD 7E FB            	ld	a, (ix-5)
+     575/    7775 : DD 77 FF            	ld	(ix-1), a
+     576/    7778 :                     ma142:
+     577/    7778 : 2A 54 C0            	ld	hl, (_Lct + 80)
+     578/    777B : BF                  	cp	a
+     579/    777C : ED 52               	sbc	hl, de
+     580/    777E : 28 1B               	jr	Z, ma116
+     581/    7780 : DD 6E FE            	ld	l, (ix-2)
+     582/    7783 : DD 66 FF            	ld	h, (ix-1)
+     583/    7786 : 09                  	add	hl, bc
+     584/    7787 : DD 34 FE            	inc	(ix-2)
+     585/    778A : 20 03               	jr	NZ, ma281
+     586/    778C : DD 34 FF            	inc	(ix-1)
+     587/    778F :                     ma281:
+     588/    778F : C5                  	push	bc
+     589/    7790 : FD E1               	pop	iy
+     590/    7792 : FD 19               	add	iy, de
+     591/    7794 : 13                  	inc	de
+     592/    7795 : FD 7E 00            	ld	a, (iy+0)
+     593/    7798 : 77                  	ld	(hl), a
+     594/    7799 : 18 DD               	jr	ma142
+     595/    779B :                     ma116:
+     596/    779B :                     ;vtl.c:129: WRITEW(Bnd, dst);
+     597/    779B : 21 54 C0            	ld	hl, _Lct + 80
+     598/    779E : DD 7E FE            	ld	a, (ix-2)
+     599/    77A1 : 77                  	ld	(hl), a
+     600/    77A2 : 23                  	inc	hl
+     601/    77A3 : DD 7E FF            	ld	a, (ix-1)
+     602/    77A6 : 77                  	ld	(hl), a
+     603/    77A7 :                     ma118:
+     604/    77A7 :                     ;vtl.c:132: if (READB(ptr) == '\0') goto nmsg;-	/*continue;*/
+     605/    77A7 : E1                  	pop	hl
+     606/    77A8 : E5                  	push	hl
+     607/    77A9 : 09                  	add	hl, bc
+     608/    77AA : 7E                  	ld	a, (hl)
+     609/    77AB : B7                  	or	a
+     610/    77AC : CA 27 76            	jp	Z, ma103
+     611/    77AF :                     ;vtl.c:133: for (m = 3, tmp = ptr; READB(tmp) != '\0'; m++, tmp++) ;
+     612/    77AF : D1                  	pop	de
+     613/    77B0 : D5                  	push	de
+     614/    77B1 : DD 36 FE 03         	ld	(ix-2), 03
+     615/    77B5 : DD 36 FF 00         	ld	(ix-1), 0
+     616/    77B9 :                     ma145:
+     617/    77B9 : 69                  	ld	l, c
+     618/    77BA : 60                  	ld	h, b
+     619/    77BB : 19                  	add	hl, de
+     620/    77BC : 7E                  	ld	a, (hl)
+     621/    77BD : B7                  	or	a
+     622/    77BE : 28 0B               	jr	Z, ma122
+     623/    77C0 : DD 34 FE            	inc	(ix-2)
+     624/    77C3 : 20 03               	jr	NZ, ma282
+     625/    77C5 : DD 34 FF            	inc	(ix-1)
+     626/    77C8 :                     ma282:
+     627/    77C8 : 13                  	inc	de
+     628/    77C9 : 18 EE               	jr	ma145
+     629/    77CB :                     ma122:
+     630/    77CB :                     ;vtl.c:134: if (READW(Bnd) + m < READW(Lmt)) {
+     631/    77CB : 2A 54 C0            	ld	hl, (_Lct + 80)
+     632/    77CE : 7D                  	ld	a, l
+     633/    77CF : DD 86 FE            	add	a, (ix-2)
+     634/    77D2 : 5F                  	ld	e, a
+     635/    77D3 : 7C                  	ld	a, h
+     636/    77D4 : DD 8E FF            	adc	a, (ix-1)
+     637/    77D7 : 57                  	ld	d, a
+     638/    77D8 : 2A 5C C0            	ld	hl, (_Lct + 88)
+     639/    77DB : 7B                  	ld	a, e
+     640/    77DC : 95                  	sub	l
+     641/    77DD : 7A                  	ld	a, d
+     642/    77DE : 9C                  	sbc	a, h
+     643/    77DF : D2 21 76            	jp	NC, ma150
+     644/    77E2 :                     ;vtl.c:135: src = READW(Bnd);
+     645/    77E2 : ED 5B 54 C0         	ld	de, (_Lct + 80)
+     646/    77E6 :                     ;vtl.c:136: WRITEW(Bnd, READW(Bnd) + m);
+     647/    77E6 : 2A 54 C0            	ld	hl, (_Lct + 80)
+     648/    77E9 : DD 7E FE            	ld	a, (ix-2)
+     649/    77EC : 85                  	add	a, l
+     650/    77ED : DD 77 FC            	ld	(ix-4), a
+     651/    77F0 : DD 7E FF            	ld	a, (ix-1)
+     652/    77F3 : 8C                  	adc	a, h
+     653/    77F4 : DD 77 FD            	ld	(ix-3), a
+     654/    77F7 : 21 54 C0            	ld	hl, _Lct + 80
+     655/    77FA : DD 7E FC            	ld	a, (ix-4)
+     656/    77FD : 77                  	ld	(hl), a
+     657/    77FE : 23                  	inc	hl
+     658/    77FF : DD 7E FD            	ld	a, (ix-3)
+     659/    7802 : 77                  	ld	(hl), a
+     660/    7803 :                     ;vtl.c:137: for (dst = READW(Bnd); src != cur; WRITEB(--dst, READB(--src))) ;
+     661/    7803 : 2B                  	dec	hl
+     662/    7804 : 7E                  	ld	a, (hl)
+     663/    7805 : DD 77 FE            	ld	(ix-2), a
+     664/    7808 : 23                  	inc	hl
+     665/    7809 : 7E                  	ld	a, (hl)
+     666/    780A : DD 77 FF            	ld	(ix-1), a
+     667/    780D :                     ma148:
+     668/    780D : DD 6E FA            	ld	l, (ix-6)
+     669/    7810 : DD 66 FB            	ld	h, (ix-5)
+     670/    7813 : BF                  	cp	a
+     671/    7814 : ED 52               	sbc	hl, de
+     672/    7816 : 28 1A               	jr	Z, ma123
+     673/    7818 : DD 6E FE            	ld	l, (ix-2)
+     674/    781B : DD 66 FF            	ld	h, (ix-1)
+     675/    781E : 2B                  	dec	hl
+     676/    781F : DD 75 FE            	ld	(ix-2), l
+     677/    7822 : DD 74 FF            	ld	(ix-1), h
+     678/    7825 : 09                  	add	hl, bc
+     679/    7826 : 1B                  	dec	de
+     680/    7827 : C5                  	push	bc
+     681/    7828 : FD E1               	pop	iy
+     682/    782A : FD 19               	add	iy, de
+     683/    782C : FD 7E 00            	ld	a, (iy+0)
+     684/    782F : 77                  	ld	(hl), a
+     685/    7830 : 18 DB               	jr	ma148
+     686/    7832 :                     ma123:
+     687/    7832 :                     ;vtl.c:138: WRITEW(src, n);
+     688/    7832 : 69                  	ld	l, c
+     689/    7833 : 60                  	ld	h, b
+     690/    7834 : 19                  	add	hl, de
+     691/    7835 : DD 7E F8            	ld	a, (ix-8)
+     692/    7838 : 77                  	ld	(hl), a
+     693/    7839 : 23                  	inc	hl
+     694/    783A : DD 7E F9            	ld	a, (ix-7)
+     695/    783D : 77                  	ld	(hl), a
+     696/    783E :                     ;vtl.c:139: src += 2;
+     697/    783E : 13                  	inc	de
+     698/    783F : 13                  	inc	de
+     699/    7840 : DD 73 FC            	ld	(ix-4), e
+     700/    7843 : DD 72 FD            	ld	(ix-3), d
+     701/    7846 :                     ;vtl.c:140: while (WRITEB(src++, READB(ptr++)) != '\0') ;
+     702/    7846 : DD 7E F6            	ld	a, (ix-10)
+     703/    7849 : DD 77 FE            	ld	(ix-2), a
+     704/    784C : DD 7E F7            	ld	a, (ix-9)
+     705/    784F : DD 77 FF            	ld	(ix-1), a
+     706/    7852 :                     ma124:
+     707/    7852 : DD 6E FC            	ld	l, (ix-4)
+     708/    7855 : DD 66 FD            	ld	h, (ix-3)
+     709/    7858 : 09                  	add	hl, bc
+     710/    7859 : DD 34 FC            	inc	(ix-4)
+     711/    785C : 20 03               	jr	NZ, ma284
+     712/    785E : DD 34 FD            	inc	(ix-3)
+     713/    7861 :                     ma284:
+     714/    7861 : DD 5E FE            	ld	e, (ix-2)
+     715/    7864 : DD 56 FF            	ld	d, (ix-1)
+     716/    7867 : DD 34 FE            	inc	(ix-2)
+     717/    786A : 20 03               	jr	NZ, ma285
+     718/    786C : DD 34 FF            	inc	(ix-1)
+     719/    786F :                     ma285:
+     720/    786F : DD 7E FE            	ld	a, (ix-2)
+     721/    7872 : DD 77 F6            	ld	(ix-10), a
+     722/    7875 : DD 7E FF            	ld	a, (ix-1)
+     723/    7878 : DD 77 F7            	ld	(ix-9), a
+     724/    787B : 7B                  	ld	a, e
+     725/    787C : 81                  	add	a, c
+     726/    787D : 5F                  	ld	e, a
+     727/    787E : 7A                  	ld	a, d
+     728/    787F : 88                  	adc	a, b
+     729/    7880 : 57                  	ld	d, a
+     730/    7881 : 1A                  	ld	a, (de)
+     731/    7882 : 77                  	ld	(hl),a
+     732/    7883 : B7                  	or	a
+     733/    7884 : CA 27 76            	jp	Z, ma103
+     734/    7887 :                     ;vtl.c:141: goto nmsg;-/* continue; */
+     735/    7887 :                     ;vtl.c:148: }
+     736/    7887 : 18 C9               	jr	ma124
+     737/    7889 :                     
+     738/    7889 :                     ;vtl.c:155: static int fndln(unsigned short *ptr) {
+     739/    7889 :                     ;----------------------------------
+     740/    7889 :                     ; Function fndln
+     741/    7889 :                     ; ---------------------------------
+     742/    7889 :                     _fndln:
+     743/    7889 : DD E5               	push	ix
+     744/    788B : DD 21 00 00         	ld	ix,0
+     745/    788F : DD 39               	add	ix,sp
+     746/    7891 : F5                  	push	af
+     747/    7892 : F5                  	push	af
+     748/    7893 : DD 75 FE            	ld	(ix-2), l
+     749/    7896 : DD 74 FF            	ld	(ix-1), h
+     750/    7899 :                     ;vtl.c:156: for (*ptr = Obj; *ptr != READW(Bnd); *ptr = nxtln(*ptr)) {
+     751/    7899 : C1                  	pop	bc
+     752/    789A : E1                  	pop	hl
+     753/    789B : E5                  	push	hl
+     754/    789C : C5                  	push	bc
+     755/    789D : 36 08               	ld	(hl), 08
+     756/    789F : 23                  	inc	hl
+     757/    78A0 : 36 01               	ld	(hl), 01
+     758/    78A2 :                     fn105:
+     759/    78A2 : DD 6E FE            	ld	l, (ix-2)
+     760/    78A5 : DD 66 FF            	ld	h, (ix-1)
+     761/    78A8 : 7E                  	ld	a, (hl)
+     762/    78A9 : DD 77 FC            	ld	(ix-4), a
+     763/    78AC : 23                  	inc	hl
+     764/    78AD : 7E                  	ld	a, (hl)
+     765/    78AE : DD 77 FD            	ld	(ix-3), a
+     766/    78B1 : 2A 54 C0            	ld	hl, (_Lct + 80)
+     767/    78B4 : C1                  	pop	bc
+     768/    78B5 : C5                  	push	bc
+     769/    78B6 : BF                  	cp	a
+     770/    78B7 : ED 42               	sbc	hl, bc
+     771/    78B9 : 28 2B               	jr	Z, fn103
+     772/    78BB :                     ;vtl.c:157: if (READW(*ptr) >= READW(Pcc)) return 0;
+     773/    78BB : 3E 04               	ld	a, _Lct & 0ffh
+     774/    78BD : DD 86 FC            	add	a, (ix-4)
+     775/    78C0 : 6F                  	ld	l, a
+     776/    78C1 :                     
+     777/    78C1 :                     
+     778/    78C1 : 3E C0               	ld	a, _Lct >> 8
+     779/    78C3 : DD 8E FD            	adc	a, (ix-3)
+     780/    78C6 : 67                  	ld	h, a
+     781/    78C7 :                     
+     782/    78C7 :                     
+     783/    78C7 : 4E                  	ld	c, (hl)
+     784/    78C8 : 23                  	inc	hl
+     785/    78C9 : 46                  	ld	b, (hl)
+     786/    78CA : 2A 4E C0            	ld	hl, (_Lct + 74)
+     787/    78CD : 79                  	ld	a, c
+     788/    78CE : 95                  	sub	l
+     789/    78CF : 78                  	ld	a, b
+     790/    78D0 : 9C                  	sbc	a, h
+     791/    78D1 : 38 05               	jr	C, fn106
+     792/    78D3 : 11 00 00            	ld	de, 0
+     793/    78D6 : 18 11               	jr	fn107
+     794/    78D8 :                     fn106:
+     795/    78D8 :                     ;vtl.c:156: for (*ptr = Obj; *ptr != READW(Bnd); *ptr = nxtln(*ptr)) {
+     796/    78D8 : E1                  	pop	hl
+     797/    78D9 : E5                  	push	hl
+     798/    78DA : CD EE 78            	call	_nxtln
+     799/    78DD : C1                  	pop	bc
+     800/    78DE : E1                  	pop	hl
+     801/    78DF : E5                  	push	hl
+     802/    78E0 : C5                  	push	bc
+     803/    78E1 : 73                  	ld	(hl), e
+     804/    78E2 : 23                  	inc	hl
+     805/    78E3 : 72                  	ld	(hl), d
+     806/    78E4 : 18 BC               	jr	fn105
+     807/    78E6 :                     fn103:
+     808/    78E6 :                     ;vtl.c:159: return 1;
+     809/    78E6 : 11 01 00            	ld	de, 1
+     810/    78E9 :                     fn107:
+     811/    78E9 :                     ;vtl.c:160: }
+     812/    78E9 : DD F9               	ld	sp, ix
+     813/    78EB : DD E1               	pop	ix
+     814/    78ED : C9                  	ret
+     815/    78EE :                     ;vtl.c:166: static unsigned short nxtln(unsigned short ptr) {
+     816/    78EE :                     ;----------------------------------
+     817/    78EE :                     ; Function nxtln
+     818/    78EE :                     ; ---------------------------------
+     819/    78EE :                     _nxtln:
+     820/    78EE : EB                  	ex	de, hl
+     821/    78EF :                     ;vtl.c:167: for (ptr += 2; READB(ptr++) != '\0'; ) ;
+     822/    78EF : 13                  	inc	de
+     823/    78F0 : 13                  	inc	de
+     824/    78F1 :                     nx103:
+     825/    78F1 : 21 04 C0            	ld	hl, _Lct
+     826/    78F4 : 19                  	add	hl, de
+     827/    78F5 : 13                  	inc	de
+     828/    78F6 : 7E                  	ld	a, (hl)
+     829/    78F7 : B7                  	or	a
+     830/    78F8 : 20 F7               	jr	NZ, nx103
+     831/    78FA :                     ;vtl.c:168: return ptr;
+     832/    78FA :                     ;vtl.c:169: }
+     833/    78FA : C9                  	ret
+     834/    78FB :                     ;vtl.c:175: static void getln(unsigned short lbf) {
+     835/    78FB :                     ;----------------------------------
+     836/    78FB :                     ; Function getln
+     837/    78FB :                     ; ---------------------------------
+     838/    78FB :                     _getln:
+     839/    78FB : DD E5               	push	ix
+     840/    78FD : DD 21 00 00         	ld	ix,0
+     841/    7901 : DD 39               	add	ix,sp
+     842/    7903 : F5                  	push	af
+     843/    7904 : 3B                  	dec	sp
+     844/    7905 : 4D                  	ld	c, l
+     845/    7906 : 44                  	ld	b, h
+     846/    7907 :                     ;vtl.c:179: for (p = 0; ; ) {
+     847/    7907 : 11 00 00            	ld	de, 0
+     848/    790A :                     ge117:
+     849/    790A :                     ;vtl.c:180: c = getchr();
+     850/    790A : C5                  	push	bc
+     851/    790B : D5                  	push	de
+     852/    790C : CD 12 75            	call	_getchr
+     853/    790F : D1                  	pop	de
+     854/    7910 : C1                  	pop	bc
+     855/    7911 :                     ;vtl.c:181: if (c == '\b') {
+     856/    7911 : DD 77 FD            	ld	(ix-3), a
+     857/    7914 : D6 08               	sub	08
+     858/    7916 : 20 0E               	jr	NZ, ge114
+     859/    7918 :                     ;vtl.c:182: if (p > 0) p--;
+     860/    7918 : AF                  	xor	a
+     861/    7919 : BB                  	cp	e
+     862/    791A : 9A                  	sbc	a, d
+     863/    791B : E2 20 79            	jp	PO, ge153
+     864/    791E : EE 80               	xor	80h
+     865/    7920 :                     ge153:
+     866/    7920 : F2 0A 79            	jp	P, ge117
+     867/    7923 : 1B                  	dec	de
+     868/    7924 : 18 E4               	jr	ge117
+     869/    7926 :                     ge114:
+     870/    7926 :                     ;vtl.c:184: WRITEB(lbf + p, '\0');
+     871/    7926 : DD 71 FE            	ld	(ix-2), c
+     872/    7929 : DD 70 FF            	ld	(ix-1), b
+     873/    792C :                     ;vtl.c:183: } else if (c == '\r') {
+     874/    792C : DD 7E FD            	ld	a, (ix-3)
+     875/    792F : D6 0D               	sub	0dh
+     876/    7931 : 20 14               	jr	NZ, ge111
+     877/    7933 :                     ;vtl.c:184: WRITEB(lbf + p, '\0');
+     878/    7933 : DD 6E FE            	ld	l, (ix-2)
+     879/    7936 : DD 66 FF            	ld	h, (ix-1)
+     880/    7939 : 19                  	add	hl, de
+     881/    793A : 11 04 C0            	ld	de, _Lct
+     882/    793D : 19                  	add	hl, de
+     883/    793E : 36 00               	ld	(hl), 0
+     884/    7940 :                     ;vtl.c:185: putchr('\n');
+     885/    7940 : 3E 0A               	ld	a, 0ah
+     886/    7942 : CD 06 75            	call	_putchr
+     887/    7945 :                     ;vtl.c:186: return;
+     888/    7945 : 18 38               	jr	ge119
+     889/    7947 :                     ge111:
+     890/    7947 :                     ;vtl.c:187: } else if (c == 0x15 || p + 1 == 74) {
+     891/    7947 : DD 7E FD            	ld	a, (ix-3)
+     892/    794A : D6 15               	sub	15h
+     893/    794C : 28 09               	jr	Z, ge106
+     894/    794E : 6B                  	ld	l, e
+     895/    794F :                     
+     896/    794F :                     
+     897/    794F : 62                  	ld	h, d
+     898/    7950 :                     
+     899/    7950 :                     
+     900/    7950 : 23                  	inc	hl
+     901/    7951 : 7D                  	ld	a, l
+     902/    7952 : D6 4A               	sub	4ah
+     903/    7954 : B4                  	or	h
+     904/    7955 : 20 0A               	jr	NZ, ge107
+     905/    7957 :                     ge106:
+     906/    7957 :                     ;vtl.c:188: crlf();
+     907/    7957 : C5                  	push	bc
+     908/    7958 : CD 15 7E            	call	_crlf
+     909/    795B : C1                  	pop	bc
+     910/    795C :                     ;vtl.c:189: p = 0;
+     911/    795C : 11 00 00            	ld	de, 0
+     912/    795F : 18 A9               	jr	ge117
+     913/    7961 :                     ge107:
+     914/    7961 :                     ;vtl.c:190: } else if (c <= 0x1f) {
+     915/    7961 : 3E 1F               	ld	a, 1fh
+     916/    7963 : DD 96 FD            	sub	(ix-3)
+     917/    7966 : 30 A2               	jr	NC, ge117
+     918/    7968 :                     ;vtl.c:192: WRITEB(lbf + p++, c);
+     919/    7968 : EB                  	ex	de, hl
+     920/    7969 : 7D                  	ld	a, l
+     921/    796A : DD 86 FE            	add	a, (ix-2)
+     922/    796D : 6F                  	ld	l, a
+     923/    796E :                     
+     924/    796E :                     
+     925/    796E : 7C                  	ld	a, h
+     926/    796F : DD 8E FF            	adc	a, (ix-1)
+     927/    7972 : 67                  	ld	h, a
+     928/    7973 :                     
+     929/    7973 :                     
+     930/    7973 : D5                  	push	de
+     931/    7974 : 11 04 C0            	ld	de, _Lct
+     932/    7977 : 19                  	add	hl, de
+     933/    7978 : D1                  	pop	de
+     934/    7979 : DD 7E FD            	ld	a, (ix-3)
+     935/    797C : 77                  	ld	(hl), a
+     936/    797D : 18 8B               	jr	ge117
+     937/    797F :                     ge119:
+     938/    797F :                     ;vtl.c:195: }
+     939/    797F : DD F9               	ld	sp, ix
+     940/    7981 : DD E1               	pop	ix
+     941/    7983 : C9                  	ret
+     942/    7984 :                     ;vtl.c:203: static int getnm(unsigned short *ptr, unsigned short *n) {
+     943/    7984 :                     ;----------------------------------
+     944/    7984 :                     ; Function getnm
+     945/    7984 :                     ; ---------------------------------
+     946/    7984 :                     _getnm:
+     947/    7984 : DD E5               	push	ix
+     948/    7986 : DD 21 00 00         	ld	ix,0
+     949/    798A : DD 39               	add	ix,sp
+     950/    798C : F5                  	push	af
+     951/    798D : F5                  	push	af
+     952/    798E : F5                  	push	af
+     953/    798F : DD 75 FE            	ld	(ix-2), l
+     954/    7992 : DD 74 FF            	ld	(ix-1), h
+     955/    7995 : DD 73 FC            	ld	(ix-4), e
+     956/    7998 : DD 72 FD            	ld	(ix-3), d
+     957/    799B :                     ;vtl.c:204: if (!num(*ptr)) return 0;
+     958/    799B : DD 6E FE            	ld	l, (ix-2)
+     959/    799E : DD 66 FF            	ld	h, (ix-1)
+     960/    79A1 : 5E                  	ld	e, (hl)
+     961/    79A2 : 23                  	inc	hl
+     962/    79A3 : 56                  	ld	d, (hl)
+     963/    79A4 : EB                  	ex	de, hl
+     964/    79A5 : CD 15 7A            	call	_num
+     965/    79A8 : 7A                  	ld	a, d
+     966/    79A9 : B3                  	or	e
+     967/    79AA : 20 05               	jr	NZ, gt102
+     968/    79AC : 11 00 00            	ld	de, 0
+     969/    79AF : 18 5F               	jr	gt106
+     970/    79B1 :                     gt102:
+     971/    79B1 :                     ;vtl.c:205: *n = 0;
+     972/    79B1 : C1                  	pop	bc
+     973/    79B2 : E1                  	pop	hl
+     974/    79B3 : E5                  	push	hl
+     975/    79B4 : C5                  	push	bc
+     976/    79B5 : AF                  	xor	a
+     977/    79B6 : 77                  	ld	(hl), a
+     978/    79B7 : 23                  	inc	hl
+     979/    79B8 : 77                  	ld	(hl), a
+     980/    79B9 :                     ;vtl.c:206: do {
+     981/    79B9 :                     gt103:
+     982/    79B9 :                     ;vtl.c:207: *n *= 10;
+     983/    79B9 : DD 6E FC            	ld	l, (ix-4)
+     984/    79BC : DD 66 FD            	ld	h, (ix-3)
+     985/    79BF : 4E                  	ld	c, (hl)
+     986/    79C0 : 23                  	inc	hl
+     987/    79C1 : 46                  	ld	b, (hl)
+     988/    79C2 : 69                  	ld	l, c
+     989/    79C3 : 60                  	ld	h, b
+     990/    79C4 : 29                  	add	hl, hl
+     991/    79C5 : 29                  	add	hl, hl
+     992/    79C6 : 09                  	add	hl, bc
+     993/    79C7 : 29                  	add	hl, hl
+     994/    79C8 : EB                  	ex	de, hl
+     995/    79C9 : C1                  	pop	bc
+     996/    79CA : E1                  	pop	hl
+     997/    79CB : E5                  	push	hl
+     998/    79CC : C5                  	push	bc
+     999/    79CD : 73                  	ld	(hl), e
+    1000/    79CE : 23                  	inc	hl
+    1001/    79CF : 72                  	ld	(hl), d
+    1002/    79D0 :                     ;vtl.c:208: *n += READB((*ptr)++) - '0';
+    1003/    79D0 : DD 6E FE            	ld	l, (ix-2)
+    1004/    79D3 : DD 66 FF            	ld	h, (ix-1)
+    1005/    79D6 : 4E                  	ld	c, (hl)
+    1006/    79D7 : 23                  	inc	hl
+    1007/    79D8 : 46                  	ld	b, (hl)
+    1008/    79D9 : 69                  	ld	l, c
+    1009/    79DA : 60                  	ld	h, b
+    1010/    79DB : 23                  	inc	hl
+    1011/    79DC : E3                  	ex	(sp), hl
+    1012/    79DD : DD 6E FE            	ld	l, (ix-2)
+    1013/    79E0 : DD 66 FF            	ld	h, (ix-1)
+    1014/    79E3 : DD 7E FA            	ld	a, (ix-6)
+    1015/    79E6 : 77                  	ld	(hl), a
+    1016/    79E7 : 23                  	inc	hl
+    1017/    79E8 : DD 7E FB            	ld	a, (ix-5)
+    1018/    79EB : 77                  	ld	(hl), a
+    1019/    79EC : 21 04 C0            	ld	hl, _Lct
+    1020/    79EF : 09                  	add	hl, bc
+    1021/    79F0 : 4E                  	ld	c, (hl)
+    1022/    79F1 : 06 00               	ld	b, 0
+    1023/    79F3 : 79                  	ld	a, c
+    1024/    79F4 : C6 D0               	add	a, 0d0h
+    1025/    79F6 : 6F                  	ld	l, a
+    1026/    79F7 :                     
+    1027/    79F7 :                     
+    1028/    79F7 : 78                  	ld	a, b
+    1029/    79F8 : CE FF               	adc	a, 0ffh
+    1030/    79FA : 67                  	ld	h, a
+    1031/    79FB :                     
+    1032/    79FB :                     
+    1033/    79FB : 19                  	add	hl, de
+    1034/    79FC : EB                  	ex	de, hl
+    1035/    79FD : C1                  	pop	bc
+    1036/    79FE : E1                  	pop	hl
+    1037/    79FF : E5                  	push	hl
+    1038/    7A00 : C5                  	push	bc
+    1039/    7A01 : 73                  	ld	(hl), e
+    1040/    7A02 : 23                  	inc	hl
+    1041/    7A03 : 72                  	ld	(hl), d
+    1042/    7A04 :                     ;vtl.c:209: } while (num(*ptr));
+    1043/    7A04 : E1                  	pop	hl
+    1044/    7A05 : E5                  	push	hl
+    1045/    7A06 : CD 15 7A            	call	_num
+    1046/    7A09 : 7A                  	ld	a, d
+    1047/    7A0A : B3                  	or	e
+    1048/    7A0B : 20 AC               	jr	NZ, gt103
+    1049/    7A0D :                     ;vtl.c:210: return 1;
+    1050/    7A0D : 11 01 00            	ld	de, 1
+    1051/    7A10 :                     gt106:
+    1052/    7A10 :                     ;vtl.c:211: }
+    1053/    7A10 : DD F9               	ld	sp, ix
+    1054/    7A12 : DD E1               	pop	ix
+    1055/    7A14 : C9                  	ret
+    1056/    7A15 :                     ;vtl.c:217: static int num(unsigned short ptr) {
+    1057/    7A15 :                     ;----------------------------------
+    1058/    7A15 :                     ; Function num
+    1059/    7A15 :                     ; ---------------------------------
+    1060/    7A15 :                     _num:
+    1061/    7A15 :                     ;vtl.c:218: return ('0' <= READB(ptr) && READB(ptr) <= '9');
+    1062/    7A15 : 11 04 C0            	ld	de, _Lct
+    1063/    7A18 : 19                  	add	hl, de
+    1064/    7A19 : 4E                  	ld	c, (hl)
+    1065/    7A1A : 79                  	ld	a, c
+    1066/    7A1B : D6 30               	sub	30h
+    1067/    7A1D : 38 05               	jr	C, nu103
+    1068/    7A1F : 3E 39               	ld	a, 39h
+    1069/    7A21 : 91                  	sub	c
+    1070/    7A22 : 30 04               	jr	NC, nu104
+    1071/    7A24 :                     nu103:
+    1072/    7A24 : 1E 00               	ld	e, 00
+    1073/    7A26 : 18 02               	jr	nu105
+    1074/    7A28 :                     nu104:
+    1075/    7A28 : 1E 01               	ld	e, 01
+    1076/    7A2A :                     nu105:
+    1077/    7A2A : 16 00               	ld	d, 00
+    1078/    7A2C :                     ;vtl.c:219: }
+    1079/    7A2C : C9                  	ret
+    1080/    7A2D :                     ;vtl.c:225: static void ordr(unsigned short ptr) {
+    1081/    7A2D :                     ;----------------------------------
+    1082/    7A2D :                     ; Function ordr
+    1083/    7A2D :                     ; ---------------------------------
+    1084/    7A2D :                     _ordr:
+    1085/    7A2D : DD E5               	push	ix
+    1086/    7A2F : DD 21 00 00         	ld	ix,0
+    1087/    7A33 : DD 39               	add	ix,sp
+    1088/    7A35 : F5                  	push	af
+    1089/    7A36 : F5                  	push	af
+    1090/    7A37 : F5                  	push	af
+    1091/    7A38 : 3B                  	dec	sp
+    1092/    7A39 : DD 75 FE            	ld	(ix-2), l
+    1093/    7A3C : DD 74 FF            	ld	(ix-1), h
+    1094/    7A3F :                     ;vtl.c:229: getvr(&ptr, &c, &adr);-/* 左辺値のアドレスを求める */
+    1095/    7A3F : 21 01 00            	ld	hl, 1
+    1096/    7A42 : 39                  	add	hl, sp
+    1097/    7A43 : E5                  	push	hl
+    1098/    7A44 : 21 02 00            	ld	hl, 2
+    1099/    7A47 : 39                  	add	hl, sp
+    1100/    7A48 : EB                  	ex	de, hl
+    1101/    7A49 : 21 07 00            	ld	hl, 7
+    1102/    7A4C : 39                  	add	hl, sp
+    1103/    7A4D : CD 4B 7D            	call	_getvr
+    1104/    7A50 :                     ;vtl.c:230: ptr++;-/* 代入の'='を読み飛ばす */
+    1105/    7A50 : DD 34 FE            	inc	(ix-2)
+    1106/    7A53 : 20 03               	jr	NZ, or134
+    1107/    7A55 : DD 34 FF            	inc	(ix-1)
+    1108/    7A58 :                     or134:
+    1109/    7A58 :                     ;vtl.c:232: if (READB(ptr) == '"') {
+    1110/    7A58 : 01 04 C0            	ld	bc, _Lct
+    1111/    7A5B : DD 6E FE            	ld	l, (ix-2)
+    1112/    7A5E : DD 66 FF            	ld	h, (ix-1)
+    1113/    7A61 : 09                  	add	hl, bc
+    1114/    7A62 : 7E                  	ld	a, (hl)
+    1115/    7A63 : D6 22               	sub	22h
+    1116/    7A65 : 20 26               	jr	NZ, or110
+    1117/    7A67 :                     ;vtl.c:233: ptr++;
+    1118/    7A67 : DD 34 FE            	inc	(ix-2)
+    1119/    7A6A : 20 03               	jr	NZ, or137
+    1120/    7A6C : DD 34 FF            	inc	(ix-1)
+    1121/    7A6F :                     or137:
+    1122/    7A6F :                     ;vtl.c:234: putl(&ptr, '"');
+    1123/    7A6F : C5                  	push	bc
+    1124/    7A70 : 3E 22               	ld	a, 22h
+    1125/    7A72 : F5                  	push	af
+    1126/    7A73 : 33                  	inc	sp
+    1127/    7A74 : 21 08 00            	ld	hl, 8
+    1128/    7A77 : 39                  	add	hl, sp
+    1129/    7A78 : CD DB 7D            	call	_putl
+    1130/    7A7B : C1                  	pop	bc
+    1131/    7A7C :                     ;vtl.c:235: if (READB(ptr) != ';') crlf();
+    1132/    7A7C : DD 6E FE            	ld	l, (ix-2)
+    1133/    7A7F : DD 66 FF            	ld	h, (ix-1)
+    1134/    7A82 : 09                  	add	hl, bc
+    1135/    7A83 : 7E                  	ld	a, (hl)
+    1136/    7A84 : D6 3B               	sub	3bh
+    1137/    7A86 : 28 51               	jr	Z, or111
+    1138/    7A88 : CD 15 7E            	call	_crlf
+    1139/    7A8B : 18 4C               	jr	or111
+    1140/    7A8D :                     or110:
+    1141/    7A8D :                     ;vtl.c:239: expr(&ptr, &val);-/* 右辺値を計算する */
+    1142/    7A8D : C5                  	push	bc
+    1143/    7A8E : 21 05 00            	ld	hl, 5
+    1144/    7A91 : 39                  	add	hl, sp
+    1145/    7A92 : EB                  	ex	de, hl
+    1146/    7A93 : 21 07 00            	ld	hl, 7
+    1147/    7A96 : 39                  	add	hl, sp
+    1148/    7A97 : CD DE 7A            	call	_expr
+    1149/    7A9A : C1                  	pop	bc
+    1150/    7A9B :                     ;vtl.c:241: if (c == '$') {
+    1151/    7A9B : DD 7E F9            	ld	a, (ix-7)
+    1152/    7A9E : D6 24               	sub	24h
+    1153/    7AA0 : 20 08               	jr	NZ, or107
+    1154/    7AA2 :                     ;vtl.c:242: putchr(val & 0xff);
+    1155/    7AA2 : DD 7E FC            	ld	a, (ix-4)
+    1156/    7AA5 : CD 06 75            	call	_putchr
+    1157/    7AA8 : 18 2F               	jr	or111
+    1158/    7AAA :                     or107:
+    1159/    7AAA :                     ;vtl.c:243: } else if ((c -= '?') == 0) {
+    1160/    7AAA : DD 7E F9            	ld	a, (ix-7)
+    1161/    7AAD : C6 C1               	add	a, 0c1h
+    1162/    7AAF : DD 77 F9            	ld	(ix-7), a
+    1163/    7AB2 : B7                  	or	a
+    1164/    7AB3 : 20 0B               	jr	NZ, or104
+    1165/    7AB5 :                     ;vtl.c:244: putnm(val);
+    1166/    7AB5 : DD 6E FC            	ld	l, (ix-4)
+    1167/    7AB8 :                     
+    1168/    7AB8 :                     
+    1169/    7AB8 : DD 66 FD            	ld	h, (ix-3)
+    1170/    7ABB :                     
+    1171/    7ABB :                     
+    1172/    7ABB : CD 1F 7E            	call	_putnm
+    1173/    7ABE : 18 19               	jr	or111
+    1174/    7AC0 :                     or104:
+    1175/    7AC0 :                     ;vtl.c:248: WRITEW(adr, val);
+    1176/    7AC0 : DD 6E FA            	ld	l, (ix-6)
+    1177/    7AC3 : DD 66 FB            	ld	h, (ix-5)
+    1178/    7AC6 : 09                  	add	hl, bc
+    1179/    7AC7 : DD 7E FC            	ld	a, (ix-4)
+    1180/    7ACA : 77                  	ld	(hl), a
+    1181/    7ACB : 23                  	inc	hl
+    1182/    7ACC : DD 7E FD            	ld	a, (ix-3)
+    1183/    7ACF : 77                  	ld	(hl), a
+    1184/    7AD0 :                     ;vtl.c:256: r = rand();
+    1185/    7AD0 : C5                  	push	bc
+    1186/    7AD1 : CD 20 75            	call	_rand
+    1187/    7AD4 : C1                  	pop	bc
+    1188/    7AD5 :                     ;vtl.c:258: WRITEW(Rnd, r);
+    1189/    7AD5 : ED 53 56 C0         	ld	(_Lct + 82), de
+    1190/    7AD9 :                     or111:
+    1191/    7AD9 :                     ;vtl.c:261: return;
+    1192/    7AD9 :                     ;vtl.c:262: }
+    1193/    7AD9 : DD F9               	ld	sp, ix
+    1194/    7ADB : DD E1               	pop	ix
+    1195/    7ADD : C9                  	ret
+    1196/    7ADE :                     ;vtl.c:268: static void expr(unsigned short *ptr, unsigned short *val) {
+    1197/    7ADE :                     ;----------------------------------
+    1198/    7ADE :                     ; Function expr
+    1199/    7ADE :                     ; ---------------------------------
+    1200/    7ADE :                     _expr:
+    1201/    7ADE : DD E5               	push	ix
+    1202/    7AE0 : DD 21 00 00         	ld	ix,0
+    1203/    7AE4 : DD 39               	add	ix,sp
+    1204/    7AE6 : F5                  	push	af
+    1205/    7AE7 : 4D                  	ld	c, l
+    1206/    7AE8 : 44                  	ld	b, h
+    1207/    7AE9 : 33                  	inc	sp
+    1208/    7AEA : 33                  	inc	sp
+    1209/    7AEB : D5                  	push	de
+    1210/    7AEC :                     ;vtl.c:271: factr(ptr, val);
+    1211/    7AEC : C5                  	push	bc
+    1212/    7AED : E1                  	pop	hl
+    1213/    7AEE : D1                  	pop	de
+    1214/    7AEF : D5                  	push	de
+    1215/    7AF0 : E5                  	push	hl
+    1216/    7AF1 : 69                  	ld	l, c
+    1217/    7AF2 :                     
+    1218/    7AF2 :                     
+    1219/    7AF2 : 60                  	ld	h, b
+    1220/    7AF3 :                     
+    1221/    7AF3 :                     
+    1222/    7AF3 : CD 20 7B            	call	_factr
+    1223/    7AF6 : C1                  	pop	bc
+    1224/    7AF7 :                     ;vtl.c:272: while ((c = READB(*ptr)) != '\0' && c != ')') {
+    1225/    7AF7 :                     ex102:
+    1226/    7AF7 : 69                  	ld	l, c
+    1227/    7AF8 : 60                  	ld	h, b
+    1228/    7AF9 : 5E                  	ld	e, (hl)
+    1229/    7AFA : 23                  	inc	hl
+    1230/    7AFB : 56                  	ld	d, (hl)
+    1231/    7AFC : 21 04 C0            	ld	hl, _Lct
+    1232/    7AFF : 19                  	add	hl, de
+    1233/    7B00 : 7E                  	ld	a, (hl)
+    1234/    7B01 :                     
+    1235/    7B01 :                     
+    1236/    7B01 : B7                  	or	a,a
+    1237/    7B02 : 28 11               	jr	Z, ex104
+    1238/    7B04 : D6 29               	sub	29h
+    1239/    7B06 : 28 0D               	jr	Z, ex104
+    1240/    7B08 :                     ;vtl.c:273: term(ptr, val);
+    1241/    7B08 : C5                  	push	bc
+    1242/    7B09 : E1                  	pop	hl
+    1243/    7B0A : D1                  	pop	de
+    1244/    7B0B : D5                  	push	de
+    1245/    7B0C : E5                  	push	hl
+    1246/    7B0D : 69                  	ld	l, c
+    1247/    7B0E :                     
+    1248/    7B0E :                     
+    1249/    7B0E : 60                  	ld	h, b
+    1250/    7B0F :                     
+    1251/    7B0F :                     
+    1252/    7B0F : CD FF 7B            	call	_term
+    1253/    7B12 : C1                  	pop	bc
+    1254/    7B13 : 18 E2               	jr	ex102
+    1255/    7B15 :                     ex104:
+    1256/    7B15 :                     ;vtl.c:275: (*ptr)++;
+    1257/    7B15 : 13                  	inc	de
+    1258/    7B16 : 7B                  	ld	a, e
+    1259/    7B17 : 02                  	ld	(bc), a
+    1260/    7B18 : 03                  	inc	bc
+    1261/    7B19 : 7A                  	ld	a, d
+    1262/    7B1A : 02                  	ld	(bc), a
+    1263/    7B1B :                     ;vtl.c:276: return;
+    1264/    7B1B :                     ;vtl.c:277: }
+    1265/    7B1B : DD F9               	ld	sp, ix
+    1266/    7B1D : DD E1               	pop	ix
+    1267/    7B1F : C9                  	ret
+    1268/    7B20 :                     ;vtl.c:283: static void factr(unsigned short *ptr, unsigned short *val) {
+    1269/    7B20 :                     ;----------------------------------
+    1270/    7B20 :                     ; Function factr
+    1271/    7B20 :                     ; ---------------------------------
+    1272/    7B20 :                     _factr:
+    1273/    7B20 : DD E5               	push	ix
+    1274/    7B22 : DD 21 00 00         	ld	ix,0
+    1275/    7B26 : DD 39               	add	ix,sp
+    1276/    7B28 : F5                  	push	af
+    1277/    7B29 : F5                  	push	af
+    1278/    7B2A : F5                  	push	af
+    1279/    7B2B : 3B                  	dec	sp
+    1280/    7B2C : 4D                  	ld	c, l
+    1281/    7B2D : 44                  	ld	b, h
+    1282/    7B2E : DD 73 FE            	ld	(ix-2), e
+    1283/    7B31 : DD 72 FF            	ld	(ix-1), d
+    1284/    7B34 :                     ;vtl.c:286: if (READB(*ptr) == '\0') {
+    1285/    7B34 : 69                  	ld	l, c
+    1286/    7B35 : 60                  	ld	h, b
+    1287/    7B36 : 5E                  	ld	e, (hl)
+    1288/    7B37 : 23                  	inc	hl
+    1289/    7B38 : 56                  	ld	d, (hl)
+    1290/    7B39 : 21 04 C0            	ld	hl, _Lct
+    1291/    7B3C : 19                  	add	hl, de
+    1292/    7B3D : 7E                  	ld	a, (hl)
+    1293/    7B3E : B7                  	or	a
+    1294/    7B3F : 20 0D               	jr	NZ, fa102
+    1295/    7B41 :                     ;vtl.c:287: *val = 0;
+    1296/    7B41 : DD 6E FE            	ld	l, (ix-2)
+    1297/    7B44 : DD 66 FF            	ld	h, (ix-1)
+    1298/    7B47 : AF                  	xor	a
+    1299/    7B48 : 77                  	ld	(hl), a
+    1300/    7B49 : 23                  	inc	hl
+    1301/    7B4A : 77                  	ld	(hl), a
+    1302/    7B4B :                     ;vtl.c:288: return;
+    1303/    7B4B : C3 FA 7B            	jp	fa114
+    1304/    7B4E :                     fa102:
+    1305/    7B4E :                     ;vtl.c:291: if (getnm(ptr, val)) return;
+    1306/    7B4E : C5                  	push	bc
+    1307/    7B4F : DD 5E FE            	ld	e, (ix-2)
+    1308/    7B52 : DD 56 FF            	ld	d, (ix-1)
+    1309/    7B55 : 69                  	ld	l, c
+    1310/    7B56 :                     
+    1311/    7B56 :                     
+    1312/    7B56 : 60                  	ld	h, b
+    1313/    7B57 :                     
+    1314/    7B57 :                     
+    1315/    7B57 : CD 84 79            	call	_getnm
+    1316/    7B5A : C1                  	pop	bc
+    1317/    7B5B : 7A                  	ld	a, d
+    1318/    7B5C : B3                  	or	e
+    1319/    7B5D : C2 FA 7B            	jp	NZ,fa114
+    1320/    7B60 :                     ;vtl.c:293: c = READB((*ptr)++);
+    1321/    7B60 : 69                  	ld	l, c
+    1322/    7B61 : 60                  	ld	h, b
+    1323/    7B62 : 5E                  	ld	e, (hl)
+    1324/    7B63 : 23                  	inc	hl
+    1325/    7B64 : 56                  	ld	d, (hl)
+    1326/    7B65 : 6B                  	ld	l, e
+    1327/    7B66 : 62                  	ld	h, d
+    1328/    7B67 : 23                  	inc	hl
+    1329/    7B68 : DD 75 FC            	ld	(ix-4), l
+    1330/    7B6B : DD 74 FD            	ld	(ix-3), h
+    1331/    7B6E : 69                  	ld	l, c
+    1332/    7B6F : 60                  	ld	h, b
+    1333/    7B70 : DD 7E FC            	ld	a, (ix-4)
+    1334/    7B73 : 77                  	ld	(hl), a
+    1335/    7B74 : 23                  	inc	hl
+    1336/    7B75 : DD 7E FD            	ld	a, (ix-3)
+    1337/    7B78 : 77                  	ld	(hl), a
+    1338/    7B79 : 21 04 C0            	ld	hl, _Lct
+    1339/    7B7C : 19                  	add	hl, de
+    1340/    7B7D : 7E                  	ld	a, (hl)
+    1341/    7B7E : DD 77 F9            	ld	(ix-7), a
+    1342/    7B81 :                     ;vtl.c:294: if (c == '?') {
+    1343/    7B81 : FE 3F               	cp	3fh
+    1344/    7B83 : 20 1D               	jr	NZ, fa112
+    1345/    7B85 :                     ;vtl.c:297: tmp = Lbf;
+    1346/    7B85 : DD 36 FA 88         	ld	(ix-6), 88h
+    1347/    7B89 : DD 36 FB 00         	ld	(ix-5), 0
+    1348/    7B8D :                     ;vtl.c:298: getln(tmp);
+    1349/    7B8D : 21 88 00            	ld	hl, 88h
+    1350/    7B90 : CD FB 78            	call	_getln
+    1351/    7B93 :                     ;vtl.c:299: expr(&tmp, val);
+    1352/    7B93 : DD 5E FE            	ld	e, (ix-2)
+    1353/    7B96 : DD 56 FF            	ld	d, (ix-1)
+    1354/    7B99 : 21 01 00            	ld	hl, 1
+    1355/    7B9C : 39                  	add	hl, sp
+    1356/    7B9D : CD DE 7A            	call	_expr
+    1357/    7BA0 : 18 58               	jr	fa113
+    1358/    7BA2 :                     fa112:
+    1359/    7BA2 :                     ;vtl.c:300: } else if (c == '$') {
+    1360/    7BA2 : FE 24               	cp	24h
+    1361/    7BA4 : 20 11               	jr	NZ, fa109
+    1362/    7BA6 :                     ;vtl.c:301: *val = getchr();
+    1363/    7BA6 : CD 12 75            	call	_getchr
+    1364/    7BA9 : 4F                  	ld	c, a
+    1365/    7BAA : 06 00               	ld	b, 0
+    1366/    7BAC : DD 6E FE            	ld	l, (ix-2)
+    1367/    7BAF : DD 66 FF            	ld	h, (ix-1)
+    1368/    7BB2 : 71                  	ld	(hl), c
+    1369/    7BB3 : 23                  	inc	hl
+    1370/    7BB4 : 70                  	ld	(hl), b
+    1371/    7BB5 : 18 43               	jr	fa113
+    1372/    7BB7 :                     fa109:
+    1373/    7BB7 :                     ;vtl.c:302: } else if (c == '(') {
+    1374/    7BB7 : D6 28               	sub	28h
+    1375/    7BB9 : 20 0D               	jr	NZ, fa106
+    1376/    7BBB :                     ;vtl.c:303: expr(ptr, val);
+    1377/    7BBB : DD 5E FE            	ld	e, (ix-2)
+    1378/    7BBE : DD 56 FF            	ld	d, (ix-1)
+    1379/    7BC1 : 69                  	ld	l, c
+    1380/    7BC2 :                     
+    1381/    7BC2 :                     
+    1382/    7BC2 : 60                  	ld	h, b
+    1383/    7BC3 :                     
+    1384/    7BC3 :                     
+    1385/    7BC3 : CD DE 7A            	call	_expr
+    1386/    7BC6 : 18 32               	jr	fa113
+    1387/    7BC8 :                     fa106:
+    1388/    7BC8 :                     ;vtl.c:307: (*ptr)--;
+    1389/    7BC8 : 69                  	ld	l, c
+    1390/    7BC9 : 60                  	ld	h, b
+    1391/    7BCA : 5E                  	ld	e, (hl)
+    1392/    7BCB : 23                  	inc	hl
+    1393/    7BCC : 56                  	ld	d, (hl)
+    1394/    7BCD : 1B                  	dec	de
+    1395/    7BCE : 69                  	ld	l, c
+    1396/    7BCF : 60                  	ld	h, b
+    1397/    7BD0 : 73                  	ld	(hl), e
+    1398/    7BD1 : 23                  	inc	hl
+    1399/    7BD2 : 72                  	ld	(hl), d
+    1400/    7BD3 :                     ;vtl.c:308: getvr(ptr, &c, &adr);
+    1401/    7BD3 : 21 01 00            	ld	hl, 1
+    1402/    7BD6 : 39                  	add	hl, sp
+    1403/    7BD7 : E5                  	push	hl
+    1404/    7BD8 : 21 02 00            	ld	hl, 2
+    1405/    7BDB : 39                  	add	hl, sp
+    1406/    7BDC : EB                  	ex	de, hl
+    1407/    7BDD : 69                  	ld	l, c
+    1408/    7BDE :                     
+    1409/    7BDE :                     
+    1410/    7BDE : 60                  	ld	h, b
+    1411/    7BDF :                     
+    1412/    7BDF :                     
+    1413/    7BDF : CD 4B 7D            	call	_getvr
+    1414/    7BE2 :                     ;vtl.c:309: *val = READW(adr);-/* 変数か配列の値を得る */
+    1415/    7BE2 : 3E 04               	ld	a, _Lct & 0ffh
+    1416/    7BE4 : DD 86 FA            	add	a, (ix-6)
+    1417/    7BE7 : 6F                  	ld	l, a
+    1418/    7BE8 :                     
+    1419/    7BE8 :                     
+    1420/    7BE8 : 3E C0               	ld	a, _Lct >> 8
+    1421/    7BEA : DD 8E FB            	adc	a, (ix-5)
+    1422/    7BED : 67                  	ld	h, a
+    1423/    7BEE :                     
+    1424/    7BEE :                     
+    1425/    7BEE : 4E                  	ld	c, (hl)
+    1426/    7BEF : 23                  	inc	hl
+    1427/    7BF0 : 46                  	ld	b, (hl)
+    1428/    7BF1 : DD 6E FE            	ld	l, (ix-2)
+    1429/    7BF4 : DD 66 FF            	ld	h, (ix-1)
+    1430/    7BF7 : 71                  	ld	(hl), c
+    1431/    7BF8 : 23                  	inc	hl
+    1432/    7BF9 : 70                  	ld	(hl), b
+    1433/    7BFA :                     fa113:
+    1434/    7BFA :                     ;vtl.c:311: return;
+    1435/    7BFA :                     fa114:
+    1436/    7BFA :                     ;vtl.c:312: }
+    1437/    7BFA : DD F9               	ld	sp, ix
+    1438/    7BFC : DD E1               	pop	ix
+    1439/    7BFE : C9                  	ret
+    1440/    7BFF :                     ;vtl.c:318: static void term(unsigned short *ptr, unsigned short *val) {
+    1441/    7BFF :                     ;----------------------------------
+    1442/    7BFF :                     ; Function term
+    1443/    7BFF :                     ; ---------------------------------
+    1444/    7BFF :                     _term:
+    1445/    7BFF : DD E5               	push	ix
+    1446/    7C01 : DD 21 00 00         	ld	ix,0
+    1447/    7C05 : DD 39               	add	ix,sp
+    1448/    7C07 : FD 21 F8 FF         	ld	iy, -8
+    1449/    7C0B : FD 39               	add	iy, sp
+    1450/    7C0D : FD F9               	ld	sp, iy
+    1451/    7C0F : 4D                  	ld	c, l
+    1452/    7C10 : 44                  	ld	b, h
+    1453/    7C11 : DD 73 FE            	ld	(ix-2), e
+    1454/    7C14 : DD 72 FF            	ld	(ix-1), d
+    1455/    7C17 :                     ;vtl.c:322: c = READB((*ptr)++);
+    1456/    7C17 : 69                  	ld	l, c
+    1457/    7C18 : 60                  	ld	h, b
+    1458/    7C19 : 5E                  	ld	e, (hl)
+    1459/    7C1A : 23                  	inc	hl
+    1460/    7C1B : 56                  	ld	d, (hl)
+    1461/    7C1C : 6B                  	ld	l, e
+    1462/    7C1D : 62                  	ld	h, d
+    1463/    7C1E : 23                  	inc	hl
+    1464/    7C1F : DD 75 FC            	ld	(ix-4), l
+    1465/    7C22 : DD 74 FD            	ld	(ix-3), h
+    1466/    7C25 : 69                  	ld	l, c
+    1467/    7C26 : 60                  	ld	h, b
+    1468/    7C27 : DD 7E FC            	ld	a, (ix-4)
+    1469/    7C2A : 77                  	ld	(hl), a
+    1470/    7C2B : 23                  	inc	hl
+    1471/    7C2C : DD 7E FD            	ld	a, (ix-3)
+    1472/    7C2F : 77                  	ld	(hl), a
+    1473/    7C30 : 21 04 C0            	ld	hl, _Lct
+    1474/    7C33 : 19                  	add	hl, de
+    1475/    7C34 : 7E                  	ld	a, (hl)
+    1476/    7C35 : DD 77 FD            	ld	(ix-3), a
+    1477/    7C38 :                     ;vtl.c:323: factr(ptr, &val2);
+    1478/    7C38 : 21 00 00            	ld	hl, 0
+    1479/    7C3B : 39                  	add	hl, sp
+    1480/    7C3C : EB                  	ex	de, hl
+    1481/    7C3D : 69                  	ld	l, c
+    1482/    7C3E :                     
+    1483/    7C3E :                     
+    1484/    7C3E : 60                  	ld	h, b
+    1485/    7C3F :                     
+    1486/    7C3F :                     
+    1487/    7C3F : CD 20 7B            	call	_factr
+    1488/    7C42 :                     ;vtl.c:325: *val *= val2;
+    1489/    7C42 : DD 6E FE            	ld	l, (ix-2)
+    1490/    7C45 : DD 66 FF            	ld	h, (ix-1)
+    1491/    7C48 : 7E                  	ld	a, (hl)
+    1492/    7C49 : DD 77 FA            	ld	(ix-6), a
+    1493/    7C4C : 23                  	inc	hl
+    1494/    7C4D : 7E                  	ld	a, (hl)
+    1495/    7C4E : DD 77 FB            	ld	(ix-5), a
+    1496/    7C51 :                     ;vtl.c:324: if (c == '*') {
+    1497/    7C51 : DD 7E FD            	ld	a, (ix-3)
+    1498/    7C54 : D6 2A               	sub	2ah
+    1499/    7C56 : 20 17               	jr	NZ, tm117
+    1500/    7C58 :                     ;vtl.c:325: *val *= val2;
+    1501/    7C58 : D1                  	pop	de
+    1502/    7C59 : D5                  	push	de
+    1503/    7C5A : DD 6E FA            	ld	l, (ix-6)
+    1504/    7C5D :                     
+    1505/    7C5D :                     
+    1506/    7C5D : DD 66 FB            	ld	h, (ix-5)
+    1507/    7C60 :                     
+    1508/    7C60 :                     
+    1509/    7C60 : CD 9D 75            	call	mulint
+    1510/    7C63 : DD 6E FE            	ld	l, (ix-2)
+    1511/    7C66 : DD 66 FF            	ld	h, (ix-1)
+    1512/    7C69 : 73                  	ld	(hl), e
+    1513/    7C6A : 23                  	inc	hl
+    1514/    7C6B : 72                  	ld	(hl), d
+    1515/    7C6C : C3 46 7D            	jp	tm118
+    1516/    7C6F :                     tm117:
+    1517/    7C6F :                     ;vtl.c:326: } else if (c == '+') {
+    1518/    7C6F : DD 7E FD            	ld	a, (ix-3)
+    1519/    7C72 : D6 2B               	sub	2bh
+    1520/    7C74 : 20 24               	jr	NZ, tm114
+    1521/    7C76 :                     ;vtl.c:327: *val += val2;
+    1522/    7C76 : DD 7E FA            	ld	a, (ix-6)
+    1523/    7C79 : DD 86 F8            	add	a, (ix-8)
+    1524/    7C7C : DD 77 FC            	ld	(ix-4), a
+    1525/    7C7F : DD 7E FB            	ld	a, (ix-5)
+    1526/    7C82 : DD 8E F9            	adc	a, (ix-7)
+    1527/    7C85 : DD 77 FD            	ld	(ix-3), a
+    1528/    7C88 : DD 6E FE            	ld	l, (ix-2)
+    1529/    7C8B : DD 66 FF            	ld	h, (ix-1)
+    1530/    7C8E : DD 7E FC            	ld	a, (ix-4)
+    1531/    7C91 : 77                  	ld	(hl), a
+    1532/    7C92 : 23                  	inc	hl
+    1533/    7C93 : DD 7E FD            	ld	a, (ix-3)
+    1534/    7C96 : 77                  	ld	(hl), a
+    1535/    7C97 : C3 46 7D            	jp	tm118
+    1536/    7C9A :                     tm114:
+    1537/    7C9A :                     ;vtl.c:328: } else if (c == '-') {
+    1538/    7C9A : DD 7E FD            	ld	a, (ix-3)
+    1539/    7C9D : D6 2D               	sub	2dh
+    1540/    7C9F : 20 1A               	jr	NZ, tm111
+    1541/    7CA1 :                     ;vtl.c:329: *val -= val2;
+    1542/    7CA1 : DD 7E FA            	ld	a, (ix-6)
+    1543/    7CA4 : DD 96 F8            	sub	(ix-8)
+    1544/    7CA7 : 4F                  	ld	c, a
+    1545/    7CA8 : DD 7E FB            	ld	a, (ix-5)
+    1546/    7CAB : DD 9E F9            	sbc	a, (ix-7)
+    1547/    7CAE : 47                  	ld	b, a
+    1548/    7CAF : DD 6E FE            	ld	l, (ix-2)
+    1549/    7CB2 : DD 66 FF            	ld	h, (ix-1)
+    1550/    7CB5 : 71                  	ld	(hl), c
+    1551/    7CB6 : 23                  	inc	hl
+    1552/    7CB7 : 70                  	ld	(hl), b
+    1553/    7CB8 : C3 46 7D            	jp	tm118
+    1554/    7CBB :                     tm111:
+    1555/    7CBB :                     ;vtl.c:330: } else if (c == '/') {
+    1556/    7CBB : DD 7E FD            	ld	a, (ix-3)
+    1557/    7CBE : D6 2F               	sub	2fh
+    1558/    7CC0 : 20 29               	jr	NZ, tm108
+    1559/    7CC2 :                     ;vtl.c:331: WRITEW(Rmd, *val % val2);
+    1560/    7CC2 : D1                  	pop	de
+    1561/    7CC3 : D5                  	push	de
+    1562/    7CC4 : DD 6E FA            	ld	l, (ix-6)
+    1563/    7CC7 :                     
+    1564/    7CC7 :                     
+    1565/    7CC7 : DD 66 FB            	ld	h, (ix-5)
+    1566/    7CCA :                     
+    1567/    7CCA :                     
+    1568/    7CCA : CD B4 75            	call	moduint
+    1569/    7CCD : ED 53 52 C0         	ld	(_Lct + 78), de
+    1570/    7CD1 :                     ;vtl.c:332: *val /= val2;
+    1571/    7CD1 : DD 6E FE            	ld	l, (ix-2)
+    1572/    7CD4 : DD 66 FF            	ld	h, (ix-1)
+    1573/    7CD7 : 4E                  	ld	c, (hl)
+    1574/    7CD8 : 23                  	inc	hl
+    1575/    7CD9 : 66                  	ld	h, (hl)
+    1576/    7CDA :                     
+    1577/    7CDA : D1                  	pop	de
+    1578/    7CDB : D5                  	push	de
+    1579/    7CDC : 69                  	ld	l, c
+    1580/    7CDD :                     
+    1581/    7CDD :                     
+    1582/    7CDD : CD B9 75            	call	divuint
+    1583/    7CE0 : DD 6E FE            	ld	l, (ix-2)
+    1584/    7CE3 : DD 66 FF            	ld	h, (ix-1)
+    1585/    7CE6 : 73                  	ld	(hl), e
+    1586/    7CE7 : 23                  	inc	hl
+    1587/    7CE8 : 72                  	ld	(hl), d
+    1588/    7CE9 : 18 5B               	jr	tm118
+    1589/    7CEB :                     tm108:
+    1590/    7CEB :                     ;vtl.c:333: } else if (c == '=') {
+    1591/    7CEB : DD 7E FD            	ld	a, (ix-3)
+    1592/    7CEE : D6 3D               	sub	3dh
+    1593/    7CF0 : 20 21               	jr	NZ, tm105
+    1594/    7CF2 :                     ;vtl.c:334: *val = (*val == val2);
+    1595/    7CF2 : DD 7E FA            	ld	a, (ix-6)
+    1596/    7CF5 : DD 96 F8            	sub	(ix-8)
+    1597/    7CF8 : 20 0A               	jr	NZ, tm161
+    1598/    7CFA : DD 7E FB            	ld	a, (ix-5)
+    1599/    7CFD : DD 96 F9            	sub	(ix-7)
+    1600/    7D00 : 3E 01               	ld	a, 01
+    1601/    7D02 : 28 01               	jr	Z, tm162
+    1602/    7D04 :                     tm161:
+    1603/    7D04 : AF                  	xor	a
+    1604/    7D05 :                     tm162:
+    1605/    7D05 : 4F                  	ld	c, a
+    1606/    7D06 : 06 00               	ld	b, 0
+    1607/    7D08 : DD 6E FE            	ld	l, (ix-2)
+    1608/    7D0B : DD 66 FF            	ld	h, (ix-1)
+    1609/    7D0E : 71                  	ld	(hl), c
+    1610/    7D0F : 23                  	inc	hl
+    1611/    7D10 : 70                  	ld	(hl), b
+    1612/    7D11 : 18 33               	jr	tm118
+    1613/    7D13 :                     tm105:
+    1614/    7D13 :                     ;vtl.c:336: *val = (*val >= val2);
+    1615/    7D13 : DD 7E FA            	ld	a, (ix-6)
+    1616/    7D16 : DD 96 F8            	sub	(ix-8)
+    1617/    7D19 : DD 7E FB            	ld	a, (ix-5)
+    1618/    7D1C : DD 9E F9            	sbc	a, (ix-7)
+    1619/    7D1F : 3E 00               	ld	a, 0
+    1620/    7D21 : 17                  	rla
+    1621/    7D22 : 4F                  	ld	c, a
+    1622/    7D23 :                     ;vtl.c:335: } else if (c == '>') {
+    1623/    7D23 : DD 7E FD            	ld	a, (ix-3)
+    1624/    7D26 : D6 3E               	sub	3eh
+    1625/    7D28 : 20 11               	jr	NZ, tm102
+    1626/    7D2A :                     ;vtl.c:336: *val = (*val >= val2);
+    1627/    7D2A : 79                  	ld	a, c
+    1628/    7D2B : EE 01               	xor	01
+    1629/    7D2D : 4F                  	ld	c, a
+    1630/    7D2E : 06 00               	ld	b, 0
+    1631/    7D30 : DD 6E FE            	ld	l, (ix-2)
+    1632/    7D33 : DD 66 FF            	ld	h, (ix-1)
+    1633/    7D36 : 71                  	ld	(hl), c
+    1634/    7D37 : 23                  	inc	hl
+    1635/    7D38 : 70                  	ld	(hl), b
+    1636/    7D39 : 18 0B               	jr	tm118
+    1637/    7D3B :                     tm102:
+    1638/    7D3B :                     ;vtl.c:338: *val = (*val < val2);
+    1639/    7D3B : 06 00               	ld	b, 0
+    1640/    7D3D : DD 6E FE            	ld	l, (ix-2)
+    1641/    7D40 : DD 66 FF            	ld	h, (ix-1)
+    1642/    7D43 : 71                  	ld	(hl), c
+    1643/    7D44 : 23                  	inc	hl
+    1644/    7D45 : 70                  	ld	(hl), b
+    1645/    7D46 :                     tm118:
+    1646/    7D46 :                     ;vtl.c:340: return;
+    1647/    7D46 :                     ;vtl.c:341: }
+    1648/    7D46 : DD F9               	ld	sp, ix
+    1649/    7D48 : DD E1               	pop	ix
+    1650/    7D4A : C9                  	ret
+    1651/    7D4B :                     ;vtl.c:347: static void getvr(unsigned short *ptr, unsigned char *c, unsigned short *adr)
+    1652/    7D4B :                     ;----------------------------------
+    1653/    7D4B :                     ; Function getvr
+    1654/    7D4B :                     ; ---------------------------------
+    1655/    7D4B :                     _getvr:
+    1656/    7D4B : DD E5               	push	ix
+    1657/    7D4D : DD 21 00 00         	ld	ix,0
+    1658/    7D51 : DD 39               	add	ix,sp
+    1659/    7D53 : F5                  	push	af
+    1660/    7D54 : F5                  	push	af
+    1661/    7D55 : F5                  	push	af
+    1662/    7D56 : 4D                  	ld	c, l
+    1663/    7D57 : 44                  	ld	b, h
+    1664/    7D58 : DD 73 FE            	ld	(ix-2), e
+    1665/    7D5B : DD 72 FF            	ld	(ix-1), d
+    1666/    7D5E :                     ;vtl.c:351: *c = READB((*ptr)++);
+    1667/    7D5E : 69                  	ld	l, c
+    1668/    7D5F : 60                  	ld	h, b
+    1669/    7D60 : 5E                  	ld	e, (hl)
+    1670/    7D61 : 23                  	inc	hl
+    1671/    7D62 : 56                  	ld	d, (hl)
+    1672/    7D63 : 6B                  	ld	l, e
+    1673/    7D64 : 62                  	ld	h, d
+    1674/    7D65 : 23                  	inc	hl
+    1675/    7D66 : DD 75 FC            	ld	(ix-4), l
+    1676/    7D69 : DD 74 FD            	ld	(ix-3), h
+    1677/    7D6C : 69                  	ld	l, c
+    1678/    7D6D : 60                  	ld	h, b
+    1679/    7D6E : DD 7E FC            	ld	a, (ix-4)
+    1680/    7D71 : 77                  	ld	(hl), a
+    1681/    7D72 : 23                  	inc	hl
+    1682/    7D73 : DD 7E FD            	ld	a, (ix-3)
+    1683/    7D76 : 77                  	ld	(hl), a
+    1684/    7D77 : 21 04 C0            	ld	hl, _Lct
+    1685/    7D7A : 19                  	add	hl, de
+    1686/    7D7B : 56                  	ld	d, (hl)
+    1687/    7D7C : DD 6E FE            	ld	l, (ix-2)
+    1688/    7D7F : DD 66 FF            	ld	h, (ix-1)
+    1689/    7D82 : 72                  	ld	(hl), d
+    1690/    7D83 :                     ;vtl.c:352: if (*c == ':') {
+    1691/    7D83 : DD 6E FE            	ld	l, (ix-2)
+    1692/    7D86 : DD 66 FF            	ld	h, (ix-1)
+    1693/    7D89 : 5E                  	ld	e, (hl)
+    1694/    7D8A :                     ;vtl.c:354: *adr = READW(Bnd) + val * 2;
+    1695/    7D8A : DD 7E 04            	ld	a, (ix+4)
+    1696/    7D8D : DD 77 FC            	ld	(ix-4), a
+    1697/    7D90 : DD 7E 05            	ld	a, (ix+5)
+    1698/    7D93 : DD 77 FD            	ld	(ix-3), a
+    1699/    7D96 :                     ;vtl.c:352: if (*c == ':') {
+    1700/    7D96 : 7A                  	ld	a, d
+    1701/    7D97 : D6 3A               	sub	3ah
+    1702/    7D99 : 20 1C               	jr	NZ, gr105
+    1703/    7D9B :                     ;vtl.c:353: expr(ptr, &val);
+    1704/    7D9B : 21 00 00            	ld	hl, 0
+    1705/    7D9E : 39                  	add	hl, sp
+    1706/    7D9F : EB                  	ex	de, hl
+    1707/    7DA0 : 69                  	ld	l, c
+    1708/    7DA1 :                     
+    1709/    7DA1 :                     
+    1710/    7DA1 : 60                  	ld	h, b
+    1711/    7DA2 :                     
+    1712/    7DA2 :                     
+    1713/    7DA2 : CD DE 7A            	call	_expr
+    1714/    7DA5 :                     ;vtl.c:354: *adr = READW(Bnd) + val * 2;
+    1715/    7DA5 : ED 4B 54 C0         	ld	bc, (_Lct + 80)
+    1716/    7DA9 : E1                  	pop	hl
+    1717/    7DAA : E5                  	push	hl
+    1718/    7DAB : 29                  	add	hl, hl
+    1719/    7DAC : 09                  	add	hl, bc
+    1720/    7DAD : EB                  	ex	de, hl
+    1721/    7DAE : C1                  	pop	bc
+    1722/    7DAF : E1                  	pop	hl
+    1723/    7DB0 : E5                  	push	hl
+    1724/    7DB1 : C5                  	push	bc
+    1725/    7DB2 : 73                  	ld	(hl), e
+    1726/    7DB3 : 23                  	inc	hl
+    1727/    7DB4 : 72                  	ld	(hl), d
+    1728/    7DB5 : 18 1D               	jr	gr106
+    1729/    7DB7 :                     gr105:
+    1730/    7DB7 :                     ;vtl.c:356: else if ( *c == 0x7f ) mach_fin();-/* DEL key */
+    1731/    7DB7 : 7B                  	ld	a, e
+    1732/    7DB8 : D6 7F               	sub	7fh
+    1733/    7DBA : 20 05               	jr	NZ, gr102
+    1734/    7DBC : CD 89 75            	call	_mach_fin
+    1735/    7DBF : 18 13               	jr	gr106
+    1736/    7DC1 :                     gr102:
+    1737/    7DC1 :                     ;vtl.c:357: else *adr = ((*c & 0x3f) + 2) * 2;
+    1738/    7DC1 : 16 00               	ld	d, 0
+    1739/    7DC3 : 7B                  	ld	a, e
+    1740/    7DC4 : E6 3F               	and	3fh
+    1741/    7DC6 : 26 00               	ld	h, 0
+    1742/    7DC8 :                     
+    1743/    7DC8 :                     
+    1744/    7DC8 : 6F                  	ld	l, a
+    1745/    7DC9 :                     
+    1746/    7DC9 :                     
+    1747/    7DC9 : 23                  	inc	hl
+    1748/    7DCA : 23                  	inc	hl
+    1749/    7DCB : 29                  	add	hl, hl
+    1750/    7DCC : EB                  	ex	de, hl
+    1751/    7DCD : C1                  	pop	bc
+    1752/    7DCE : E1                  	pop	hl
+    1753/    7DCF : E5                  	push	hl
+    1754/    7DD0 : C5                  	push	bc
+    1755/    7DD1 : 73                  	ld	(hl), e
+    1756/    7DD2 : 23                  	inc	hl
+    1757/    7DD3 : 72                  	ld	(hl), d
+    1758/    7DD4 :                     gr106:
+    1759/    7DD4 :                     ;vtl.c:358: return;
+    1760/    7DD4 :                     ;vtl.c:359: }
+    1761/    7DD4 : DD F9               	ld	sp, ix
+    1762/    7DD6 : DD E1               	pop	ix
+    1763/    7DD8 : E1                  	pop	hl
+    1764/    7DD9 : F1                  	pop	af
+    1765/    7DDA : E9                  	jp	(hl)
+    1766/    7DDB :                     ;vtl.c:365: static void putl(unsigned short *ptr, unsigned char d) {
+    1767/    7DDB :                     ;----------------------------------
+    1768/    7DDB :                     ; Function putl
+    1769/    7DDB :                     ; ---------------------------------
+    1770/    7DDB :                     _putl:
+    1771/    7DDB : DD E5               	push	ix
+    1772/    7DDD : DD 21 00 00         	ld	ix,0
+    1773/    7DE1 : DD 39               	add	ix,sp
+    1774/    7DE3 : F5                  	push	af
+    1775/    7DE4 : EB                  	ex	de, hl
+    1776/    7DE5 :                     ;vtl.c:366: while (READB(*ptr) != d) putchr(READB((*ptr)++));
+    1777/    7DE5 :                     pl101:
+    1778/    7DE5 : 6B                  	ld	l, e
+    1779/    7DE6 : 62                  	ld	h, d
+    1780/    7DE7 : 4E                  	ld	c, (hl)
+    1781/    7DE8 : 23                  	inc	hl
+    1782/    7DE9 : 46                  	ld	b, (hl)
+    1783/    7DEA : 21 04 C0            	ld	hl, _Lct
+    1784/    7DED : 09                  	add	hl, bc
+    1785/    7DEE : E3                  	ex	(sp), hl
+    1786/    7DEF : E1                  	pop	hl
+    1787/    7DF0 : E5                  	push	hl
+    1788/    7DF1 : 6E                  	ld	l, (hl)
+    1789/    7DF2 :                     
+    1790/    7DF2 : 03                  	inc	bc
+    1791/    7DF3 : DD 7E 04            	ld	a, (ix+4)
+    1792/    7DF6 : 95                  	sub	l
+    1793/    7DF7 : 28 10               	jr	Z, pl103
+    1794/    7DF9 : 6B                  	ld	l, e
+    1795/    7DFA : 62                  	ld	h, d
+    1796/    7DFB : 71                  	ld	(hl), c
+    1797/    7DFC : 23                  	inc	hl
+    1798/    7DFD : 70                  	ld	(hl), b
+    1799/    7DFE : E1                  	pop	hl
+    1800/    7DFF : E5                  	push	hl
+    1801/    7E00 : 4E                  	ld	c, (hl)
+    1802/    7E01 : D5                  	push	de
+    1803/    7E02 : 79                  	ld	a, c
+    1804/    7E03 : CD 06 75            	call	_putchr
+    1805/    7E06 : D1                  	pop	de
+    1806/    7E07 : 18 DC               	jr	pl101
+    1807/    7E09 :                     pl103:
+    1808/    7E09 :                     ;vtl.c:367: (*ptr)++;
+    1809/    7E09 : 79                  	ld	a, c
+    1810/    7E0A : 12                  	ld	(de), a
+    1811/    7E0B : 13                  	inc	de
+    1812/    7E0C : 78                  	ld	a, b
+    1813/    7E0D : 12                  	ld	(de), a
+    1814/    7E0E :                     ;vtl.c:368: return;
+    1815/    7E0E :                     ;vtl.c:369: }
+    1816/    7E0E : DD F9               	ld	sp, ix
+    1817/    7E10 : DD E1               	pop	ix
+    1818/    7E12 : E1                  	pop	hl
+    1819/    7E13 : 33                  	inc	sp
+    1820/    7E14 : E9                  	jp	(hl)
+    1821/    7E15 :                     ;vtl.c:375: static void crlf(void) {
+    1822/    7E15 :                     ;----------------------------------
+    1823/    7E15 :                     ; Function crlf
+    1824/    7E15 :                     ; ---------------------------------
+    1825/    7E15 :                     _crlf:
+    1826/    7E15 :                     ;vtl.c:376: putchr('\r');
+    1827/    7E15 : 3E 0D               	ld	a, 0dh
+    1828/    7E17 : CD 06 75            	call	_putchr
+    1829/    7E1A :                     ;vtl.c:377: putchr('\n');
+    1830/    7E1A : 3E 0A               	ld	a, 0ah
+    1831/    7E1C :                     ;vtl.c:378: return;
+    1832/    7E1C :                     ;vtl.c:379: }
+    1833/    7E1C : C3 06 75            	jp	_putchr
+    1834/    7E1F :                     ;vtl.c:385: static void putnm(unsigned short x) {
+    1835/    7E1F :                     ;----------------------------------
+    1836/    7E1F :                     ; Function putnm
+    1837/    7E1F :                     ; ---------------------------------
+    1838/    7E1F :                     _putnm:
+    1839/    7E1F : DD E5               	push	ix
+    1840/    7E21 : DD 21 00 00         	ld	ix,0
+    1841/    7E25 : DD 39               	add	ix,sp
+    1842/    7E27 : F5                  	push	af
+    1843/    7E28 : 3B                  	dec	sp
+    1844/    7E29 : EB                  	ex	de, hl
+    1845/    7E2A :                     ;vtl.c:389: ptr = Nbf + 5;
+    1846/    7E2A : 21 87 00            	ld	hl, 87h
+    1847/    7E2D : E3                  	ex	(sp), hl
+    1848/    7E2E :                     ;vtl.c:390: WRITEB(ptr, '\0');
+    1849/    7E2E : 21 8B C0            	ld	hl, _Lct + 135
+    1850/    7E31 : 36 00               	ld	(hl), 0
+    1851/    7E33 :                     ;vtl.c:391: do {
+    1852/    7E33 : C1                  	pop	bc
+    1853/    7E34 : C5                  	push	bc
+    1854/    7E35 :                     pu101:
+    1855/    7E35 :                     ;vtl.c:392: y = x % 10;
+    1856/    7E35 : EB                  	ex	de, hl
+    1857/    7E36 : E5                  	push	hl
+    1858/    7E37 : C5                  	push	bc
+    1859/    7E38 : 11 0A 00            	ld	de, 0ah
+    1860/    7E3B : CD B4 75            	call	moduint
+    1861/    7E3E : C1                  	pop	bc
+    1862/    7E3F : E1                  	pop	hl
+    1863/    7E40 : DD 73 FF            	ld	(ix-1), e
+    1864/    7E43 :                     ;vtl.c:393: x /= 10;
+    1865/    7E43 : C5                  	push	bc
+    1866/    7E44 : 11 0A 00            	ld	de, 0ah
+    1867/    7E47 : CD B9 75            	call	divuint
+    1868/    7E4A : C1                  	pop	bc
+    1869/    7E4B :                     ;vtl.c:394: WRITEB(--ptr, y + '0');
+    1870/    7E4B : 0B                  	dec	bc
+    1871/    7E4C : 33                  	inc	sp
+    1872/    7E4D : 33                  	inc	sp
+    1873/    7E4E : C5                  	push	bc
+    1874/    7E4F : 21 04 C0            	ld	hl, _Lct
+    1875/    7E52 : 09                  	add	hl, bc
+    1876/    7E53 : DD 7E FF            	ld	a, (ix-1)
+    1877/    7E56 : C6 30               	add	a, 30h
+    1878/    7E58 : 77                  	ld	(hl), a
+    1879/    7E59 :                     ;vtl.c:395: } while (x != 0);
+    1880/    7E59 : 7A                  	ld	a, d
+    1881/    7E5A : B3                  	or	e
+    1882/    7E5B : 20 D8               	jr	NZ, pu101
+    1883/    7E5D :                     ;vtl.c:396: putl(&ptr, '\0');
+    1884/    7E5D : 33                  	inc	sp
+    1885/    7E5E : 33                  	inc	sp
+    1886/    7E5F : C5                  	push	bc
+    1887/    7E60 : AF                  	xor	a
+    1888/    7E61 : F5                  	push	af
+    1889/    7E62 : 33                  	inc	sp
+    1890/    7E63 : 21 01 00            	ld	hl, 1
+    1891/    7E66 : 39                  	add	hl, sp
+    1892/    7E67 : CD DB 7D            	call	_putl
+    1893/    7E6A :                     ;vtl.c:397: return;
+    1894/    7E6A :                     ;vtl.c:398: }
+    1895/    7E6A : DD F9               	ld	sp, ix
+    1896/    7E6C : DD E1               	pop	ix
+    1897/    7E6E : C9                  	ret
+    1898/    7E6F :                     ;vtl.c:404: static void putstr(char *str) {
+    1899/    7E6F :                     ;----------------------------------
+    1900/    7E6F :                     ; Function putstr
+    1901/    7E6F :                     ; ---------------------------------
+    1902/    7E6F :                     _putstr:
+    1903/    7E6F :                     ;vtl.c:405: while (*str != '\0') putchr(*(str++));
+    1904/    7E6F : 7E                  	ld	a, (hl)
+    1905/    7E70 : B7                  	or	a
+    1906/    7E71 : CA 15 7E            	jp	Z,_crlf
+    1907/    7E74 : 23                  	inc	hl
+    1908/    7E75 : 4F                  	ld	c, a
+    1909/    7E76 : E5                  	push	hl
+    1910/    7E77 : 79                  	ld	a, c
+    1911/    7E78 : CD 06 75            	call	_putchr
+    1912/    7E7B : E1                  	pop	hl
+    1913/    7E7C :                     ;vtl.c:406: crlf();
+    1914/    7E7C :                     ;vtl.c:407: return;
+    1915/    7E7C :                     ;vtl.c:408: }
+    1916/    7E7C : 18 F1               	jr	_putstr
+    1917/    7E7E :                     
+    1918/    7E7E : 56 54 4C 2D 43 20   str_0:	db	"VTL-C Z80 edition.", 0
+             7E84 : 5A 38 30 20 65 64 
+             7E8A : 69 74 69 6F 6E 2E 
+             7E90 : 00                
+    1919/    7E91 : 0D 0A 4F 4B 00      str_1:	db	0dh, 0ah, "OK", 0
+    1920/    7E96 :                     
+    1921/    7E96 :                     
+    1922/    7E96 : FF FF FF FF FF FF   	db	($ & 0FF00H)+100H-$ dup(0FFH)
+             7E9C : FF FF FF FF FF FF 
+             7EA2 : FF FF FF FF FF FF 
+             7EA8 : FF FF FF FF FF FF 
+             7EAE : FF FF FF FF FF FF 
+             7EB4 : FF FF FF FF FF FF 
+             7EBA : FF FF FF FF FF FF 
+             7EC0 : FF FF FF FF FF FF 
+             7EC6 : FF FF FF FF FF FF 
+             7ECC : FF FF FF FF FF FF 
+             7ED2 : FF FF FF FF FF FF 
+             7ED8 : FF FF FF FF FF FF 
+             7EDE : FF FF FF FF FF FF 
+             7EE4 : FF FF FF FF FF FF 
+             7EEA : FF FF FF FF FF FF 
+             7EF0 : FF FF FF FF FF FF 
+             7EF6 : FF FF FF FF FF FF 
+             7EFC : FF FF FF FF       
+    1923/    7F00 :                     
+    1924/    7F00 :                     end_code:
+    1925/    7F00 :                     	;;
+    1926/    7F00 :                     	;; Work Area
+    1927/    7F00 :                     	;;
+    1928/    7F00 : =>FALSE             	if SUPER_MEZ
+    1929/    7F00 :                     	org	end_code
+    1930/    7F00 : =>TRUE              	else
+    1931/    C000 :                     	ORG	WORK_B
+    1932/    C000 : [1928]              	endif
+    1933/    C000 :                     
+    1934/    C000 :                     SEED:	ds	2
+    1935/    C002 :                     SEEDX:	ds	2
+    1936/    C004 :                     _Lct:		ds	WORK_END+1 - _Lct
+    1937/    EE01 :                     
+    1938/    EE01 :                     	end
+ AS V1.42 Beta [Bld 246] - Source File vtlz80.asm - Page 2 - 9/2/2023 3:19:50
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+ AKI80 :                          0 - |
+*ARCHITECTURE :                                        "i386-unknown-win32" - |
+*CASESENSITIVE :                  0 - | *CONSTPI :        3.141592653589793 - |
+*DATE :                  "9/2/2023" - |  DIVUINT :                     75B9 C |
+ DIV_0 :                       75C3 C |  DIV_1 :                       75C8 C |
+ DIV_2 :                       75D0 C |  DIV_3 :                       75D8 C |
+ DIV_4 :                       75DF C | *END_CODE :                    7F00 C |
+ ENTRY :                       758C C |  EX102 :                       7AF7 C |
+ EX104 :                       7B15 C |  FA102 :                       7B4E C |
+ FA106 :                       7BC8 C |  FA109 :                       7BB7 C |
+ FA112 :                       7BA2 C |  FA113 :                       7BFA C |
+ FA114 :                       7BFA C | *FALSE :                          0 - |
+ FN103 :                       78E6 C |  FN105 :                       78A2 C |
+ FN106 :                       78D8 C |  FN107 :                       78E9 C |
+*FULLPMMU :                       1 - |  GE106 :                       7957 C |
+ GE107 :                       7961 C |  GE111 :                       7947 C |
+ GE114 :                       7926 C |  GE117 :                       790A C |
+ GE119 :                       797F C |  GE153 :                       7920 C |
+ GR102 :                       7DC1 C |  GR105 :                       7DB7 C |
+ GR106 :                       7DD4 C |  GT102 :                       79B1 C |
+ GT103 :                       79B9 C |  GT106 :                       7A10 C |
+*HAS64 :                          0 - | *HASFPU :                         0 - |
+*HASPMMU :                        0 - | *INIT :                        7500 C |
+*INSUPMODE :                      0 - | *LISTON :                         1 - |
+ MA103 :                       7627 C |  MA110 :                       768A C |
+ MA111 :                       76B1 C |  MA112 :                       76CD C |
+ MA116 :                       779B C |  MA118 :                       77A7 C |
+ MA122 :                       77CB C |  MA123 :                       7832 C |
+ MA124 :                       7852 C |  MA130 :                       7730 C |
+ MA133 :                       76EA C |  MA136 :                       7656 C |
+ MA139 :                       76F6 C |  MA142 :                       7778 C |
+ MA145 :                       77B9 C |  MA148 :                       780D C |
+ MA150 :                       7621 C |  MA281 :                       778F C |
+ MA282 :                       77C8 C |  MA284 :                       7861 C |
+ MA285 :                       786F C | *MACEXP :                         7 - |
+ MODUINT :                     75B4 C | *MOMCPU :                        80 - |
+*MOMCPUNAME :                 "Z80" - |  MSIZE :                       2D00 - |
+ MUL00 :                       75A9 C |  MUL01 :                       75AA C |
+ MUL02 :                       75B0 C |  MULINT :                      759D C |
+*NESTMAX :                      100 - |  NOKEY :                       7510 C |
+ NU103 :                       7A24 C |  NU104 :                       7A28 C |
+ NU105 :                       7A2A C |  NX103 :                       78F1 C |
+ OR104 :                       7AC0 C |  OR107 :                       7AAA C |
+ OR110 :                       7A8D C |  OR111 :                       7AD9 C |
+ OR134 :                       7A58 C |  OR137 :                       7A6F C |
+*PADDING :                        1 - |  PL101 :                       7DE5 C |
+ PL103 :                       7E09 C |  PU101 :                       7E35 C |
+ RAM12K :                         1 - |  RAM8K :                          0 - |
+ RAM_B :                      0C000 - | *RELAXED :                        0 - |
+ RND3 :                        752C C |  RND4 :                        7569 C |
+ SBCZ80 :                         0 - |  SEED :                       0C000 C |
+ SEEDX :                      0C002 C |  STR_0 :                       7E7E C |
+ STR_1 :                       7E91 C |  SUPER_MEZ :                      0 - |
+ SUPER_MEZ_FULL :                 0 - |  S_CODE :                      7500 - |
+*TIME :                   "3:19:50" - |  TM102 :                       7D3B C |
+ TM105 :                       7D13 C |  TM108 :                       7CEB C |
+ TM111 :                       7CBB C |  TM114 :                       7C9A C |
+ TM117 :                       7C6F C |  TM118 :                       7D46 C |
+ TM161 :                       7D04 C |  TM162 :                       7D05 C |
+*TRUE :                           1 - |  USTACK :                     0EE90 - |
+*VERSION :                     142F - |  WORK_B :                     0C000 - |
+ WORK_END :                   0EE00 - |  _BREAKCHECK :                 75E8 C |
+ _CRLF :                       7E15 C |  _C_GETCH :                    7508 C |
+ _C_KBHIT :                    750A C |  _EXPR :                       7ADE C |
+ _FACTR :                      7B20 C |  _FNDLN :                      7889 C |
+ _GETCHR :                     7512 C |  _GETLN :                      78FB C |
+ _GETNM :                      7984 C |  _GETVR :                      7D4B C |
+ _LCT :                       0C004 C |  _MACH_FIN :                   7589 C |
+ _MAIN :                       75F5 C |  _NUM :                        7A15 C |
+ _NXTLN :                      78EE C |  _ORDR :                       7A2D C |
+ _PUTCHR :                     7506 C |  _PUTL :                       7DDB C |
+ _PUTNM :                      7E1F C |  _PUTSTR :                     7E6F C |
+ _RAND :                       7520 C |  _SRAND :                      7519 C |
+ _TERM :                       7BFF C |  _WARM_BOOT :                  7595 C |
+
+    146 symbols
+     22 unused symbols
+
+ AS V1.42 Beta [Bld 246] - Source File vtlz80.asm - Page 3 - 9/2/2023 3:19:50
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.04 seconds assembly time
+
+   1939 lines source file
+      2 passes
+      0 errors
+      0 warnings
