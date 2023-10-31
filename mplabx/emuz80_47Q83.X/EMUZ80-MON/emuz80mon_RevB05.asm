@@ -42,7 +42,7 @@ BACKDOOR = 1
 	IF	SuperMEZ80
 UARTDR	EQU	00H	; UART DATA I/O REGISTOR
 UARTCR	EQU	01H	; UART CONTROL I/O REGISTOR
-WORK_B	equ	0FF00H	; work area EF00-EFFF
+WORK_B	equ	0FF00H	; work area FF00-FFFF
 STACKM	equ	0FF00H	; monitor stack
 STACK	equ	0FEC0H	; user stack
 ROM_B	equ	0000H	; program base address
