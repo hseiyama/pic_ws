@@ -171,6 +171,7 @@ CSTART:
 	MOVE.L	D0,GADDR
 	MOVE.L	D0,SADDR
 	MOVE.B	#'S',HEXMOD
+	MOVE.B	#'U',GOMOD
 	MOVE.B	#MPU_SPEC,PSPEC
 
 	IF INIVEC <> $00000000
@@ -266,6 +267,9 @@ WSTART:
 	CMP.B	#'R',D0
 	BEQ	REG
 	ENDIF
+
+	CMP.B	#'B',D0
+	BEQ	BOOT
 
 	CMP.B	#'?',D0
 	BEQ	CMDHLP
@@ -412,6 +416,16 @@ DPB3:
 
 GO:
 	ADDQ	#1,A0
+	MOVE.B	(A0),D0		; Check command "GS"
+	BSR	UPPER
+	CMP.B	#'S',D0
+	BNE	GOM0
+	MOVE.B	D0,GOMOD	; Go supervisor mode
+	ADDQ	#1,A0
+	BRA	GOM1
+GOM0:
+	MOVE.B	#'U',GOMOD	; Go user mode
+GOM1:
 	BSR	SKIPSP
 	BSR	RDHEX
 	TST.B	(A0)
@@ -434,8 +448,10 @@ G0:
 	SAVE
 	CPU	68010
 
+	CMP.B	#'S',GOMOD	; Check supervisor mode
+	BEQ	G00		; Pass satck operate
 	MOVE	#$0000,-(A7)	; Format / Dummy (Vector Offset)
-
+G00:
 	MOVE.L	REGVBR,D0
 	AND.L	#$FFFFFFFE,D0
 	MOVEC	D0,VBR		; Be careful!
@@ -446,15 +462,22 @@ G0:
 
 	RESTORE
 G1:
+	CMP.B	#'S',GOMOD	; Check supervisor mode
+	BEQ	G10		; Pass satck operate
 	MOVE.L	REGPC,-(A7)
 	MOVE	REGSR,-(A7)
-
+G10:
 	MOVE.L	REGA7,A0
 	MOVE	A0,USP
 
 	MOVEM.L	REGD0,D0-D7/A0-A6
 
+	CMP.B	#'S',GOMOD	; Check supervisor mode
+	BEQ	G11
 	RTE
+G11:
+	MOVE.L	REGPC,A0
+	JMP	(A0)		; Jump PC
 
 	ELSE
 
@@ -911,6 +934,20 @@ RD2:
 	BRA	RD0
 
 	ENDIF
+
+;;;
+;;; Boot
+;;;
+
+BOOT:
+	ADDQ	#1,A0
+	MOVE.B	(A0),D0
+	BSR	UPPER
+	CMP.B	#'T',D0
+	BNE	ERR
+	MOVE.L	$00000000,A7	; Reset: Initial SSP
+	MOVE.L	$00000004,A0	; Reset: Initial PC
+	JMP	(A0)
 
 ;;;
 ;;; Command help
@@ -1665,8 +1702,9 @@ DMYRTM:
 
 HLPMSG:
 	DC.B	"? :Command Help",CR,LF
+	DC.B	"BT :Boot(Simulate Reset)",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
-	DC.B	"G[<adr>] :Go",CR,LF
+	DC.B	"G[S][<adr>] :Go(S:Supervisor)",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"P(I|S)<adr,adr> :Save HexFile(I:Intel,S:Motorola)",CR,LF
 	DC.B	"R[<reg>] :Set or Dump Register",CR,LF
@@ -2081,6 +2119,7 @@ SADDR:	DS.L	1		; SET address
 HEXMOD:	DS.B	1		; HEX file mode
 RECTYP:	DS.B	1		; Record type
 PSPEC:	DS.B	1		; Processor spec.
+GOMOD:	DS.B	1		; Go mode
 
 	ALIGN	2
 
