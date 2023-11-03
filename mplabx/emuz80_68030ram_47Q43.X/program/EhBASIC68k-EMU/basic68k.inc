@@ -205,7 +205,7 @@ prg_strt
 
 ; Use these two lines when running from ROM
 ram_addr	EQU	$04000		; RAM start address
-ram_size	EQU	$1C000		; RAM size
+ram_size	EQU	$19000		; RAM size
 
 ; Use these two lines when running from RAM
 ;ram_addr	EQU	$04000		; RAM start address

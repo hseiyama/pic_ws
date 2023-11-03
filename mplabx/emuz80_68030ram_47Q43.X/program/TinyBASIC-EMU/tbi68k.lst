@@ -1,0 +1,1858 @@
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 1 - 11/3/2023 20:35:53
+
+
+       1/       0 :                     ;*****************************************************************
+       2/       0 :                     ;								 *
+       3/       0 :                     ;		Tiny BASIC for the Motorola MC68000		 *
+       4/       0 :                     ;								 *
+       5/       0 :                     ; Derived from Palo Alto Tiny BASIC as published in the May 1976 *
+       6/       0 :                     ; issue of Dr. Dobb's Journal.  Adapted to the 68000 by:	 *
+       7/       0 :                     ;	Gordon Brandly						 *
+       8/       0 :                     ;	R.R. 2							 *
+       9/       0 :                     ;	Fort Sask., Alberta, CANADA				 *
+      10/       0 :                     ;	T8L 2N8							 *
+      11/       0 :                     ;								 *
+      12/       0 :                     ;								 *
+      13/       0 :                     ; This version is for MEX68KECB Educational Computer Board I/O.	 *
+      14/       0 :                     ;								 *
+      15/       0 :                     ;*****************************************************************
+      16/       0 :                     ;    Copyright (C) 1984 by Gordon Brandly. This program may be	 *
+      17/       0 :                     ;    freely distributed for personal use only. All commercial	 *
+      18/       0 :                     ;                      rights are reserved.			 *
+      19/       0 :                     ;*****************************************************************
+      20/       0 :                     
+      21/       0 :                     ; Vers.	1.0  1984/7/17  - Original version by Gordon Brandly
+      22/       0 :                     ;	1.1  1984/12/9  - Addition of '$' print term by Marvin Lipford
+      23/       0 :                     ;	1.2  1985/4/9	- Bug fix in multiply routine by Rick Murray
+      24/       0 :                     
+      25/       0 :                     ;
+      26/       0 :                     ; Tiny BASIC for MEZ68008
+      27/       0 :                     ;	2022/10/21	- Modified by Satoshi Okue
+      28/       0 :                     ;
+      29/       0 :                     ; ROM address 0x0000-0x3fff
+      30/       0 :                     ; RAM address 0x8000-
+      31/       0 :                     ;
+      32/       0 :                     
+      33/       0 :                     	CPU	68030
+      34/       0 :                     
+      35/       0 :                     	SUPMODE	ON
+      36/       0 :                     
+      37/       0 :                     	ORG	$00000000
+      38/       0 :                     
+      39/       0 :                     INIVEC:
+      40/       0 :                     	;; 0-7
+      41/       0 : 0001 D000           	DC.L	ENDRAM		; Reset: Initial SSP
+      42/       4 : 0000 00E4           	DC.L	CSTART		; Reset: Initial PC
+      43/       8 :                     
+      44/       8 :                     
+      45/       8 : =$D                 CR	EQU	$0D		; ASCII equates
+      46/       8 : =$A                 LF	EQU	$0A
+      47/       8 : =$9                 TAB	EQU	$09
+      48/       8 : =$3                 CTRLC	EQU	$03
+      49/       8 : =$8                 CTRLH	EQU	$08
+      50/       8 : =$13                CTRLS	EQU	$13
+      51/       8 : =$18                CTRLX	EQU	$18
+      52/       8 :                     
+      53/       8 : =$50                BUFLEN	EQU	80		; length of keyboard input buffer
+      54/       8 :                     
+      55/       8 : =$40000001          ACIAC:	EQU	$40000001
+      56/       8 : =$40000000          ACIAD:	EQU	$40000000
+      57/       8 :                     
+      58/       8 : =$1000              TOPRAM	EQU	$1000
+      59/       8 : =$1D000             ENDRAM	EQU	TOPRAM+$1C000
+      60/       8 :                     
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 2 - 11/3/2023 20:35:53
+
+
+      61/      C0 :                     	ORG	$C0		; first free address using Tutor
+      62/      C0 :                     
+      63/      C0 :                     ;
+      64/      C0 :                     ; Standard jump table. You can change these addresses if you are
+      65/      C0 :                     ; customizing this interpreter for a different environment.
+      66/      C0 :                     ;
+      67/      C0 : 6000 0022           START	BRA.L	CSTART		; Cold Start entry point
+      68/      C4 : 6000 005A           GOWARM	BRA.L	WSTART		; Warm Start entry point
+      69/      C8 : 6000 0AFE           GOOUT	BRA.L	OUTC		; Jump to character-out routine
+      70/      CC : 6000 0B0C           GOIN	BRA.L	INC		; Jump to character-in routine
+      71/      D0 : 6000 0B1E           GOAUXO	BRA.L	AUXOUT		; Jump to auxiliary-out routine
+      72/      D4 : 6000 0B1C           GOAUXI	BRA.L	AUXIN		; Jump to auxiliary-in routine
+      73/      D8 : 6000 0B1A           GOBYE	BRA.L	BYEBYE		; Jump to monitor, DOS, etc.
+      74/      DC :                     ;
+      75/      DC :                     ; Modifiable system constants:
+      76/      DC :                     ;
+      77/      DC : 0000 1080           TXTBGN	DC.L	TXT		; beginning of program memory
+      78/      E0 : 0001 D000           ENDMEM	DC.L	ENDRAM		; end of available memory
+      79/      E4 :                     ;
+      80/      E4 :                     ; The main interpreter starts here:
+      81/      E4 :                     ;
+      82/      E4 : 203C 0000 0001      CSTART	MOVE.l	#$00000001,D0	; [add] Set instruction cache enable
+      83/      EA : 4E7B 0002           	MOVEC	D0,CACR		; [add] at cache control register
+      84/      EE : 2E78 00E0           	MOVE.L	ENDMEM,SP	; initialize stack pointer
+      85/      F2 : 4DF8 0BF6           	LEA	INITMSG,A6	; tell who we are
+      86/      F6 : 6100 0AC4           	BSR.L	PRMESG
+      87/      FA : 21F8 00DC 1024      	MOVE.L	TXTBGN,TXTUNF	; init. end-of-program pointer
+      88/     100 : 2038 00E0           	MOVE.L	ENDMEM,D0	; get address of end of memory
+      89/     104 : 0480 0000 0800      	SUBI.L	#2048,D0	; reserve 2K for the stack
+      90/     10A : 21C0 102C           	MOVE.L	D0,STKLMT
+      91/     10E : 0480 0000 006C      	SUBI.L	#108,D0		; reserve variable area (27 long words)
+      92/     114 : 21C0 1028           	MOVE.L	D0,VARBGN
+      93/     118 : 21FC 0000 00C0      	MOVE.L	#START,RANPNT
+              11E : 1000             
+      94/     120 : 4280                WSTART	CLR.L	D0		; initialize internal variables
+      95/     122 : 21C0 1010           	MOVE.L	D0,LOPVAR
+      96/     126 : 21C0 1008           	MOVE.L	D0,STKGOS
+      97/     12A : 21C0 1004           	MOVE.L	D0,CURRNT	; current line number pointer = 0
+      98/     12E : 2E78 00E0           	MOVE.L	ENDMEM,SP	; init S.P. again, just in case
+      99/     132 : 4DF8 0C1C           	LEA	OKMSG,A6	; display "OK"
+     100/     136 : 6100 0A84           	BSR.L	PRMESG
+     101/     13A : 103C 003E           ST3	MOVE.B	#'>',D0		; Prompt with a '>' and
+     102/     13E : 6100 07B8           	BSR.L	GETLN		; read a line.
+     103/     142 : 6100 0A18           	BSR.L	TOUPBUF		; convert to upper case
+     104/     146 : 2848                	MOVE.L	A0,A4		; save pointer to end of line
+     105/     148 : 41F8 1030           	LEA	BUFFER,A0	; point to the beginning of line
+     106/     14C : 6100 09CC           	BSR.L	TSTNUM		; is there a number there?
+     107/     150 : 6100 09FE           	BSR.L	IGNBLK		; skip trailing blanks
+     108/     154 : 4A41                	TST	D1		; does line no. exist? (or nonzero?)
+     109/     156 : 6700 011A           	BEQ.L	DIRECT		; if not, it's a direct statement
+     110/     15A : 0C81 0000 FFFF      	CMPI.L	#$FFFF,D1	; see if line no. is <= 16 bits
+     111/     160 : 6400 078E           	BCC.L	QHOW		; if not, we've overflowed
+     112/     164 : 1101                	MOVE.B	D1,-(A0)	; store the binary line no.
+     113/     166 : E059                	ROR	#8,D1		; (Kludge to store a word on a
+     114/     168 : 1101                	MOVE.B	D1,-(A0)	; possible byte boundary)
+     115/     16A : E159                	ROL	#8,D1
+     116/     16C : 6100 082A           	BSR.L	FNDLN		; find this line in save area
+     117/     170 : 2A49                	MOVE.L	A1,A5		; save possible line pointer
+     118/     172 : 6612                	BNE	ST4		; if not found, insert
+     119/     174 : 6100 0848           	BSR.L	FNDNXT		; find the next line (into A1)
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 3 - 11/3/2023 20:35:53
+
+
+     120/     178 : 244D                	MOVE.L	A5,A2		; pointer to line to be deleted
+     121/     17A : 2678 1024           	MOVE.L	TXTUNF,A3	; points to top of save area
+     122/     17E : 6100 0848           	BSR.L	MVUP		; move up to delete
+     123/     182 : 21CA 1024           	MOVE.L	A2,TXTUNF	; update the end pointer
+     124/     186 : 200C                ST4	MOVE.L	A4,D0		; calculate the length of new line
+     125/     188 : 9088                	SUB.L	A0,D0
+     126/     18A : 0C80 0000 0003      	CMPI.L	#3,D0		; is it just a line no. & CR?
+     127/     190 : 67A8                	BEQ	ST3		; if so, it was just a delete
+     128/     192 : 2678 1024           	MOVE.L	TXTUNF,A3	; compute new end
+     129/     196 : 2C4B                	MOVE.L	A3,A6
+     130/     198 : D7C0                	ADD.L	D0,A3
+     131/     19A : 2038 1028           	MOVE.L	VARBGN,D0	; see if there's enough room
+     132/     19E : B08B                	CMP.L	A3,D0
+     133/     1A0 : 6300 0746           	BLS.L	QSORRY		; if not, say so
+     134/     1A4 : 21CB 1024           	MOVE.L	A3,TXTUNF	; if so, store new end position
+     135/     1A8 : 224E                	MOVE.L	A6,A1		; points to old unfilled area
+     136/     1AA : 244D                	MOVE.L	A5,A2		; points to beginning of move area
+     137/     1AC : 6100 0824           	BSR.L	MVDOWN		; move things out of the way
+     138/     1B0 : 2248                	MOVE.L	A0,A1		; set up to do the insertion
+     139/     1B2 : 244D                	MOVE.L	A5,A2
+     140/     1B4 : 264C                	MOVE.L	A4,A3
+     141/     1B6 : 6100 0810           	BSR.L	MVUP		; do it
+     142/     1BA : 6000 FF7E           	BRA	ST3		; go back and get another line
+     143/     1BE :                     
+     144/     1BE :                     ;
+     145/     1BE :                     ;******************************************************************
+     146/     1BE :                     ;
+     147/     1BE :                     ; *** Tables *** DIRECT *** EXEC ***
+     148/     1BE :                     ;
+     149/     1BE :                     ; This section of the code tests a string against a table. When
+     150/     1BE :                     ; a match is found, control is transferred to the section of
+     151/     1BE :                     ; code according to the table.
+     152/     1BE :                     ;
+     153/     1BE :                     ; At 'EXEC', A0 should point to the string, A1 should point to
+     154/     1BE :                     ; the character table, and A2 should point to the execution
+     155/     1BE :                     ; table. At 'DIRECT', A0 should point to the string, A1 and
+     156/     1BE :                     ; A2 will be set up to point to TAB1 and TAB1_1, which are
+     157/     1BE :                     ; the tables of all direct and statement commands.
+     158/     1BE :                     ;
+     159/     1BE :                     ; A '.' in the string will terminate the test and the partial
+     160/     1BE :                     ; match will be considered as a match, e.g. 'P.', 'PR.','PRI.',
+     161/     1BE :                     ; 'PRIN.', or 'PRINT' will all match 'PRINT'.
+     162/     1BE :                     ;
+     163/     1BE :                     ; There are two tables: the character table and the execution
+     164/     1BE :                     ; table. The character table consists of any number of text items.
+     165/     1BE :                     ; Each item is a string of characters with the last character's
+     166/     1BE :                     ; high bit set to one. The execution table holds a 16-bit
+     167/     1BE :                     ; execution addresses that correspond to each entry in the
+     168/     1BE :                     ; character table.
+     169/     1BE :                     ;
+     170/     1BE :                     ; The end of the character table is a 0 byte which corresponds
+     171/     1BE :                     ; to the default routine in the execution table, which is
+     172/     1BE :                     ; executed if none of the other table items are matched.
+     173/     1BE :                     ;
+     174/     1BE :                     ; Character-matching tables:
+     175/     1BE : 4C49 53D4           TAB1	DC.B	'LIS',('T'+$80)		; Direct commands
+     176/     1C2 : 4C4F 41C4           	DC.B	'LOA',('D'+$80)
+     177/     1C6 : 4E45 D7             	DC.B	'NE',('W'+$80)
+     178/     1C9 : 5255 CE             	DC.B	'RU',('N'+$80)
+     179/     1CC : 5341 56C5           	DC.B	'SAV',('E'+$80)
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 4 - 11/3/2023 20:35:53
+
+
+     180/     1D0 : 4E45 58D4           TAB2	DC.B	'NEX',('T'+$80)		; Direct / statement
+     181/     1D4 : 4C45 D4             	DC.B	'LE',('T'+$80)
+     182/     1D7 : 49C6                	DC.B	'I',('F'+$80)
+     183/     1D9 : 474F 54CF           	DC.B	'GOT',('O'+$80)
+     184/     1DD : 474F 5355 C2        	DC.B	'GOSU',('B'+$80)
+     185/     1E2 : 5245 5455 52CE      	DC.B	'RETUR',('N'+$80)
+     186/     1E8 : 5245 CD             	DC.B	'RE',('M'+$80)
+     187/     1EB : 464F D2             	DC.B	'FO',('R'+$80)
+     188/     1EE : 494E 5055 D4        	DC.B	'INPU',('T'+$80)
+     189/     1F3 : 5052 494E D4        	DC.B	'PRIN',('T'+$80)
+     190/     1F8 : 504F 4BC5           	DC.B	'POK',('E'+$80)
+     191/     1FC : 5354 4FD0           	DC.B	'STO',('P'+$80)
+     192/     200 : 4259 C5             	DC.B	'BY',('E'+$80)
+     193/     203 : 4341 4CCC           	DC.B	'CAL',('L'+$80)
+     194/     207 : 00                  	DC.B	0
+     195/     208 : 5045 45CB           TAB4	DC.B	'PEE',('K'+$80)		; Functions
+     196/     20C : 524E C4             	DC.B	'RN',('D'+$80)
+     197/     20F : 4142 D3             	DC.B	'AB',('S'+$80)
+     198/     212 : 5349 5AC5           	DC.B	'SIZ',('E'+$80)
+     199/     216 : 00                  	DC.B	0
+     200/     217 : 54CF                TAB5	DC.B	'T',('O'+$80)		; "TO" in "FOR"
+     201/     219 : 00                  	DC.B	0
+     202/     21A : 5354 45D0           TAB6	DC.B	'STE',('P'+$80)		; "STEP" in "FOR"
+     203/     21E : 00                  	DC.B	0
+     204/     21F : 3EBD                TAB8	DC.B	'>',('='+$80)		; Relational operators
+     205/     221 : 3CBE                	DC.B	'<',('>'+$80)
+     206/     223 : BE                  	DC.B	('>'+$80)
+     207/     224 : BD                  	DC.B	('='+$80)
+     208/     225 : 3CBD                	DC.B	'<',('='+$80)
+     209/     227 : BC                  	DC.B	('<'+$80)
+     210/     228 : 00                  	DC.B	0
+     211/     229 : 00                  	DC.B	0	; <- for aligning on a word boundary
+     212/     22A :                     
+     213/     22A :                     ; Execution address tables:
+     214/     22A : 0316                TAB1_1	DC.W	LIST			; Direct commands
+     215/     22C : 0552                	DC.W	LOAD
+     216/     22E : 02B8                	DC.W	NEW
+     217/     230 : 02CA                	DC.W	RUN
+     218/     232 : 05B0                	DC.W	SAVE
+     219/     234 : 045E                TAB2_1	DC.W	NEXT			; Direct / statement
+     220/     236 : 0542                	DC.W	LET
+     221/     238 : 04AE                	DC.W	IF
+     222/     23A : 0302                	DC.W	GOTO
+     223/     23C : 03AE                	DC.W	GOSUB
+     224/     23E : 03D6                	DC.W	RETURN
+     225/     240 : 04AC                	DC.W	REM
+     226/     242 : 03F4                	DC.W	FOR
+     227/     244 : 04D4                	DC.W	INPUT
+     228/     246 : 0342                	DC.W	PRINT
+     229/     248 : 062E                	DC.W	POKE
+     230/     24A : 02C2                	DC.W	STOP
+     231/     24C : 00D8                	DC.W	GOBYE
+     232/     24E : 0646                	DC.W	CALL
+     233/     250 : 053C                	DC.W	DEFLT
+     234/     252 : 0810                TAB4_1	DC.W	PEEK			; Functions
+     235/     254 : 081C                	DC.W	RND
+     236/     256 : 084E                	DC.W	ABS
+     237/     258 : 085E                	DC.W	SIZE
+     238/     25A : 0718                	DC.W	XP40
+     239/     25C : 040C                TAB5_1	DC.W	FR1			; "TO" in "FOR"
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 5 - 11/3/2023 20:35:53
+
+
+     240/     25E : 08A8                	DC.W	QWHAT
+     241/     260 : 0420                TAB6_1	DC.W	FR2			; "STEP" in "FOR"
+     242/     262 : 0426                	DC.W	FR3
+     243/     264 : 066A                TAB8_1	DC.W	XP11	; >=		; Relational operators
+     244/     266 : 0670                	DC.W	XP12	; <>
+     245/     268 : 0676                	DC.W	XP13	; >
+     246/     26A : 0682                	DC.W	XP15	; =
+     247/     26C : 067C                	DC.W	XP14	; <=
+     248/     26E : 068A                	DC.W	XP16	; <
+     249/     270 : 069A                	DC.W	XP17
+     250/     272 :                     ;
+     251/     272 : 43F8 01BE           DIRECT	LEA	TAB1,A1
+     252/     276 : 45F8 022A           	LEA	TAB1_1,A2
+     253/     27A : 6100 08D4           EXEC	BSR.L	IGNBLK		; ignore leading blanks
+     254/     27E : 2648                	MOVE.L	A0,A3		; save the pointer
+     255/     280 : 4202                	CLR.B	D2		; clear match flag
+     256/     282 : 1018                EXLP	MOVE.B	(A0)+,D0	; get the program character
+     257/     284 : 1211                	MOVE.B	(A1),D1		; get the table character
+     258/     286 : 6604                	BNE	EXNGO		; If end of table,
+     259/     288 : 204B                	MOVE.L	A3,A0		; restore the text pointer and...
+     260/     28A : 6024                	BRA	EXGO		; execute the default.
+     261/     28C : 1600                EXNGO	MOVE.B	D0,D3		; Else check for period...
+     262/     28E : C602                	AND.B	D2,D3		; and a match.
+     263/     290 : 0C03 002E           	CMPI.B	#'.',D3
+     264/     294 : 671A                	BEQ	EXGO		; if so, execute
+     265/     296 : 0201 007F           	ANDI.B	#$7F,D1		; ignore the table's high bit
+     266/     29A : B200                	CMP.B	D0,D1		; is there a match?
+     267/     29C : 670C                	BEQ	EXMAT
+     268/     29E : 548A                	ADDQ.L	#2,A2		; if not, try the next entry
+     269/     2A0 : 204B                	MOVE.L	A3,A0		; reset the program pointer
+     270/     2A2 : 4202                	CLR.B	D2		; sorry, no match
+     271/     2A4 : 4A19                EX1	TST.B	(A1)+		; get to the end of the entry
+     272/     2A6 : 6AFC                	BPL	EX1
+     273/     2A8 : 60D8                	BRA	EXLP		; back for more matching
+     274/     2AA : 74FF                EXMAT	MOVEQ	#-1,D2		; we've got a match so far
+     275/     2AC : 4A19                	TST.B	(A1)+		; end of table entry?
+     276/     2AE : 6AD2                	BPL	EXLP		; if not, go back for more
+     277/     2B0 : 47F8 0000           EXGO	LEA	0,A3		; execute the appropriate routine
+     278/     2B4 : 3652                	MOVE	(A2),A3
+     279/     2B6 : 4ED3                	JMP	(A3)
+     280/     2B8 :                     ;
+     281/     2B8 :                     ;******************************************************************
+     282/     2B8 :                     ;
+     283/     2B8 :                     ; What follows is the code to execute direct and statement
+     284/     2B8 :                     ; commands. Control is transferred to these points via the command
+     285/     2B8 :                     ; table lookup code of 'DIRECT' and 'EXEC' in the last section.
+     286/     2B8 :                     ; After the command is executed, control is transferred to other
+     287/     2B8 :                     ; sections as follows:
+     288/     2B8 :                     ;
+     289/     2B8 :                     ; For 'LIST', 'NEW', and 'STOP': go back to the warm start point.
+     290/     2B8 :                     ; For 'RUN': go execute the first stored line if any; else go
+     291/     2B8 :                     ; back to the warm start point.
+     292/     2B8 :                     ; For 'GOTO' and 'GOSUB': go execute the target line.
+     293/     2B8 :                     ; For 'RETURN' and 'NEXT'; go back to saved return line.
+     294/     2B8 :                     ; For all others: if 'CURRNT' is 0, go to warm start; else go
+     295/     2B8 :                     ; execute next command. (This is done in 'FINISH'.)
+     296/     2B8 :                     ;
+     297/     2B8 :                     ;******************************************************************
+     298/     2B8 :                     ;
+     299/     2B8 :                     ; *** NEW *** STOP *** RUN (& friends) *** GOTO ***
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 6 - 11/3/2023 20:35:53
+
+
+     300/     2B8 :                     ;
+     301/     2B8 :                     ; 'NEW<CR>' sets TXTUNF to point to TXTBGN
+     302/     2B8 :                     ;
+     303/     2B8 :                     ; 'STOP<CR>' goes back to WSTART
+     304/     2B8 :                     ;
+     305/     2B8 :                     ; 'RUN<CR>' finds the first stored line, stores its address
+     306/     2B8 :                     ; in CURRNT, and starts executing it. Note that only those
+     307/     2B8 :                     ; commands in TAB2 are legal for a stored program.
+     308/     2B8 :                     ;
+     309/     2B8 :                     ; There are 3 more entries in 'RUN':
+     310/     2B8 :                     ; 'RUNNXL' finds next line, stores it's address and executes it.
+     311/     2B8 :                     ; 'RUNTSL' stores the address of this line and executes it.
+     312/     2B8 :                     ; 'RUNSML' continues the execution on same line.
+     313/     2B8 :                     ;
+     314/     2B8 :                     ; 'GOTO expr<CR>' evaluates the expression, finds the target
+     315/     2B8 :                     ; line, and jumps to 'RUNTSL' to do it.
+     316/     2B8 :                     ;
+     317/     2B8 : 6100 05E2           NEW	BSR.L	ENDCHK
+     318/     2BC : 21F8 00DC 1024      	MOVE.L	TXTBGN,TXTUNF	; set the end pointer
+     319/     2C2 :                     
+     320/     2C2 : 6100 05D8           STOP	BSR.L	ENDCHK
+     321/     2C6 : 6000 FE58           	BRA	WSTART
+     322/     2CA :                     
+     323/     2CA : 6100 05D0           RUN	BSR.L	ENDCHK
+     324/     2CE : 2078 00DC           	MOVE.L	TXTBGN,A0	; set pointer to beginning
+     325/     2D2 : 21C8 1004           	MOVE.L	A0,CURRNT
+     326/     2D6 :                     
+     327/     2D6 : 4AB8 1004           RUNNXL	TST.L	CURRNT		; executing a program?
+     328/     2DA : 6700 FE44           	BEQ.L	WSTART		; if not, we've finished a direct stat.
+     329/     2DE : 4281                	CLR.L	D1		; else find the next line number
+     330/     2E0 : 2248                	MOVE.L	A0,A1
+     331/     2E2 : 6100 06C2           	BSR.L	FNDLNP
+     332/     2E6 : 6500 FE38           	BCS	WSTART		; if we've fallen off the end, stop
+     333/     2EA :                     
+     334/     2EA : 21C9 1004           RUNTSL	MOVE.L	A1,CURRNT	; set CURRNT to point to the line no.
+     335/     2EE : 2049                	MOVE.L	A1,A0		; set the text pointer to
+     336/     2F0 : 5488                	ADDQ.L	#2,A0		; the start of the line text
+     337/     2F2 :                     
+     338/     2F2 : 6100 08B2           RUNSML	BSR.L	CHKIO		; see if a control-C was pressed
+     339/     2F6 : 43F8 01D0           	LEA	TAB2,A1		; find command in TAB2
+     340/     2FA : 45F8 0234           	LEA	TAB2_1,A2
+     341/     2FE : 6000 FF7A           	BRA	EXEC		; and execute it
+     342/     302 :                     
+     343/     302 : 6100 0356           GOTO	BSR.L	EXPR		; evaluate the following expression
+     344/     306 : 6100 0594           	BSR.L	ENDCHK		; must find end of line
+     345/     30A : 2200                	MOVE.L	D0,D1
+     346/     30C : 6100 068A           	BSR.L	FNDLN		; find the target line
+     347/     310 : 6600 05DE           	BNE.L	QHOW		; no such line no.
+     348/     314 : 60D4                	BRA	RUNTSL		; go do it
+     349/     316 :                     
+     350/     316 :                     ;
+     351/     316 :                     ;******************************************************************
+     352/     316 :                     ;
+     353/     316 :                     ; *** LIST *** PRINT ***
+     354/     316 :                     ;
+     355/     316 :                     ; LIST has two forms:
+     356/     316 :                     ; 'LIST<CR>' lists all saved lines
+     357/     316 :                     ; 'LIST #<CR>' starts listing at the line #
+     358/     316 :                     ; Control-S pauses the listing, control-C stops it.
+     359/     316 :                     ;
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 7 - 11/3/2023 20:35:53
+
+
+     360/     316 :                     ; PRINT command is 'PRINT ....:' or 'PRINT ....<CR>'
+     361/     316 :                     ; where '....' is a list of expressions, formats, back-arrows,
+     362/     316 :                     ; and strings.  These items a separated by commas.
+     363/     316 :                     ;
+     364/     316 :                     ; A format is a pound sign followed by a number.  It controls
+     365/     316 :                     ; the number of spaces the value of an expression is going to
+     366/     316 :                     ; be printed in.  It stays effective for the rest of the print
+     367/     316 :                     ; command unless changed by another format.  If no format is
+     368/     316 :                     ; specified, 11 positions will be used.
+     369/     316 :                     ;
+     370/     316 :                     ; A string is quoted in a pair of single- or double-quotes.
+     371/     316 :                     ;
+     372/     316 :                     ; An underline (back-arrow) means generate a <CR> without a <LF>
+     373/     316 :                     ;
+     374/     316 :                     ; A <CR LF> is generated after the entire list has been printed
+     375/     316 :                     ; or if the list is empty.  If the list ends with a semicolon,
+     376/     316 :                     ; however, no <CR LF> is generated.
+     377/     316 :                     ;
+     378/     316 :                     
+     379/     316 : 6100 0802           LIST	BSR.L	TSTNUM		; see if there's a line no.
+     380/     31A : 6100 0580           	BSR.L	ENDCHK		; if not, we get a zero
+     381/     31E : 6100 0678           	BSR.L	FNDLN		; find this or next line
+     382/     322 : 6500 FDFC           LS1	BCS	WSTART		; warm start if we passed the end
+     383/     326 : 6100 07C0           	BSR.L	PRTLN		; print the line
+     384/     32A : 6100 087A           	BSR.L	CHKIO		; check for listing halt request
+     385/     32E : 670C                	BEQ	LS3
+     386/     330 : 0C00 0013           	CMPI.B	#CTRLS,D0	; pause the listing?
+     387/     334 : 6606                	BNE	LS3
+     388/     336 : 6100 086E           LS2	BSR.L	CHKIO		; if so, wait for another keypress
+     389/     33A : 67FA                	BEQ	LS2
+     390/     33C : 6100 0668           LS3	BSR.L	FNDLNP		; find the next line
+     391/     340 : 60E0                	BRA	LS1
+     392/     342 :                     
+     393/     342 : 383C 000B           PRINT	MOVE	#11,D4		; D4 = number of print spaces
+     394/     346 : 6100 07BA           	BSR.L	TSTC		; if null list and ":"
+     395/     34A : 3A07                	DC.B	':',PR2-1-*
+     396/     34C : 6100 086A           	BSR.L	CRLF		; give CR-LF and continue
+     397/     350 : 60A0                	BRA	RUNSML		; execution on the same line
+     398/     352 : 6100 07AE           PR2	BSR.L	TSTC		; if null list and <CR>
+     399/     356 : 0D09                	DC.B	CR,PR0-1-*
+     400/     358 : 6100 085E           	BSR.L	CRLF		; also give CR-LF and
+     401/     35C : 6000 FF78           	BRA	RUNNXL		; execute the next line
+     402/     360 : 6100 07A0           PR0	BSR.L	TSTC		; else is it a format?
+     403/     364 : 2309                	DC.B	'#',PR1-1-*
+     404/     366 : 6100 02F2           	BSR.L	EXPR		; yes, evaluate expression
+     405/     36A : 3800                	MOVE	D0,D4		; and save it as print width
+     406/     36C : 6016                	BRA	PR3		; look for more to print
+     407/     36E : 6100 0792           PR1	BSR.L	TSTC		; is character expression? (MRL)
+     408/     372 : 240B                	DC.B	'$',PR4-1-*
+     409/     374 : 6100 02E4           	BSR.L	EXPR		; yep. Evaluate expression (MRL)
+     410/     378 : 6100 FD4E           	BSR	GOOUT		; print low byte (MRL)
+     411/     37C : 6006                	BRA	PR3		; look for more. (MRL)
+     412/     37E : 6100 06B6           PR4	BSR.L	QTSTG		; is it a string?
+     413/     382 : 6012                	BRA.S	PR8		; if not, must be an expression
+     414/     384 : 6100 077C           PR3	BSR.L	TSTC		; if ",", go find next
+     415/     388 : 2C07                	DC.B	',',PR6-1-*
+     416/     38A : 6100 04F6           	BSR.L	FIN		; in the list.
+     417/     38E : 60D0                	BRA	PR0
+     418/     390 : 6100 0826           PR6	BSR.L	CRLF		; list ends here
+     419/     394 : 6010                	BRA	FINISH
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 8 - 11/3/2023 20:35:53
+
+
+     420/     396 : 3F04                PR8	MOVE	D4,-(SP)	; save the width value
+     421/     398 : 6100 02C0           	BSR.L	EXPR		; evaluate the expression
+     422/     39C : 381F                	MOVE	(SP)+,D4	; restore the width
+     423/     39E : 2200                	MOVE.L	D0,D1
+     424/     3A0 : 6100 06D2           	BSR.L	PRTNUM		; print its value
+     425/     3A4 : 60DE                	BRA	PR3		; more to print?
+     426/     3A6 :                     
+     427/     3A6 : 6100 04DA           FINISH	BSR.L	FIN		; Check end of command
+     428/     3AA : 6000 04FC           	BRA.L	QWHAT		; print "What?" if wrong
+     429/     3AE :                     
+     430/     3AE :                     ;
+     431/     3AE :                     ;******************************************************************
+     432/     3AE :                     ;
+     433/     3AE :                     ; *** GOSUB *** & RETURN ***
+     434/     3AE :                     ;
+     435/     3AE :                     ; 'GOSUB expr:' or 'GOSUB expr<CR>' is like the 'GOTO' command,
+     436/     3AE :                     ; except that the current text pointer, stack pointer, etc. are
+     437/     3AE :                     ; saved so that execution can be continued after the subroutine
+     438/     3AE :                     ; 'RETURN's.  In order that 'GOSUB' can be nested (and even
+     439/     3AE :                     ; recursive), the save area must be stacked.  The stack pointer
+     440/     3AE :                     ; is saved in 'STKGOS'.  The old 'STKGOS' is saved on the stack.
+     441/     3AE :                     ; If we are in the main routine, 'STKGOS' is zero (this was done
+     442/     3AE :                     ; in the initialization section of the interpreter), but we still
+     443/     3AE :                     ; save it as a flag for no further 'RETURN's.
+     444/     3AE :                     ;
+     445/     3AE :                     ; 'RETURN<CR>' undoes everything that 'GOSUB' did, and thus
+     446/     3AE :                     ; returns the execution to the command after the most recent
+     447/     3AE :                     ; 'GOSUB'.  If 'STKGOS' is zero, it indicates that we never had
+     448/     3AE :                     ; a 'GOSUB' and is thus an error.
+     449/     3AE :                     ;
+     450/     3AE : 6100 0644           GOSUB	BSR.L	PUSHA		; save the current 'FOR' parameters
+     451/     3B2 : 6100 02A6           	BSR.L	EXPR		; get line number
+     452/     3B6 : 2F08                	MOVE.L	A0,-(SP)	; save text pointer
+     453/     3B8 : 2200                	MOVE.L	D0,D1
+     454/     3BA : 6100 05DC           	BSR.L	FNDLN		; find the target line
+     455/     3BE : 6600 0532           	BNE.L	AHOW		; if not there, say "How?"
+     456/     3C2 : 2F38 1004           	MOVE.L	CURRNT,-(SP)	; found it, save old 'CURRNT'...
+     457/     3C6 : 2F38 1008           	MOVE.L	STKGOS,-(SP)	; and 'STKGOS'
+     458/     3CA : 42B8 1010           	CLR.L	LOPVAR		; load new values
+     459/     3CE : 21CF 1008           	MOVE.L	SP,STKGOS
+     460/     3D2 : 6000 FF16           	BRA	RUNTSL
+     461/     3D6 :                     
+     462/     3D6 : 6100 04C4           RETURN	BSR.L	ENDCHK		; there should be just a <CR>
+     463/     3DA : 2238 1008           	MOVE.L	STKGOS,D1	; get old stack pointer
+     464/     3DE : 6700 04C8           	BEQ.L	QWHAT		; if zero, it doesn't exist
+     465/     3E2 : 2E41                	MOVE.L	D1,SP		; else restore it
+     466/     3E4 : 21DF 1008           	MOVE.L	(SP)+,STKGOS	; and the old 'STKGOS'
+     467/     3E8 : 21DF 1004           	MOVE.L	(SP)+,CURRNT	; and the old 'CURRNT'
+     468/     3EC : 205F                	MOVE.L	(SP)+,A0	; and the old text pointer
+     469/     3EE : 6100 05EA           	BSR.L	POPA		; and the old 'FOR' parameters
+     470/     3F2 : 60B2                	BRA	FINISH		; and we are back home
+     471/     3F4 :                     
+     472/     3F4 :                     ;
+     473/     3F4 :                     ;******************************************************************
+     474/     3F4 :                     ;
+     475/     3F4 :                     ; *** FOR *** & NEXT ***
+     476/     3F4 :                     ;
+     477/     3F4 :                     ; 'FOR' has two forms:
+     478/     3F4 :                     ; 'FOR var=exp1 TO exp2 STEP exp1' and 'FOR var=exp1 TO exp2'
+     479/     3F4 :                     ; The second form means the same thing as the first form with a
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 9 - 11/3/2023 20:35:53
+
+
+     480/     3F4 :                     ; STEP of positive 1.  The interpreter will find the variable 'var'
+     481/     3F4 :                     ; and set its value to the current value of 'exp1'.  It also
+     482/     3F4 :                     ; evaluates 'exp2' and 'exp1' and saves all these together with
+     483/     3F4 :                     ; the text pointer, etc. in the 'FOR' save area, which consisits of
+     484/     3F4 :                     ; 'LOPVAR', 'LOPINC', 'LOPLMT', 'LOPLN', and 'LOPPT'.  If there is
+     485/     3F4 :                     ; already something in the save area (indicated by a non-zero
+     486/     3F4 :                     ; 'LOPVAR'), then the old save area is saved on the stack before
+     487/     3F4 :                     ; the new values are stored.  The interpreter will then dig in the
+     488/     3F4 :                     ; stack and find out if this same variable was used in another
+     489/     3F4 :                     ; currently active 'FOR' loop.  If that is the case, then the old
+     490/     3F4 :                     ; 'FOR' loop is deactivated. (i.e. purged from the stack)
+     491/     3F4 :                     ;
+     492/     3F4 :                     ; 'NEXT var' serves as the logical (not necessarily physical) end
+     493/     3F4 :                     ; of the 'FOR' loop.  The control variable 'var' is checked with
+     494/     3F4 :                     ; the 'LOPVAR'.  If they are not the same, the interpreter digs in
+     495/     3F4 :                     ; the stack to find the right one and purges all those that didn't
+     496/     3F4 :                     ; match.  Either way, it then adds the 'STEP' to that variable and
+     497/     3F4 :                     ; checks the result with against the limit value.  If it is within
+     498/     3F4 :                     ; the limit, control loops back to the command following the
+     499/     3F4 :                     ; 'FOR'.  If it's outside the limit, the save area is purged and
+     500/     3F4 :                     ; execution continues.
+     501/     3F4 :                     ;
+     502/     3F4 : 6100 05FE           FOR	BSR.L	PUSHA		; save the old 'FOR' save area
+     503/     3F8 : 6100 046E           	BSR.L	SETVAL		; set the control variable
+     504/     3FC : 21CE 1010           	MOVE.L	A6,LOPVAR	; save its address
+     505/     400 : 43F8 0217           	LEA	TAB5,A1		; use 'EXEC' to test for 'TO'
+     506/     404 : 45F8 025C           	LEA	TAB5_1,A2
+     507/     408 : 6000 FE70           	BRA	EXEC
+     508/     40C : 6100 024C           FR1	BSR.L	EXPR		; evaluate the limit
+     509/     410 : 21C0 1018           	MOVE.L	D0,LOPLMT	; save that
+     510/     414 : 43F8 021A           	LEA	TAB6,A1		; use 'EXEC' to look for the
+     511/     418 : 45F8 0260           	LEA	TAB6_1,A2	; word 'STEP'
+     512/     41C : 6000 FE5C           	BRA	EXEC
+     513/     420 : 6100 0238           FR2	BSR.L	EXPR		; found it, get the step value
+     514/     424 : 6002                	BRA	FR4
+     515/     426 : 7001                FR3	MOVEQ	#1,D0		; not found, step defaults to 1
+     516/     428 : 21C0 1014           FR4	MOVE.L	D0,LOPINC	; save that too
+     517/     42C : 21F8 1004 101C      FR5	MOVE.L	CURRNT,LOPLN	; save address of current line number
+     518/     432 : 21C8 1020           	MOVE.L	A0,LOPPT	; and text pointer
+     519/     436 : 2C4F                	MOVE.L	SP,A6		; dig into the stack to find 'LOPVAR'
+     520/     438 : 6006                	BRA	FR7
+     521/     43A : DDFC 0000 0014      FR6	ADD.L	#20,A6		; look at next stack frame
+     522/     440 : 2016                FR7	MOVE.L	(A6),D0		; is it zero?
+     523/     442 : 6716                	BEQ	FR8		; if so, we're done
+     524/     444 : B0B8 1010           	CMP.L	LOPVAR,D0	; same as current LOPVAR?
+     525/     448 : 66F0                	BNE	FR6		; nope, look some more
+     526/     44A : 244F                	MOVE.L	SP,A2		; Else remove 5 long words from...
+     527/     44C : 224E                	MOVE.L	A6,A1		; inside the stack.
+     528/     44E : 47F8 0014           	LEA	20,A3
+     529/     452 : D7C9                	ADD.L	A1,A3
+     530/     454 : 6100 057C           	BSR.L	MVDOWN
+     531/     458 : 2E4B                	MOVE.L	A3,SP		; set the SP 5 long words up
+     532/     45A : 6000 FF4A           FR8	BRA	FINISH		; and continue execution
+     533/     45E :                     
+     534/     45E : 6100 02E4           NEXT	BSR.L	TSTV		; get address of variable
+     535/     462 : 6500 0444           	BCS.L	QWHAT		; if no variable, say "What?"
+     536/     466 : 2240                	MOVE.L	D0,A1		; save variable's address
+     537/     468 : 2038 1010           NX0	MOVE.L	LOPVAR,D0	; If 'LOPVAR' is zero, we never...
+     538/     46C : 6700 043A           	BEQ.L	QWHAT		; had a FOR loop, so say "What?"
+     539/     470 : B3C0                	CMP.L	D0,A1		; else we check them
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 10 - 11/3/2023 20:35:53
+
+
+     540/     472 : 6706                	BEQ	NX3		; OK, they agree
+     541/     474 : 6100 0564           	BSR.L	POPA		; nope, let's see the next frame
+     542/     478 : 60EE                	BRA	NX0
+     543/     47A : 2011                NX3	MOVE.L	(A1),D0		; get control variable's value
+     544/     47C : D0B8 1014           	ADD.L	LOPINC,D0	; add in loop increment
+     545/     480 : 6900 046E           	BVS.L	QHOW		; say "How?" for 32-bit overflow
+     546/     484 : 2280                	MOVE.L	D0,(A1)		; save control variable's new value
+     547/     486 : 2238 1018           	MOVE.L	LOPLMT,D1	; get loop's limit value
+     548/     48A : 4AB8 1014           	TST.L	LOPINC
+     549/     48E : 6A02                	BPL	NX1		; branch if loop increment is positive
+     550/     490 : C141                	EXG	D0,D1
+     551/     492 : B280                NX1	CMP.L	D0,D1		; test against limit
+     552/     494 : 6D0E                	BLT	NX2		; branch if outside limit
+     553/     496 : 21F8 101C 1004      	MOVE.L	LOPLN,CURRNT	; Within limit, go back to the...
+     554/     49C : 2078 1020           	MOVE.L	LOPPT,A0	; saved 'CURRNT' and text pointer.
+     555/     4A0 : 6000 FF04           	BRA	FINISH
+     556/     4A4 : 6100 0534           NX2	BSR.L	POPA		; purge this loop
+     557/     4A8 : 6000 FEFC           	BRA	FINISH
+     558/     4AC :                     
+     559/     4AC :                     ;
+     560/     4AC :                     ;******************************************************************
+     561/     4AC :                     ;
+     562/     4AC :                     ; *** REM *** IF *** INPUT *** LET (& DEFLT) ***
+     563/     4AC :                     ;
+     564/     4AC :                     ; 'REM' can be followed by anything and is ignored by the
+     565/     4AC :                     ; interpreter.
+     566/     4AC :                     ;
+     567/     4AC :                     ; 'IF' is followed by an expression, as a condition and one or
+     568/     4AC :                     ; more commands (including other 'IF's) separated by colons.
+     569/     4AC :                     ; Note that the word 'THEN' is not used.  The interpreter evaluates
+     570/     4AC :                     ; the expression.  If it is non-zero, execution continues.  If it
+     571/     4AC :                     ; is zero, the commands that follow are ignored and execution
+     572/     4AC :                     ; continues on the next line.
+     573/     4AC :                     ;
+     574/     4AC :                     ; 'INPUT' is like the 'PRINT' command, and is followed by a list
+     575/     4AC :                     ; of items.  If the item is a string in single or double quotes,
+     576/     4AC :                     ; or is an underline (back arrow), it has the same effect as in
+     577/     4AC :                     ; 'PRINT'.  If an item is a variable, this variable name is
+     578/     4AC :                     ; printed out followed by a colon, then the interpreter waits for
+     579/     4AC :                     ; an expression to be typed in.  The variable is then set to the
+     580/     4AC :                     ; value of this expression.  If the variable is preceeded by a
+     581/     4AC :                     ; string (again in single or double quotes), the string will be
+     582/     4AC :                     ; displayed followed by a colon.  The interpreter the waits for an
+     583/     4AC :                     ; expression to be entered and sets the variable equal to the
+     584/     4AC :                     ; expression's value.  If the input expression is invalid, the
+     585/     4AC :                     ; interpreter will print "What?", "How?", or "Sorry" and reprint
+     586/     4AC :                     ; the prompt and redo the input.  The execution will not terminate
+     587/     4AC :                     ; unless you press control-C.  This is handled in 'INPERR'.
+     588/     4AC :                     ;
+     589/     4AC :                     ; 'LET' is followed by a list of items separated by commas.
+     590/     4AC :                     ; Each item consists of a variable, an equals sign, and an
+     591/     4AC :                     ; expression.  The interpreter evaluates the expression and sets
+     592/     4AC :                     ; the variable to that value.  The interpreter will also handle
+     593/     4AC :                     ; 'LET' commands without the word 'LET'.  This is done by 'DEFLT'.
+     594/     4AC :                     ;
+     595/     4AC : 600A                REM	BRA	IF2		; skip the rest of the line
+     596/     4AE :                     
+     597/     4AE : 6100 01AA           IF	BSR.L	EXPR		; evaluate the expression
+     598/     4B2 : 4A80                IF1	TST.L	D0		; is it zero?
+     599/     4B4 : 6600 FE3C           	BNE	RUNSML		; if not, continue
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 11 - 11/3/2023 20:35:53
+
+
+     600/     4B8 : 2248                IF2	MOVE.L	A0,A1
+     601/     4BA : 4281                	CLR.L	D1
+     602/     4BC : 6100 0502           	BSR.L	FNDSKP		; if so, skip the rest of the line
+     603/     4C0 : 6400 FE28           	BCC	RUNTSL		; and run the next line
+     604/     4C4 : 6000 FC5A           	BRA.L	WSTART		; if no next line, do a warm start
+     605/     4C8 :                     
+     606/     4C8 : 2E78 100C           INPERR	MOVE.L	STKINP,SP	; restore the old stack pointer
+     607/     4CC : 21DF 1004           	MOVE.L	(SP)+,CURRNT	; and old 'CURRNT'
+     608/     4D0 : 588F                	ADDQ.L	#4,SP
+     609/     4D2 : 205F                	MOVE.L	(SP)+,A0	; and old text pointer
+     610/     4D4 :                     
+     611/     4D4 : 2F08                INPUT	MOVE.L	A0,-(SP)	; save in case of error
+     612/     4D6 : 6100 055E           	BSR.L	QTSTG		; is next item a string?
+     613/     4DA : 600A                	BRA.S	IP2		; nope
+     614/     4DC : 6100 0266           	BSR.L	TSTV		; yes, but is it followed by a variable?
+     615/     4E0 : 654C                	BCS	IP4		; if not, branch
+     616/     4E2 : 2440                	MOVE.L	D0,A2		; put away the variable's address
+     617/     4E4 : 601A                	BRA	IP3		; if so, input to variable
+     618/     4E6 : 2F08                IP2	MOVE.L	A0,-(SP)	; save for 'PRTSTG'
+     619/     4E8 : 6100 025A           	BSR.L	TSTV		; must be a variable now
+     620/     4EC : 6500 03BA           	BCS.L	QWHAT		; "What?" it isn't?
+     621/     4F0 : 2440                	MOVE.L	D0,A2		; put away the variable's address
+     622/     4F2 : 1410                	MOVE.B	(A0),D2		; get ready for 'PRTSTG'
+     623/     4F4 : 4200                	CLR.B	D0
+     624/     4F6 : 1080                	MOVE.B	D0,(A0)
+     625/     4F8 : 225F                	MOVE.L	(SP)+,A1
+     626/     4FA : 6100 051E           	BSR.L	PRTSTG		; print string as prompt
+     627/     4FE : 1082                	MOVE.B	D2,(A0)		; restore text
+     628/     500 : 2F08                IP3	MOVE.L	A0,-(SP)	; save in case of error
+     629/     502 : 2F38 1004           	MOVE.L	CURRNT,-(SP)	; also save 'CURRNT'
+     630/     506 : 21FC FFFF FFFF      	MOVE.L	#-1,CURRNT	; flag that we are in INPUT
+              50C : 1004             
+     631/     50E : 21CF 100C           	MOVE.L	SP,STKINP	; save the stack pointer too
+     632/     512 : 2F0A                	MOVE.L	A2,-(SP)	; save the variable address
+     633/     514 : 103C 003A           	MOVE.B	#':',D0		; print a colon first
+     634/     518 : 6100 03DE           	BSR.L	GETLN		; then get an input line
+     635/     51C : 41F8 1030           	LEA	BUFFER,A0	; point to the buffer
+     636/     520 : 6100 0138           	BSR.L	EXPR		; evaluate the input
+     637/     524 : 245F                	MOVE.L	(SP)+,A2	; restore the variable address
+     638/     526 : 2480                	MOVE.L	D0,(A2)		; save value in variable
+     639/     528 : 21DF 1004           	MOVE.L	(SP)+,CURRNT	; restore old 'CURRNT'
+     640/     52C : 205F                	MOVE.L	(SP)+,A0	; and the old text pointer
+     641/     52E : 588F                IP4	ADDQ.L	#4,SP		; clean up the stack
+     642/     530 : 6100 05D0           	BSR.L	TSTC		; is the next thing a comma?
+     643/     534 : 2C03                	DC.B	',',IP5-1-*
+     644/     536 : 609C                	BRA	INPUT		; yes, more items
+     645/     538 : 6000 FE6C           IP5	BRA	FINISH
+     646/     53C :                     
+     647/     53C : 0C10 000D           DEFLT	CMPI.B	#CR,(A0)	; empty line is OK
+     648/     540 : 670C                	BEQ	LT1		; else it is 'LET'
+     649/     542 :                     
+     650/     542 : 6100 0324           LET	BSR.L	SETVAL		; do the assignment
+     651/     546 : 6100 05BA           	BSR.L	TSTC		; check for more 'LET' items
+     652/     54A : 2C03                	DC.B	',',LT1-1-*
+     653/     54C : 60F4                	BRA	LET
+     654/     54E : 6000 FE56           LT1	BRA	FINISH		; until we are finished.
+     655/     552 :                     
+     656/     552 :                     ;
+     657/     552 :                     ;******************************************************************
+     658/     552 :                     ;
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 12 - 11/3/2023 20:35:53
+
+
+     659/     552 :                     ; *** LOAD *** & SAVE ***
+     660/     552 :                     ;
+     661/     552 :                     ; These two commands transfer a program to/from an auxiliary
+     662/     552 :                     ; device such as a cassette, another computer, etc.  The program
+     663/     552 :                     ; is converted to an easily-stored format: each line starts with
+     664/     552 :                     ; a colon, the line no. as 4 hex digits, and the rest of the line.
+     665/     552 :                     ; At the end, a line starting with an '@' sign is sent.  This
+     666/     552 :                     ; format can be read back with a minimum of processing time by
+     667/     552 :                     ; the 68000.
+     668/     552 :                     ;
+     669/     552 : 2078 00DC           LOAD	MOVE.L	TXTBGN,A0	; set pointer to start of prog. area
+     670/     556 : 103C 000D           	MOVE.B	#CR,D0		; For a CP/M host, tell it we're ready...
+     671/     55A : 6100 FB74           	BSR	GOAUXO		; by sending a CR to finish PIP command.
+     672/     55E : 6100 FB74           LOD1	BSR	GOAUXI		; look for start of line
+     673/     562 : 67FA                	BEQ	LOD1
+     674/     564 : 0C00 0040           	CMPI.B	#'@',D0		; end of program?
+     675/     568 : 671E                	BEQ	LODEND
+     676/     56A : 0C00 003A           	CMPI.B	#':',D0		; if not, is it start of line?
+     677/     56E : 66EE                	BNE	LOD1		; if not, wait for it
+     678/     570 : 611E                	BSR	GBYTE		; get first byte of line no.
+     679/     572 : 10C1                	MOVE.B	D1,(A0)+	; store it
+     680/     574 : 611A                	BSR	GBYTE		; get 2nd bye of line no.
+     681/     576 : 10C1                	MOVE.B	D1,(A0)+	; store that, too
+     682/     578 : 6100 FB5A           LOD2	BSR	GOAUXI		; get another text char.
+     683/     57C : 67FA                	BEQ	LOD2
+     684/     57E : 10C0                	MOVE.B	D0,(A0)+	; store it
+     685/     580 : 0C00 000D           	CMPI.B	#CR,D0		; is it the end of the line?
+     686/     584 : 66F2                	BNE	LOD2		; if not, go back for more
+     687/     586 : 60D6                	BRA	LOD1		; if so, start a new line
+     688/     588 : 21C8 1024           LODEND	MOVE.L	A0,TXTUNF	; set end-of program pointer
+     689/     58C : 6000 FB92           	BRA	WSTART		; back to direct mode
+     690/     590 :                     
+     691/     590 : 7401                GBYTE	MOVEQ	#1,D2		; get two hex characters from auxiliary
+     692/     592 : 4241                	CLR	D1		; and store them as a byte in D1
+     693/     594 : 6100 FB3E           GBYTE1	BSR	GOAUXI		; get a char.
+     694/     598 : 67FA                	BEQ	GBYTE1
+     695/     59A : 0C00 0041           	CMPI.B	#'A',D0
+     696/     59E : 6502                	BCS	GBYTE2
+     697/     5A0 : 5F00                	SUBQ.B	#7,D0		; if greater than 9, adjust
+     698/     5A2 : 0200 000F           GBYTE2	ANDI.B	#$F,D0		; strip ASCII
+     699/     5A6 : E909                	LSL.B	#4,D1		; put nybble into the result
+     700/     5A8 : 8200                	OR.B	D0,D1
+     701/     5AA : 51CA FFE8           	DBRA	D2,GBYTE1	; get another char.
+     702/     5AE : 4E75                	RTS
+     703/     5B0 :                     
+     704/     5B0 : 2078 00DC           SAVE	MOVE.L	TXTBGN,A0	; set pointer to start of prog. area
+     705/     5B4 : 2278 1024           	MOVE.L	TXTUNF,A1	; set pointer to end of prog. area
+     706/     5B8 : 103C 000D           SAVE1	MOVE.B	#CR,D0		; send out a CR & LF (CP/M likes this)
+     707/     5BC : 6100 FB12           	BSR	GOAUXO
+     708/     5C0 : 103C 000A           	MOVE.B	#LF,D0
+     709/     5C4 : 6100 FB0A           	BSR	GOAUXO
+     710/     5C8 : B3C8                	CMP.L	A0,A1		; are we finished?
+     711/     5CA : 631E                	BLS	SAVEND
+     712/     5CC : 103C 003A           	MOVE.B	#':',D0		; if not, start a line
+     713/     5D0 : 6100 FAFE           	BSR	GOAUXO
+     714/     5D4 : 1218                	MOVE.B	(A0)+,D1	; send first half of line no.
+     715/     5D6 : 6136                	BSR	PBYTE
+     716/     5D8 : 1218                	MOVE.B	(A0)+,D1	; and send 2nd half
+     717/     5DA : 6132                	BSR	PBYTE
+     718/     5DC : 1018                SAVE2	MOVE.B	(A0)+,D0	; get a text char.
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 13 - 11/3/2023 20:35:53
+
+
+     719/     5DE : 0C00 000D           	CMPI.B	#CR,D0		; is it the end of the line?
+     720/     5E2 : 67D4                	BEQ	SAVE1		; if so, send CR & LF and start new line
+     721/     5E4 : 6100 FAEA           	BSR	GOAUXO		; send it out
+     722/     5E8 : 60F2                	BRA	SAVE2		; go back for more text
+     723/     5EA : 103C 0040           SAVEND	MOVE.B	#'@',D0		; send end-of-program indicator
+     724/     5EE : 6100 FAE0           	BSR	GOAUXO
+     725/     5F2 : 103C 000D           	MOVE.B	#CR,D0		; followed by a CR & LF
+     726/     5F6 : 6100 FAD8           	BSR	GOAUXO
+     727/     5FA : 103C 000A           	MOVE.B	#LF,D0
+     728/     5FE : 6100 FAD0           	BSR	GOAUXO
+     729/     602 : 103C 001A           	MOVE.B	#$1A,D0		; and a control-Z to end the CP/M file
+     730/     606 : 6100 FAC8           	BSR	GOAUXO
+     731/     60A : 6000 FB14           	BRA	WSTART		; then go do a warm start
+     732/     60E :                     
+     733/     60E : 7401                PBYTE	MOVEQ	#1,D2		; send two hex characters from D1's low byte
+     734/     610 : E919                PBYTE1	ROL.B	#4,D1		; get the next nybble
+     735/     612 : 1001                	MOVE.B	D1,D0
+     736/     614 : 0200 000F           	ANDI.B	#$F,D0		; strip off garbage
+     737/     618 : 0600 0030           	ADDI.B	#'0',D0		; make it into ASCII
+     738/     61C : 0C00 0039           	CMPI.B	#'9',D0
+     739/     620 : 6302                	BLS	PBYTE2
+     740/     622 : 5E00                	ADDQ.B	#7,D0		; adjust if greater than 9
+     741/     624 : 6100 FAAA           PBYTE2	BSR	GOAUXO		; send it out
+     742/     628 : 51CA FFE6           	DBRA	D2,PBYTE1	; then send the next nybble
+     743/     62C : 4E75                	RTS
+     744/     62E :                     
+     745/     62E :                     ;
+     746/     62E :                     ;******************************************************************
+     747/     62E :                     ;
+     748/     62E :                     ; *** POKE *** & CALL ***
+     749/     62E :                     ;
+     750/     62E :                     ; 'POKE expr1,expr2' stores the byte from 'expr2' into the memory
+     751/     62E :                     ; address specified by 'expr1'.
+     752/     62E :                     ;
+     753/     62E :                     ; 'CALL expr' jumps to the machine language subroutine whose
+     754/     62E :                     ; starting address is specified by 'expr'.  The subroutine can use
+     755/     62E :                     ; all registers but must leave the stack the way it found it.
+     756/     62E :                     ; The subroutine returns to the interpreter by executing an RTS.
+     757/     62E :                     ;
+     758/     62E : 612A                POKE	BSR	EXPR		; get the memory address
+     759/     630 : 6100 04D0           	BSR.L	TSTC		; it must be followed by a comma
+     760/     634 : 2C0D                	DC.B	',',PKER-1-*
+     761/     636 : 2F00                	MOVE.L	D0,-(SP)	; save the address
+     762/     638 : 6120                	BSR	EXPR		; get the byte to be POKE'd
+     763/     63A : 225F                	MOVE.L	(SP)+,A1	; get the address back
+     764/     63C : 1280                	MOVE.B	D0,(A1)		; store the byte in memory
+     765/     63E : 6000 FD66           	BRA	FINISH
+     766/     642 : 6000 0264           PKER	BRA.L	QWHAT		; if no comma, say "What?"
+     767/     646 :                     
+     768/     646 : 6112                CALL	BSR	EXPR		; get the subroutine's address
+     769/     648 : 4A80                	TST.L	D0		; make sure we got a valid address
+     770/     64A : 6700 02A4           	BEQ.L	QHOW		; if not, say "How?"
+     771/     64E : 2F08                	MOVE.L	A0,-(SP)	; save the text pointer
+     772/     650 : 2240                	MOVE.L	D0,A1
+     773/     652 : 4E91                	JSR	(A1)		; jump to the subroutine
+     774/     654 : 205F                	MOVE.L	(SP)+,A0	; restore the text pointer
+     775/     656 : 6000 FD4E           	BRA	FINISH
+     776/     65A :                     ;
+     777/     65A :                     ;******************************************************************
+     778/     65A :                     ;
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 14 - 11/3/2023 20:35:53
+
+
+     779/     65A :                     ; *** EXPR ***
+     780/     65A :                     ;
+     781/     65A :                     ; 'EXPR' evaluates arithmetical or logical expressions.
+     782/     65A :                     ; <EXPR>::=<EXPR2>
+     783/     65A :                     ;	   <EXPR2><rel.op.><EXPR2>
+     784/     65A :                     ; where <rel.op.> is one of the operators in TAB8 and the result
+     785/     65A :                     ; of these operations is 1 if true and 0 if false.
+     786/     65A :                     ; <EXPR2>::=(+ or -)<EXPR3>(+ or -)<EXPR3>(...
+     787/     65A :                     ; where () are optional and (... are optional repeats.
+     788/     65A :                     ; <EXPR3>::=<EXPR4>( <* or /><EXPR4> )(...
+     789/     65A :                     ; <EXPR4>::=<variable>
+     790/     65A :                     ;	    <function>
+     791/     65A :                     ;	    (<EXPR>)
+     792/     65A :                     ; <EXPR> is recursive so that the variable '@' can have an <EXPR>
+     793/     65A :                     ; as an index, functions can have an <EXPR> as arguments, and
+     794/     65A :                     ; <EXPR4> can be an <EXPR> in parenthesis.
+     795/     65A :                     ;
+     796/     65A : 6152                EXPR	BSR	EXPR2
+     797/     65C : 2F00                	MOVE.L	D0,-(SP)	; save <EXPR2> value
+     798/     65E : 43F8 021F           	LEA	TAB8,A1		; look up a relational operator
+     799/     662 : 45F8 0264           	LEA	TAB8_1,A2
+     800/     666 : 6000 FC12           	BRA	EXEC		; go do it
+     801/     66A :                     
+     802/     66A : 6132                XP11	BSR	XP18		; is it ">="?
+     803/     66C : 6D24                	BLT	XPRT0		; no, return D0=0
+     804/     66E : 6026                	BRA	XPRT1		; else return D0=1
+     805/     670 :                     
+     806/     670 : 612C                XP12	BSR	XP18		; is it "<>"?
+     807/     672 : 671E                	BEQ	XPRT0		; no, return D0=0
+     808/     674 : 6020                	BRA	XPRT1		; else return D0=1
+     809/     676 :                     
+     810/     676 : 6126                XP13	BSR	XP18		; is it ">"?
+     811/     678 : 6F18                	BLE	XPRT0		; no, return D0=0
+     812/     67A : 601A                	BRA	XPRT1		; else return D0=1
+     813/     67C :                     
+     814/     67C : 6120                XP14	BSR	XP18		; is it "<="?
+     815/     67E : 6E12                	BGT	XPRT0		; no, return D0=0
+     816/     680 : 6014                	BRA	XPRT1		; else return D0=1
+     817/     682 :                     
+     818/     682 : 611A                XP15	BSR	XP18		; is it "="?
+     819/     684 : 660C                	BNE	XPRT0		; if not, return D0=0
+     820/     686 : 600E                	BRA	XPRT1		; else return D0=1
+     821/     688 : 4E75                XP15RT	RTS
+     822/     68A :                     
+     823/     68A : 6112                XP16	BSR	XP18		; is it "<"?
+     824/     68C : 6C04                	BGE	XPRT0		; if not, return D0=0
+     825/     68E : 6006                	BRA	XPRT1		; else return D0=1
+     826/     690 : 4E75                XP16RT	RTS
+     827/     692 :                     
+     828/     692 : 4280                XPRT0	CLR.L	D0		; return D0=0 (false)
+     829/     694 : 4E75                	RTS
+     830/     696 :                     
+     831/     696 : 7001                XPRT1	MOVEQ	#1,D0		; return D0=1 (true)
+     832/     698 : 4E75                	RTS
+     833/     69A :                     
+     834/     69A : 201F                XP17	MOVE.L	(SP)+,D0	; it's not a rel. operator
+     835/     69C : 4E75                	RTS			; return D0=<EXPR2>
+     836/     69E :                     
+     837/     69E : 201F                XP18	MOVE.L	(SP)+,D0	; reverse the top two stack items
+     838/     6A0 : 221F                	MOVE.L	(SP)+,D1
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 15 - 11/3/2023 20:35:53
+
+
+     839/     6A2 : 2F00                	MOVE.L	D0,-(SP)
+     840/     6A4 : 2F01                	MOVE.L	D1,-(SP)
+     841/     6A6 : 6106                	BSR	EXPR2		; do second <EXPR2>
+     842/     6A8 : 221F                	MOVE.L	(SP)+,D1
+     843/     6AA : B280                	CMP.L	D0,D1		; compare with the first result
+     844/     6AC : 4E75                	RTS			; return the result
+     845/     6AE :                     
+     846/     6AE : 6100 0452           EXPR2	BSR.L	TSTC		; negative sign?
+     847/     6B2 : 2D05                	DC.B	'-',XP21-1-*
+     848/     6B4 : 4280                	CLR.L	D0		; yes, fake '0-'
+     849/     6B6 : 6022                	BRA	XP26
+     850/     6B8 : 6100 0448           XP21	BSR.L	TSTC		; positive sign? ignore it
+     851/     6BC : 2B01                	DC.B	'+',XP22-1-*
+     852/     6BE : 6124                XP22	BSR	EXPR3		; first <EXPR3>
+     853/     6C0 : 6100 0440           XP23	BSR.L	TSTC		; add?
+     854/     6C4 : 2B0F                	DC.B	'+',XP25-1-*
+     855/     6C6 : 2F00                	MOVE.L	D0,-(SP)	; yes, save the value
+     856/     6C8 : 611A                	BSR	EXPR3		; get the second <EXPR3>
+     857/     6CA : 221F                XP24	MOVE.L	(SP)+,D1
+     858/     6CC : D081                	ADD.L	D1,D0		; add it to the first <EXPR3>
+     859/     6CE : 6900 0220           	BVS.L	QHOW		; branch if there's an overflow
+     860/     6D2 : 60EC                	BRA	XP23		; else go back for more operations
+     861/     6D4 : 6100 042C           XP25	BSR.L	TSTC		; subtract?
+     862/     6D8 : 2D65                	DC.B	'-',XP42-1-*
+     863/     6DA : 2F00                XP26	MOVE.L	D0,-(SP)	; yes, save the result of 1st <EXPR3>
+     864/     6DC : 6106                	BSR	EXPR3		; get second <EXPR3>
+     865/     6DE : 4480                	NEG.L	D0		; change its sign
+     866/     6E0 : 4EF8 06CA           	JMP	XP24		; and do an addition
+     867/     6E4 :                     
+     868/     6E4 : 6126                EXPR3	BSR	EXPR4		; get first <EXPR4>
+     869/     6E6 : 6100 041A           XP31	BSR.L	TSTC		; multiply?
+     870/     6EA : 2A0D                	DC.B	'*',XP34-1-*
+     871/     6EC : 2F00                	MOVE.L	D0,-(SP)	; yes, save that first result
+     872/     6EE : 611C                	BSR	EXPR4		; get second <EXPR4>
+     873/     6F0 : 221F                	MOVE.L	(SP)+,D1
+     874/     6F2 : 6100 009E           	BSR.L	MULT32		; multiply the two
+     875/     6F6 : 60EE                	BRA	XP31		; then look for more terms
+     876/     6F8 : 6100 0408           XP34	BSR.L	TSTC		; divide?
+     877/     6FC : 2F41                	DC.B	'/',XP42-1-*
+     878/     6FE : 2F00                	MOVE.L	D0,-(SP)	; save result of 1st <EXPR4>
+     879/     700 : 610A                	BSR	EXPR4		; get second <EXPR4>
+     880/     702 : 221F                	MOVE.L	(SP)+,D1
+     881/     704 : C141                	EXG	D0,D1
+     882/     706 : 6100 00CC           	BSR.L	DIV32		; do the division
+     883/     70A : 60DA                	BRA	XP31		; go back for any more terms
+     884/     70C :                     
+     885/     70C : 43F8 0208           EXPR4	LEA	TAB4,A1		; find possible function
+     886/     710 : 45F8 0252           	LEA	TAB4_1,A2
+     887/     714 : 6000 FB64           	BRA	EXEC
+     888/     718 : 612A                XP40	BSR	TSTV		; nope, not a function
+     889/     71A : 6508                	BCS	XP41		; nor a variable
+     890/     71C : 2240                	MOVE.L	D0,A1
+     891/     71E : 4280                	CLR.L	D0
+     892/     720 : 2011                	MOVE.L	(A1),D0		; if a variable, return its value in D0
+     893/     722 : 4E75                EXP4RT	RTS
+     894/     724 : 6100 03F4           XP41	BSR.L	TSTNUM		; or is it a number?
+     895/     728 : 2001                	MOVE.L	D1,D0
+     896/     72A : 4A42                	TST	D2		; (if not, # of digits will be zero)
+     897/     72C : 66F4                	BNE	EXP4RT		; if so, return it in D0
+     898/     72E : 6100 03D2           PARN	BSR.L	TSTC		; else look for ( EXPR )
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 16 - 11/3/2023 20:35:53
+
+
+     899/     732 : 280D                	DC.B	'(',XP43-1-*
+     900/     734 : 6100 FF24           	BSR	EXPR
+     901/     738 : 6100 03C8           	BSR.L	TSTC
+     902/     73C : 2903                	DC.B	')',XP43-1-*
+     903/     73E : 4E75                XP42	RTS
+     904/     740 : 6000 0166           XP43	BRA.L	QWHAT		; else say "What?"
+     905/     744 :                     
+     906/     744 :                     ;
+     907/     744 :                     ; =====	Test for a valid variable name.  Returns Carry=1 if not
+     908/     744 :                     ;	found, else returns Carry=0 and the address of the
+     909/     744 :                     ;	variable in D0.
+     910/     744 :                     
+     911/     744 : 6100 040A           TSTV	BSR.L	IGNBLK
+     912/     748 : 4280                	CLR.L	D0
+     913/     74A : 1010                	MOVE.B	(A0),D0		; look at the program text
+     914/     74C : 0400 0040           	SUBI.B	#'@',D0
+     915/     750 : 653E                	BCS	TSTVRT		; C=1: not a variable
+     916/     752 : 6626                	BNE	TV1		; branch if not "@" array
+     917/     754 : 5248                	ADDQ	#1,A0		; If it is, it should be
+     918/     756 : 61D6                	BSR	PARN		; followed by (EXPR) as its index.
+     919/     758 : D080                	ADD.L	D0,D0
+     920/     75A : 6500 0194           	BCS.L	QHOW		; say "How?" if index is too big
+     921/     75E : D080                	ADD.L	D0,D0
+     922/     760 : 6500 018E           	BCS.L	QHOW
+     923/     764 : 2F00                	MOVE.L	D0,-(SP)	; save the index
+     924/     766 : 6100 00F6           	BSR.L	SIZE		; get amount of free memory
+     925/     76A : 221F                	MOVE.L	(SP)+,D1	; get back the index
+     926/     76C : B081                	CMP.L	D1,D0		; see if there's enough memory
+     927/     76E : 6300 0178           	BLS.L	QSORRY		; if not, say "Sorry"
+     928/     772 : 2038 1028           	MOVE.L	VARBGN,D0	; put address of array element...
+     929/     776 : 9081                	SUB.L	D1,D0		; into D0
+     930/     778 : 4E75                	RTS
+     931/     77A : 0C00 001B           TV1	CMPI.B	#27,D0		; if not @, is it A through Z?
+     932/     77E : 0A3C 0001           	EOR	#1,CCR
+     933/     782 : 650C                	BCS	TSTVRT		; if not, set Carry and return
+     934/     784 : 5248                	ADDQ	#1,A0		; else bump the text pointer
+     935/     786 : D040                	ADD	D0,D0		; compute the variable's address
+     936/     788 : D040                	ADD	D0,D0
+     937/     78A : 2238 1028           	MOVE.L	VARBGN,D1
+     938/     78E : D041                	ADD	D1,D0		; and return it in D0 with Carry=0
+     939/     790 : 4E75                TSTVRT	RTS
+     940/     792 :                     
+     941/     792 :                     ;
+     942/     792 :                     ; =====	Multiplies the 32 bit values in D0 and D1, returning
+     943/     792 :                     ;	the 32 bit result in D0.
+     944/     792 :                     ;
+     945/     792 : 2801                MULT32	MOVE.L	D1,D4
+     946/     794 : B184                	EOR.L	D0,D4		; see if the signs are the same
+     947/     796 : 4A80                	TST.L	D0		; take absolute value of D0
+     948/     798 : 6A02                	BPL	MLT1
+     949/     79A : 4480                	NEG.L	D0
+     950/     79C : 4A81                MLT1	TST.L	D1		; take absolute value of D1
+     951/     79E : 6A02                	BPL	MLT2
+     952/     7A0 : 4481                	NEG.L	D1
+     953/     7A2 : 0C81 0000 FFFF      MLT2	CMPI.L	#$FFFF,D1	; is second argument <= 16 bits?
+     954/     7A8 : 630C                	BLS	MLT3		; OK, let it through
+     955/     7AA : C141                	EXG	D0,D1		; else swap the two arguments
+     956/     7AC : 0C81 0000 FFFF      	CMPI.L	#$FFFF,D1	; and check 2nd argument again
+     957/     7B2 : 6200 013C           	BHI.L	QHOW		; one of them MUST be 16 bits
+     958/     7B6 : 3400                MLT3	MOVE	D0,D2		; prepare for 32 bit X 16 bit multiply
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 17 - 11/3/2023 20:35:53
+
+
+     959/     7B8 : C4C1                	MULU	D1,D2		; multiply low word
+     960/     7BA : 4840                	SWAP	D0
+     961/     7BC : C0C1                	MULU	D1,D0		; multiply high word
+     962/     7BE : 4840                	SWAP	D0
+     963/     7C0 :                     ;** Rick Murray's bug correction follows:
+     964/     7C0 : 4A40                	TST	D0		; if lower word not 0, then overflow
+     965/     7C2 : 6600 012C           	BNE.L	QHOW		; if overflow, say "How?"
+     966/     7C6 : D082                	ADD.L	D2,D0		; D0 now holds the product
+     967/     7C8 : 6B00 0126           	BMI.L	QHOW		; if sign bit set, it's an overflow
+     968/     7CC : 4A84                	TST.L	D4		; were the signs the same?
+     969/     7CE : 6A02                	BPL	MLTRET
+     970/     7D0 : 4480                	NEG.L	D0		; if not, make the result negative
+     971/     7D2 : 4E75                MLTRET	RTS
+     972/     7D4 :                     
+     973/     7D4 :                     ;
+     974/     7D4 :                     ; ===== Divide the 32 bit value in D0 by the 32 bit value in D1.
+     975/     7D4 :                     ;	Returns the 32 bit quotient in D0, remainder in D1.
+     976/     7D4 :                     ;
+     977/     7D4 : 4A81                DIV32	TST.L	D1		; check for divide-by-zero
+     978/     7D6 : 6700 0118           	BEQ.L	QHOW		; if so, say "How?"
+     979/     7DA : 2401                	MOVE.L	D1,D2
+     980/     7DC : 2801                 	MOVE.L	D1,D4
+     981/     7DE : B184                	EOR.L	D0,D4		; see if the signs are the same
+     982/     7E0 : 4A80                	TST.L	D0		; take absolute value of D0
+     983/     7E2 : 6A02                	BPL	DIV1
+     984/     7E4 : 4480                	NEG.L	D0
+     985/     7E6 : 4A81                DIV1	TST.L	D1		; take absolute value of D1
+     986/     7E8 : 6A02                	BPL	DIV2
+     987/     7EA : 4481                	NEG.L	D1
+     988/     7EC : 761F                DIV2	MOVEQ	#31,D3		; iteration count for 32 bits
+     989/     7EE : 2200                	MOVE.L	D0,D1
+     990/     7F0 : 4280                	CLR.L	D0
+     991/     7F2 : D281                DIV3	ADD.L	D1,D1		; (This algorithm was translated from
+     992/     7F4 : D180                	ADDX.L	D0,D0		; the divide routine in Ron Cain's
+     993/     7F6 : 6708                	BEQ	DIV4		; Small-C run time library.)
+     994/     7F8 : B082                	CMP.L	D2,D0
+     995/     7FA : 6B04                	BMI	DIV4
+     996/     7FC : 5281                	ADDQ.L	#1,D1
+     997/     7FE : 9082                	SUB.L	D2,D0
+     998/     800 : 51CB FFF0           DIV4	DBRA	D3,DIV3
+     999/     804 : C141                	EXG	D0,D1		; put rem. & quot. in proper registers
+    1000/     806 : 4A84                	TST.L	D4		; were the signs the same?
+    1001/     808 : 6A04                	BPL	DIVRT
+    1002/     80A : 4480                	NEG.L	D0		; if not, results are negative
+    1003/     80C : 4481                	NEG.L	D1
+    1004/     80E : 4E75                DIVRT	RTS
+    1005/     810 :                     
+    1006/     810 :                     ;
+    1007/     810 :                     ; =====	The PEEK function returns the byte stored at the address
+    1008/     810 :                     ;	contained in the following expression.
+    1009/     810 :                     ;
+    1010/     810 : 6100 FF1C           PEEK	BSR	PARN		; get the memory address
+    1011/     814 : 2240                	MOVE.L	D0,A1
+    1012/     816 : 4280                	CLR.L	D0		; upper 3 bytes will be zero
+    1013/     818 : 1011                	MOVE.B	(A1),D0		; get the addressed byte
+    1014/     81A : 4E75                	RTS			; and return it
+    1015/     81C :                     
+    1016/     81C :                     ;
+    1017/     81C :                     ; =====	The RND function returns a random number from 1 to
+    1018/     81C :                     ;	the value of the following expression in D0.
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 18 - 11/3/2023 20:35:53
+
+
+    1019/     81C :                     ;
+    1020/     81C : 6100 FF10           RND	BSR	PARN		; get the upper limit
+    1021/     820 : 4A80                	TST.L	D0		; it must be positive and non-zero
+    1022/     822 : 6700 00CC           	BEQ.L	QHOW
+    1023/     826 : 6B00 00C8           	BMI.L	QHOW
+    1024/     82A : 2200                	MOVE.L	D0,D1
+    1025/     82C : 2278 1000           	MOVE.L	RANPNT,A1	; get memory as a random number
+    1026/     830 : B3FC 0000 0C3C      	CMP.L	#LSTROM,A1
+    1027/     836 : 6504                	BCS	RA1
+    1028/     838 : 43F8 00C0           	LEA	START,A1	; wrap around if end of program
+    1029/     83C : 2019                RA1	MOVE.L	(A1)+,D0	; get the slightly random number
+    1030/     83E : 0880 001F           	BCLR	#31,D0		; make sure it's positive
+    1031/     842 : 21C9 1000           	MOVE.L	A1,RANPNT	; (even I can do better than this!)
+    1032/     846 : 618C                	BSR	DIV32		; RND(n)=MOD(number,n)+1
+    1033/     848 : 2001                	MOVE.L	D1,D0		; MOD is the remainder of the div.
+    1034/     84A : 5280                	ADDQ.L	#1,D0
+    1035/     84C : 4E75                	RTS
+    1036/     84E :                     
+    1037/     84E :                     ;
+    1038/     84E :                     ; =====	The ABS function returns an absolute value in D0.
+    1039/     84E :                     ;
+    1040/     84E : 6100 FEDE           ABS	BSR	PARN		; get the following expr.'s value
+    1041/     852 : 4A80                	TST.L	D0
+    1042/     854 : 6A06                	BPL	ABSRT
+    1043/     856 : 4480                	NEG.L	D0		; if negative, complement it
+    1044/     858 : 6B00 0096           	BMI.L	QHOW		; if still negative, it was too big
+    1045/     85C : 4E75                ABSRT	RTS
+    1046/     85E :                     
+    1047/     85E :                     ;
+    1048/     85E :                     ; ===== The SIZE function returns the size of free memory in D0.
+    1049/     85E :                     ;
+    1050/     85E : 2038 1028           SIZE	MOVE.L	VARBGN,D0	; get the number of free bytes...
+    1051/     862 : 90B8 1024           	SUB.L	TXTUNF,D0	; between 'TXTUNF' and 'VARBGN'
+    1052/     866 : 4E75                	RTS			; return the number in D0
+    1053/     868 :                     
+    1054/     868 :                     ;
+    1055/     868 :                     ;******************************************************************
+    1056/     868 :                     ;
+    1057/     868 :                     ; *** SETVAL *** FIN *** ENDCHK *** ERROR (& friends) ***
+    1058/     868 :                     ;
+    1059/     868 :                     ; 'SETVAL' expects a variable, followed by an equal sign and then
+    1060/     868 :                     ; an expression.  It evaluates the expression and sets the variable
+    1061/     868 :                     ; to that value.
+    1062/     868 :                     ;
+    1063/     868 :                     ; 'FIN' checks the end of a command.  If it ended with ":",
+    1064/     868 :                     ; execution continues.  If it ended with a CR, it finds the
+    1065/     868 :                     ; the next line and continues from there.
+    1066/     868 :                     ;
+    1067/     868 :                     ; 'ENDCHK' checks if a command is ended with a CR. This is
+    1068/     868 :                     ; required in certain commands, such as GOTO, RETURN, STOP, etc.
+    1069/     868 :                     ;
+    1070/     868 :                     ; 'ERROR' prints the string pointed to by A0. It then prints the
+    1071/     868 :                     ; line pointed to by CURRNT with a "?" inserted at where the
+    1072/     868 :                     ; old text pointer (should be on top of the stack) points to.
+    1073/     868 :                     ; Execution of Tiny BASIC is stopped and a warm start is done.
+    1074/     868 :                     ; If CURRNT is zero (indicating a direct command), the direct
+    1075/     868 :                     ; command is not printed. If CURRNT is -1 (indicating
+    1076/     868 :                     ; 'INPUT' command in progress), the input line is not printed
+    1077/     868 :                     ; and execution is not terminated but continues at 'INPERR'.
+    1078/     868 :                     ;
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 19 - 11/3/2023 20:35:53
+
+
+    1079/     868 :                     ; Related to 'ERROR' are the following:
+    1080/     868 :                     ; 'QWHAT' saves text pointer on stack and gets "What?" message.
+    1081/     868 :                     ; 'AWHAT' just gets the "What?" message and jumps to 'ERROR'.
+    1082/     868 :                     ; 'QSORRY' and 'ASORRY' do the same kind of thing.
+    1083/     868 :                     ; 'QHOW' and 'AHOW' also do this for "How?".
+    1084/     868 :                     ;
+    1085/     868 : 6100 FEDA           SETVAL	BSR	TSTV		; variable name?
+    1086/     86C : 653A                	BCS	QWHAT		; if not, say "What?"
+    1087/     86E : 2F00                	MOVE.L	D0,-(SP)	; save the variable's address
+    1088/     870 : 6100 0290           	BSR.L	TSTC		; get past the "=" sign
+    1089/     874 : 3D0B                	DC.B	'=',SV1-1-*
+    1090/     876 : 6100 FDE2           	BSR	EXPR		; evaluate the expression
+    1091/     87A : 2C5F                	MOVE.L	(SP)+,A6
+    1092/     87C : 2C80                	MOVE.L	D0,(A6)		; and save its value in the variable
+    1093/     87E : 4E75                	RTS
+    1094/     880 : 6026                SV1	BRA	QWHAT		; if no "=" sign
+    1095/     882 :                     
+    1096/     882 : 6100 027E           FIN	BSR.L	TSTC		; *** FIN ***
+    1097/     886 : 3A07                	DC.B	':',FI1-1-*
+    1098/     888 : 588F                	ADDQ.L	#4,SP		; if ":", discard return address
+    1099/     88A : 6000 FA66           	BRA	RUNSML		; continue on the same line
+    1100/     88E : 6100 0272           FI1	BSR.L	TSTC		; not ":", is it a CR?
+    1101/     892 : 0D07                	DC.B	CR,FI2-1-*
+    1102/     894 : 588F                	ADDQ.L	#4,SP		; yes, purge return address
+    1103/     896 : 6000 FA3E           	BRA	RUNNXL		; execute the next line
+    1104/     89A : 4E75                FI2	RTS			; else return to the caller
+    1105/     89C :                     
+    1106/     89C : 6100 02B2           ENDCHK	BSR.L	IGNBLK
+    1107/     8A0 : 0C10 000D           	CMPI.B	#CR,(A0)	; does it end with a CR?
+    1108/     8A4 : 6602                	BNE	QWHAT		; if not, say "WHAT?"
+    1109/     8A6 : 4E75                	RTS
+    1110/     8A8 :                     
+    1111/     8A8 : 2F08                QWHAT	MOVE.L	A0,-(SP)
+    1112/     8AA : 4DF8 0C2A           AWHAT	LEA	WHTMSG,A6
+    1113/     8AE : 6100 030C           ERROR	BSR.L	PRMESG		; display the error message
+    1114/     8B2 : 205F                	MOVE.L	(SP)+,A0	; restore the text pointer
+    1115/     8B4 : 2038 1004           	MOVE.L	CURRNT,D0	; get the current line number
+    1116/     8B8 : 6700 F866           	BEQ	WSTART		; if zero, do a warm start
+    1117/     8BC : 0C80 FFFF FFFF      	CMPI.L	#-1,D0		; is the line no. pointer = -1?
+    1118/     8C2 : 6700 FC04           	BEQ	INPERR		; if so, redo input
+    1119/     8C6 : 1F10                	MOVE.B	(A0),-(SP)	; save the char. pointed to
+    1120/     8C8 : 4210                	CLR.B	(A0)		; put a zero where the error is
+    1121/     8CA : 2278 1004           	MOVE.L	CURRNT,A1	; point to start of current line
+    1122/     8CE : 6100 0218           	BSR.L	PRTLN		; display the line in error up to the 0
+    1123/     8D2 : 109F                	MOVE.B	(SP)+,(A0)	; restore the character
+    1124/     8D4 : 103C 003F           	MOVE.B	#'?',D0		; display a "?"
+    1125/     8D8 : 6100 F7EE           	BSR	GOOUT
+    1126/     8DC : 4240                	CLR	D0
+    1127/     8DE : 5389                	SUBQ.L	#1,A1		; point back to the error char.
+    1128/     8E0 : 6100 0138           	BSR.L	PRTSTG		; display the rest of the line
+    1129/     8E4 : 6000 F83A           	BRA	WSTART		; and do a warm start
+    1130/     8E8 : 2F08                QSORRY	MOVE.L	A0,-(SP)
+    1131/     8EA : 4DF8 0C32           ASORRY	LEA	SRYMSG,A6
+    1132/     8EE : 60BE                	BRA	ERROR
+    1133/     8F0 : 2F08                QHOW	MOVE.L	A0,-(SP)	; Error: "How?"
+    1134/     8F2 : 4DF8 0C23           AHOW	LEA	HOWMSG,A6
+    1135/     8F6 : 60B6                	BRA	ERROR
+    1136/     8F8 :                     ;
+    1137/     8F8 :                     ;******************************************************************
+    1138/     8F8 :                     ;
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 20 - 11/3/2023 20:35:53
+
+
+    1139/     8F8 :                     ; *** GETLN *** FNDLN (& friends) ***
+    1140/     8F8 :                     ;
+    1141/     8F8 :                     ; 'GETLN' reads in input line into 'BUFFER'. It first prompts with
+    1142/     8F8 :                     ; the character in D0 (given by the caller), then it fills the
+    1143/     8F8 :                     ; buffer and echos. It ignores LF's but still echos
+    1144/     8F8 :                     ; them back. Control-H is used to delete the last character
+    1145/     8F8 :                     ; entered (if there is one), and control-X is used to delete the
+    1146/     8F8 :                     ; whole line and start over again. CR signals the end of a line,
+    1147/     8F8 :                     ; and causes 'GETLN' to return.
+    1148/     8F8 :                     ;
+    1149/     8F8 :                     ; 'FNDLN' finds a line with a given line no. (in D1) in the
+    1150/     8F8 :                     ; text save area.  A1 is used as the text pointer. If the line
+    1151/     8F8 :                     ; is found, A1 will point to the beginning of that line
+    1152/     8F8 :                     ; (i.e. the high byte of the line no.), and flags are NC & Z.
+    1153/     8F8 :                     ; If that line is not there and a line with a higher line no.
+    1154/     8F8 :                     ; is found, A1 points there and flags are NC & NZ. If we reached
+    1155/     8F8 :                     ; the end of the text save area and cannot find the line, flags
+    1156/     8F8 :                     ; are C & NZ.
+    1157/     8F8 :                     ; 'FNDLN' will initialize A1 to the beginning of the text save
+    1158/     8F8 :                     ; area to start the search. Some other entries of this routine
+    1159/     8F8 :                     ; will not initialize A1 and do the search.
+    1160/     8F8 :                     ; 'FNDLNP' will start with A1 and search for the line no.
+    1161/     8F8 :                     ; 'FNDNXT' will bump A1 by 2, find a CR and then start search.
+    1162/     8F8 :                     ; 'FNDSKP' uses A1 to find a CR, and then starts the search.
+    1163/     8F8 :                     ;
+    1164/     8F8 : 6100 F7CE           GETLN	BSR	GOOUT		; display the prompt
+    1165/     8FC : 103C 0020           	MOVE.B	#' ',D0		; and a space
+    1166/     900 : 6100 F7C6           	BSR	GOOUT
+    1167/     904 : 41F8 1030           	LEA	BUFFER,A0	; A0 is the buffer pointer
+    1168/     908 : 6100 029C           GL1	BSR.L	CHKIO		; check keyboard
+    1169/     90C : 67FA                	BEQ	GL1		; wait for a char. to come in
+    1170/     90E : 0C00 0008           	CMPI.B	#CTRLH,D0	; delete last character?
+    1171/     912 : 6726                	BEQ	GL3		; if so
+    1172/     914 : 0C00 0018           	CMPI.B	#CTRLX,D0	; delete the whole line?
+    1173/     918 : 6744                	BEQ	GL4		; if so
+    1174/     91A : 0C00 000D           	CMPI.B	#CR,D0		; accept a CR
+    1175/     91E : 6706                	BEQ	GL2
+    1176/     920 : 0C00 0020           	CMPI.B	#' ',D0		; if other control char., discard it
+    1177/     924 : 65E2                	BCS	GL1
+    1178/     926 : 10C0                GL2	MOVE.B	D0,(A0)+	; save the char.
+    1179/     928 : 6100 F79E           	BSR	GOOUT		; echo the char back out
+    1180/     92C : 0C00 000D           	CMPI.B	#CR,D0		; if it's a CR, end the line
+    1181/     930 : 675C                	BEQ	GL7
+    1182/     932 : B1FC 0000 107F      	CMP.L	#(BUFFER+BUFLEN-1),A0	; any more room?
+    1183/     938 : 65CE                	BCS	GL1		; yes: get some more, else delete last char.
+    1184/     93A : 103C 0008           GL3	MOVE.B	#CTRLH,D0	; delete a char. if possible
+    1185/     93E : 6100 F788           	BSR	GOOUT
+    1186/     942 : 103C 0020           	MOVE.B	#' ',D0
+    1187/     946 : 6100 F780           	BSR	GOOUT
+    1188/     94A : B1FC 0000 1030      	CMP.L	#BUFFER,A0	; any char.'s left?
+    1189/     950 : 63B6                	BLS	GL1		; if not
+    1190/     952 : 103C 0008           	MOVE.B	#CTRLH,D0	; if so, finish the BS-space-BS sequence
+    1191/     956 : 6100 F770           	BSR	GOOUT
+    1192/     95A : 5388                	SUBQ.L	#1,A0		; decrement the text pointer
+    1193/     95C : 60AA                	BRA	GL1		; back for more	
+    1194/     95E : 2208                GL4	MOVE.L	A0,D1		; delete the whole line
+    1195/     960 : 0481 0000 1030      	SUBI.L	#BUFFER,D1	; figure out how many backspaces we need
+    1196/     966 : 671E                	BEQ	GL6		; if none needed, branch
+    1197/     968 : 5341                	SUBQ	#1,D1		; adjust for DBRA
+    1198/     96A : 103C 0008           GL5	MOVE.B	#CTRLH,D0	; and display BS-space-BS sequences
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 21 - 11/3/2023 20:35:53
+
+
+    1199/     96E : 6100 F758           	BSR	GOOUT
+    1200/     972 : 103C 0020           	MOVE.B	#' ',D0
+    1201/     976 : 6100 F750           	BSR	GOOUT
+    1202/     97A : 103C 0008           	MOVE.B	#CTRLH,D0
+    1203/     97E : 6100 F748           	BSR	GOOUT
+    1204/     982 : 51C9 FFE6           	DBRA	D1,GL5
+    1205/     986 : 41F8 1030           GL6	LEA	BUFFER,A0	; reinitialize the text pointer
+    1206/     98A : 6000 FF7C           	BRA	GL1		; and go back for more
+    1207/     98E : 103C 000A           GL7	MOVE.B	#LF,D0		; echo a LF for the CR
+    1208/     992 : 6100 F734           	BSR	GOOUT
+    1209/     996 : 4E75                	RTS
+    1210/     998 :                     
+    1211/     998 : 0C81 0000 FFFF      FNDLN	CMPI.L	#$FFFF,D1	; line no. must be < 65535
+    1212/     99E : 6400 FF50           	BCC	QHOW
+    1213/     9A2 : 2278 00DC           	MOVE.L	TXTBGN,A1	; init. the text save pointer
+    1214/     9A6 :                     
+    1215/     9A6 : 2478 1024           FNDLNP	MOVE.L	TXTUNF,A2	; check if we passed the end
+    1216/     9AA : 538A                	SUBQ.L	#1,A2
+    1217/     9AC : B5C9                	CMP.L	A1,A2
+    1218/     9AE : 650C                	BCS	FNDRET		; if so, return with Z=0 & C=1
+    1219/     9B0 : 1419                	MOVE.B	(A1)+,D2	; if not, get a line no.
+    1220/     9B2 : E14A                	LSL	#8,D2
+    1221/     9B4 : 1411                	MOVE.B	(A1),D2
+    1222/     9B6 : 5389                	SUBQ.L	#1,A1
+    1223/     9B8 : B441                	CMP.W	D1,D2		; is this the line we want?
+    1224/     9BA : 6502                	BCS	FNDNXT		; no, not there yet
+    1225/     9BC : 4E75                FNDRET	RTS			; return the cond. codes
+    1226/     9BE :                     
+    1227/     9BE : 5489                FNDNXT	ADDQ.L	#2,A1		; find the next line
+    1228/     9C0 :                     
+    1229/     9C0 : 0C19 000D           FNDSKP	CMP.B	#CR,(A1)+	; try to find a CR
+    1230/     9C4 : 66FA                	BNE	FNDSKP		; keep looking
+    1231/     9C6 : 60DE                	BRA	FNDLNP		; check if end of text
+    1232/     9C8 :                     
+    1233/     9C8 :                     ;
+    1234/     9C8 :                     ;******************************************************************
+    1235/     9C8 :                     ;
+    1236/     9C8 :                     ; *** MVUP *** MVDOWN *** POPA *** PUSHA ***
+    1237/     9C8 :                     ;
+    1238/     9C8 :                     ; 'MVUP' moves a block up from where A1 points to where A2 points
+    1239/     9C8 :                     ; until A1=A3
+    1240/     9C8 :                     ;
+    1241/     9C8 :                     ; 'MVDOWN' moves a block down from where A1 points to where A3
+    1242/     9C8 :                     ; points until A1=A2
+    1243/     9C8 :                     ;
+    1244/     9C8 :                     ; 'POPA' restores the 'FOR' loop variable save area from the stack
+    1245/     9C8 :                     ;
+    1246/     9C8 :                     ; 'PUSHA' stacks for 'FOR' loop variable save area onto the stack
+    1247/     9C8 :                     ;
+    1248/     9C8 : B7C9                MVUP	CMP.L	A1,A3		; see the above description
+    1249/     9CA : 6704                	BEQ	MVRET
+    1250/     9CC : 14D9                	MOVE.B	(A1)+,(A2)+
+    1251/     9CE : 60F8                	BRA	MVUP
+    1252/     9D0 : 4E75                MVRET	RTS
+    1253/     9D2 :                     
+    1254/     9D2 : B5C9                MVDOWN	CMP.L	A1,A2		; see the above description
+    1255/     9D4 : 67FA                	BEQ	MVRET
+    1256/     9D6 : 1721                	MOVE.B	-(A1),-(A3)
+    1257/     9D8 : 60F8                	BRA	MVDOWN
+    1258/     9DA :                     
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 22 - 11/3/2023 20:35:53
+
+
+    1259/     9DA : 2C5F                POPA	MOVE.L	(SP)+,A6	; A6 = return address
+    1260/     9DC : 21DF 1010           	MOVE.L	(SP)+,LOPVAR	; restore LOPVAR, but zero means no more
+    1261/     9E0 : 6710                	BEQ	PP1
+    1262/     9E2 : 21DF 1014           	MOVE.L	(SP)+,LOPINC	; if not zero, restore the rest
+    1263/     9E6 : 21DF 1018           	MOVE.L	(SP)+,LOPLMT
+    1264/     9EA : 21DF 101C           	MOVE.L	(SP)+,LOPLN
+    1265/     9EE : 21DF 1020           	MOVE.L	(SP)+,LOPPT
+    1266/     9F2 : 4ED6                PP1	JMP	(A6)		; return
+    1267/     9F4 :                     
+    1268/     9F4 : 2238 102C           PUSHA	MOVE.L	STKLMT,D1	; Are we running out of stack room?
+    1269/     9F8 : 928F                	SUB.L	SP,D1
+    1270/     9FA : 6400 FEEC           	BCC	QSORRY		; if so, say we're sorry
+    1271/     9FE : 2C5F                	MOVE.L	(SP)+,A6	; else get the return address
+    1272/     A00 : 2238 1010           	MOVE.L	LOPVAR,D1	; save loop variables
+    1273/     A04 : 6710                	BEQ	PU1		; if LOPVAR is zero, that's all
+    1274/     A06 : 2F38 1020           	MOVE.L	LOPPT,-(SP)	; else save all the others
+    1275/     A0A : 2F38 101C           	MOVE.L	LOPLN,-(SP)
+    1276/     A0E : 2F38 1018           	MOVE.L	LOPLMT,-(SP)
+    1277/     A12 : 2F38 1014           	MOVE.L	LOPINC,-(SP)
+    1278/     A16 : 2F01                PU1	MOVE.L	D1,-(SP)
+    1279/     A18 : 4ED6                	JMP	(A6)		; return
+    1280/     A1A :                     
+    1281/     A1A :                     ;
+    1282/     A1A :                     ;******************************************************************
+    1283/     A1A :                     ;
+    1284/     A1A :                     ; *** PRTSTG *** QTSTG *** PRTNUM *** PRTLN ***
+    1285/     A1A :                     ;
+    1286/     A1A :                     ; 'PRTSTG' prints a string pointed to by A1. It stops printing
+    1287/     A1A :                     ; and returns to the caller when either a CR is printed or when
+    1288/     A1A :                     ; the next byte is the same as what was passed in D0 by the
+    1289/     A1A :                     ; caller.
+    1290/     A1A :                     ;
+    1291/     A1A :                     ; 'QTSTG' looks for an underline (back-arrow on some systems),
+    1292/     A1A :                     ; single-quote, or double-quote.  If none of these are found, returns
+    1293/     A1A :                     ; to the caller.  If underline, outputs a CR without a LF.  If single
+    1294/     A1A :                     ; or double quote, prints the quoted string and demands a matching
+    1295/     A1A :                     ; end quote.  After the printing, the next 2 bytes of the caller are
+    1296/     A1A :                     ; skipped over (usually a short branch instruction).
+    1297/     A1A :                     ;
+    1298/     A1A :                     ; 'PRTNUM' prints the 32 bit number in D1, leading blanks are added if
+    1299/     A1A :                     ; needed to pad the number of spaces to the number in D4.
+    1300/     A1A :                     ; However, if the number of digits is larger than the no. in
+    1301/     A1A :                     ; D4, all digits are printed anyway. Negative sign is also
+    1302/     A1A :                     ; printed and counted in, positive sign is not.
+    1303/     A1A :                     ;
+    1304/     A1A :                     ; 'PRTLN' prints the saved text line pointed to by A1
+    1305/     A1A :                     ; with line no. and all.
+    1306/     A1A :                     ;
+    1307/     A1A : 1200                PRTSTG	MOVE.B	D0,D1		; save the stop character
+    1308/     A1C : 1019                PS1	MOVE.B	(A1)+,D0	; get a text character
+    1309/     A1E : B200                	CMP.B	D0,D1		; same as stop character?
+    1310/     A20 : 6712                	BEQ	PRTRET		; if so, return
+    1311/     A22 : 6100 F6A4           	BSR	GOOUT		; display the char.
+    1312/     A26 : 0C00 000D           	CMPI.B	#CR,D0		; is it a C.R.?
+    1313/     A2A : 66F0                	BNE	PS1		; no, go back for more
+    1314/     A2C : 103C 000A           	MOVE.B	#LF,D0		; yes, add a L.F.
+    1315/     A30 : 6100 F696           	BSR	GOOUT
+    1316/     A34 : 4E75                PRTRET	RTS			; then return
+    1317/     A36 :                     
+    1318/     A36 : 6100 00CA           QTSTG	BSR.L	TSTC		; *** QTSTG ***
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 23 - 11/3/2023 20:35:53
+
+
+    1319/     A3A : 2219                	DC.B	'"',QT3-1-*
+    1320/     A3C : 103C 0022           	MOVE.B	#'"',D0		; it is a "
+    1321/     A40 : 2248                QT1	MOVE.L	A0,A1
+    1322/     A42 : 61D6                	BSR	PRTSTG		; print until another
+    1323/     A44 : 2049                	MOVE.L	A1,A0
+    1324/     A46 : 225F                	MOVE.L	(SP)+,A1	; pop return address
+    1325/     A48 : 0C00 000A           	CMPI.B	#LF,D0		; was last one a CR?
+    1326/     A4C : 6700 F888           	BEQ	RUNNXL		; if so, run next line
+    1327/     A50 : 5489                QT2	ADDQ.L	#2,A1		; skip 2 bytes on return
+    1328/     A52 : 4ED1                	JMP	(A1)		; return
+    1329/     A54 : 6100 00AC           QT3	BSR.L	TSTC		; is it a single quote?
+    1330/     A58 : 2707                	DC.B	"'",QT4-1-*
+    1331/     A5A : 103C 0027           	MOVE.B	#"'",D0		; if so, do same as above
+    1332/     A5E : 60E0                	BRA	QT1
+    1333/     A60 : 6100 00A0           QT4	BSR.L	TSTC		; is it an underline?
+    1334/     A64 : 5F0D                	DC.B	'_',QT5-1-*
+    1335/     A66 : 103C 000D           	MOVE.B	#CR,D0		; if so, output a CR without LF
+    1336/     A6A : 6100 F65C           	BSR.L	GOOUT
+    1337/     A6E : 225F                	MOVE.L	(SP)+,A1	; pop return address
+    1338/     A70 : 60DE                	BRA	QT2
+    1339/     A72 : 4E75                QT5	RTS			; none of the above
+    1340/     A74 :                     
+    1341/     A74 : 2601                PRTNUM	MOVE.L	D1,D3		; save the number for later
+    1342/     A76 : 3F04                	MOVE	D4,-(SP)	; save the width value
+    1343/     A78 : 1F3C 00FF           	MOVE.B	#$FF,-(SP)	; flag for end of digit string
+    1344/     A7C : 4A81                	TST.L	D1		; is it negative?
+    1345/     A7E : 6A04                	BPL	PN1		; if not
+    1346/     A80 : 4481                	NEG.L	D1		; else make it positive
+    1347/     A82 : 5344                	SUBQ	#1,D4		; one less for width count
+    1348/     A84 : 82FC 000A           PN1	DIVU	#10,D1		; get the next digit
+    1349/     A88 : 690A                	BVS	PNOV		; overflow flag set?
+    1350/     A8A : 2001                	MOVE.L	D1,D0		; if not, save remainder
+    1351/     A8C : 0281 0000 FFFF      	ANDI.L	#$FFFF,D1	; strip the remainder
+    1352/     A92 : 601A                	BRA	TOASCII		; skip the overflow stuff
+    1353/     A94 : 3001                PNOV	MOVE	D1,D0		; prepare for long word division
+    1354/     A96 : 4241                	CLR.W	D1		; zero out low word
+    1355/     A98 : 4841                	SWAP	D1		; high word into low
+    1356/     A9A : 82FC 000A           	DIVU	#10,D1		; divide high word
+    1357/     A9E : 3401                	MOVE	D1,D2		; save quotient
+    1358/     AA0 : 3200                	MOVE	D0,D1		; low word into low
+    1359/     AA2 : 82FC 000A           	DIVU	#10,D1		; divide low word
+    1360/     AA6 : 2001                	MOVE.L	D1,D0		; D0 = remainder
+    1361/     AA8 : 4841                	SWAP	D1		; R/Q becomes Q/R
+    1362/     AAA : 3202                	MOVE	D2,D1		; D1 is low/high
+    1363/     AAC : 4841                	SWAP	D1		; D1 is finally high/low
+    1364/     AAE : 4840                TOASCII	SWAP	D0		; get remainder
+    1365/     AB0 : 1F00                	MOVE.B	D0,-(SP)	; stack it as a digit
+    1366/     AB2 : 4840                	SWAP	D0
+    1367/     AB4 : 5344                	SUBQ	#1,D4		; decrement width count
+    1368/     AB6 : 4A81                	TST.L	D1		; if quotient is zero, we're done
+    1369/     AB8 : 66CA                	BNE	PN1
+    1370/     ABA : 5344                	SUBQ	#1,D4		; adjust padding count for DBRA
+    1371/     ABC : 6B0C                	BMI	PN4		; skip padding if not needed
+    1372/     ABE : 103C 0020           PN3	MOVE.B	#' ',D0		; display the required leading spaces
+    1373/     AC2 : 6100 F604           	BSR	GOOUT
+    1374/     AC6 : 51CC FFF6           	DBRA	D4,PN3
+    1375/     ACA : 4A83                PN4	TST.L	D3		; is number negative?
+    1376/     ACC : 6A08                	BPL	PN5
+    1377/     ACE : 103C 002D           	MOVE.B	#'-',D0		; if so, display the sign
+    1378/     AD2 : 6100 F5F4           	BSR	GOOUT
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 24 - 11/3/2023 20:35:53
+
+
+    1379/     AD6 : 101F                PN5	MOVE.B	(SP)+,D0	; now unstack the digits and display
+    1380/     AD8 : 6B0A                	BMI	PNRET		; until the flag code is reached
+    1381/     ADA : 0600 0030           	ADDI.B	#'0',D0		; make into ASCII
+    1382/     ADE : 6100 F5E8           	BSR	GOOUT
+    1383/     AE2 : 60F2                	BRA	PN5
+    1384/     AE4 : 381F                PNRET	MOVE	(SP)+,D4	; restore width value
+    1385/     AE6 : 4E75                	RTS
+    1386/     AE8 :                     
+    1387/     AE8 : 4281                PRTLN	CLR.L	D1
+    1388/     AEA : 1219                	MOVE.B	(A1)+,D1	; get the binary line number
+    1389/     AEC : E149                	LSL	#8,D1
+    1390/     AEE : 1219                	MOVE.B	(A1)+,D1
+    1391/     AF0 : 7805                	MOVEQ	#5,D4		; display a 5 digit line no.
+    1392/     AF2 : 6180                	BSR	PRTNUM
+    1393/     AF4 : 103C 0020           	MOVE.B	#' ',D0		; followed by a blank
+    1394/     AF8 : 6100 F5CE           	BSR	GOOUT
+    1395/     AFC : 4240                	CLR	D0		; stop char. is a zero
+    1396/     AFE : 6000 FF1A           	BRA	PRTSTG		; display the rest of the line
+    1397/     B02 :                     
+    1398/     B02 :                     ;
+    1399/     B02 :                     ; ===== Test text byte following the call to this subroutine. If it
+    1400/     B02 :                     ;	equals the byte pointed to by A0, return to the code following
+    1401/     B02 :                     ;	the call. If they are not equal, branch to the point
+    1402/     B02 :                     ;	indicated by the offset byte following the text byte.
+    1403/     B02 :                     ;
+    1404/     B02 : 614C                TSTC	BSR	IGNBLK		; ignore leading blanks
+    1405/     B04 : 225F                	MOVE.L	(SP)+,A1	; get the return address
+    1406/     B06 : 1219                	MOVE.B	(A1)+,D1	; get the byte to compare
+    1407/     B08 : B210                	CMP.B	(A0),D1		; is it = to what A0 points to?
+    1408/     B0A : 6708                	BEQ	TC1		; if so
+    1409/     B0C : 4281                	CLR.L	D1		; If not, add the second
+    1410/     B0E : 1211                	MOVE.B	(A1),D1		; byte following the call to
+    1411/     B10 : D3C1                	ADD.L	D1,A1		; the return address.
+    1412/     B12 : 4ED1                	JMP	(A1)		; jump to the routine
+    1413/     B14 : 5288                TC1	ADDQ.L	#1,A0		; if equal, bump text pointer
+    1414/     B16 : 5289                	ADDQ.L	#1,A1		; Skip the 2 bytes following
+    1415/     B18 : 4ED1                	JMP	(A1)		; the call and continue.
+    1416/     B1A :                     
+    1417/     B1A :                     ;
+    1418/     B1A :                     ; ===== See if the text pointed to by A0 is a number. If so,
+    1419/     B1A :                     ;	return the number in D1 and the number of digits in D2,
+    1420/     B1A :                     ;	else return zero in D1 and D2.
+    1421/     B1A :                     ;
+    1422/     B1A : 4281                TSTNUM	CLR.L	D1		; initialize return parameters
+    1423/     B1C : 4242                	CLR	D2
+    1424/     B1E : 6130                	BSR	IGNBLK		; skip over blanks
+    1425/     B20 : 0C10 0030           TN1	CMPI.B	#'0',(A0)	; is it less than zero?
+    1426/     B24 : 6528                	BCS	TSNMRET		; if so, that's all
+    1427/     B26 : 0C10 0039           	CMPI.B	#'9',(A0)	; is it greater than nine?
+    1428/     B2A : 6222                	BHI	TSNMRET		; if so, return
+    1429/     B2C : 0C81 0CCC CCCC      	CMPI.L	#214748364,D1	; see if there's room for new digit
+    1430/     B32 : 6400 FDBC           	BCC	QHOW		; if not, we've overflowd
+    1431/     B36 : 2001                	MOVE.L	D1,D0		; quickly multiply result by 10
+    1432/     B38 : D281                	ADD.L	D1,D1
+    1433/     B3A : D281                	ADD.L	D1,D1
+    1434/     B3C : D280                	ADD.L	D0,D1
+    1435/     B3E : D281                	ADD.L	D1,D1
+    1436/     B40 : 1018                	MOVE.B	(A0)+,D0	; add in the new digit
+    1437/     B42 : 0280 0000 000F      	ANDI.L	#$F,D0
+    1438/     B48 : D280                	ADD.L	D0,D1
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 25 - 11/3/2023 20:35:53
+
+
+    1439/     B4A : 5242                	ADDQ	#1,D2		; increment the no. of digits
+    1440/     B4C : 60D2                	BRA	TN1
+    1441/     B4E : 4E75                TSNMRET	RTS
+    1442/     B50 :                     
+    1443/     B50 :                     ;
+    1444/     B50 :                     ; ===== Skip over blanks in the text pointed to by A0.
+    1445/     B50 :                     ;
+    1446/     B50 : 0C10 0020           IGNBLK	CMPI.B	#' ',(A0)	; see if it's a space
+    1447/     B54 : 6604                	BNE	IGBRET		; if so, swallow it
+    1448/     B56 : 5288                IGB1	ADDQ.L	#1,A0		; increment the text pointer
+    1449/     B58 : 60F6                	BRA	IGNBLK
+    1450/     B5A : 4E75                IGBRET	RTS
+    1451/     B5C :                     
+    1452/     B5C :                     ;
+    1453/     B5C :                     ; =====	Convert the line of text in the input buffer to upper
+    1454/     B5C :                     ;	case (except for stuff between quotes).
+    1455/     B5C :                     ;
+    1456/     B5C : 41F8 1030           TOUPBUF	LEA	BUFFER,A0	; set up text pointer
+    1457/     B60 : 4201                	CLR.B	D1		; clear quote flag
+    1458/     B62 : 1018                TOUPB1	MOVE.B	(A0)+,D0	; get the next text char.
+    1459/     B64 : 0C00 000D           	CMPI.B	#CR,D0		; is it end of line?
+    1460/     B68 : 6718                	BEQ	TOUPBRT		; if so, return
+    1461/     B6A : 0C00 0022           	CMPI.B	#'"',D0		; a double quote?
+    1462/     B6E : 6714                	BEQ	DOQUO
+    1463/     B70 : 0C00 0027           	CMPI.B	#"'",D0		; or a single quote?
+    1464/     B74 : 670E                	BEQ	DOQUO
+    1465/     B76 : 4A01                	TST.B	D1		; inside quotes?
+    1466/     B78 : 66E8                	BNE	TOUPB1		; if so, do the next one
+    1467/     B7A : 6118                	BSR	TOUPPER		; convert to upper case
+    1468/     B7C : 1100                	MOVE.B	D0,-(A0)	; store it
+    1469/     B7E : 5288                	ADDQ.L	#1,A0
+    1470/     B80 : 60E0                	BRA	TOUPB1		; and go back for more
+    1471/     B82 : 4E75                TOUPBRT	RTS
+    1472/     B84 :                     
+    1473/     B84 : 4A01                DOQUO	TST.B	D1		; are we inside quotes?
+    1474/     B86 : 6604                	BNE	DOQUO1
+    1475/     B88 : 1200                	MOVE.B	D0,D1		; if not, toggle inside-quotes flag
+    1476/     B8A : 60D6                	BRA	TOUPB1
+    1477/     B8C : B200                DOQUO1	CMP.B	D0,D1		; make sure we're ending proper quote
+    1478/     B8E : 66D2                	BNE	TOUPB1		; if not, ignore it
+    1479/     B90 : 4201                	CLR.B	D1		; else clear quote flag
+    1480/     B92 : 60CE                	BRA	TOUPB1
+    1481/     B94 :                     
+    1482/     B94 :                     ;
+    1483/     B94 :                     ; ===== Convert the character in D0 to upper case
+    1484/     B94 :                     ;
+    1485/     B94 : 0C00 0061           TOUPPER	CMPI.B	#'a',D0		; is it < 'a'?
+    1486/     B98 : 650A                	BCS	TOUPRET
+    1487/     B9A : 0C00 007A           	CMPI.B	#'z',D0		; or > 'z'?
+    1488/     B9E : 6204                	BHI	TOUPRET
+    1489/     BA0 : 0400 0020           	SUBI.B	#32,D0		; if not, make it upper case
+    1490/     BA4 : 4E75                TOUPRET	RTS
+    1491/     BA6 :                     
+    1492/     BA6 :                     ;
+    1493/     BA6 :                     ; 'CHKIO' checks the input. If there's no input, it will return
+    1494/     BA6 :                     ; to the caller with the Z flag set. If there is input, the Z
+    1495/     BA6 :                     ; flag is cleared and the input byte is in D0. However, if a
+    1496/     BA6 :                     ; control-C is read, 'CHKIO' will warm-start BASIC and will not
+    1497/     BA6 :                     ; return to the caller.
+    1498/     BA6 :                     ;
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 26 - 11/3/2023 20:35:53
+
+
+    1499/     BA6 : 6100 F524           CHKIO	BSR.L	GOIN		; get input if possible
+    1500/     BAA : 670A                	BEQ	CHKRET		; if Zero, no input
+    1501/     BAC : 0C00 0003           	CMPI.B	#CTRLC,D0	; is it control-C?
+    1502/     BB0 : 6604                	BNE	CHKRET		; if not
+    1503/     BB2 : 6000 F56C           	BRA.L	WSTART		; if so, do a warm start
+    1504/     BB6 : 4E75                CHKRET	RTS
+    1505/     BB8 :                     
+    1506/     BB8 :                     ;
+    1507/     BB8 :                     ; ===== Display a CR-LF sequence
+    1508/     BB8 :                     ;
+    1509/     BB8 : 4DF8 0C38           CRLF	LEA	CLMSG,A6
+    1510/     BBC :                     
+    1511/     BBC :                     ;
+    1512/     BBC :                     ; =====	Display a zero-ended string pointed to by register A6
+    1513/     BBC :                     ;
+    1514/     BBC : 101E                PRMESG	MOVE.B	(A6)+,D0	; get the char.
+    1515/     BBE : 6706                	BEQ	PRMRET		; if it's zero, we're done
+    1516/     BC0 : 6100 F506           	BSR	GOOUT		; else display it
+    1517/     BC4 : 60F6                	BRA	PRMESG
+    1518/     BC6 : 4E75                PRMRET	RTS
+    1519/     BC8 :                     
+    1520/     BC8 :                     ;*****************************************************
+    1521/     BC8 :                     ; The following routines are the only ones that need *
+    1522/     BC8 :                     ; to be changed for a different I/O environment.     *
+    1523/     BC8 :                     ;*****************************************************
+    1524/     BC8 :                     
+    1525/     BC8 :                     ;
+    1526/     BC8 :                     ; ===== Output character to the console (Port 1) from register D0
+    1527/     BC8 :                     ;	(Preserves all registers.)
+    1528/     BC8 :                     ;
+    1529/     BC8 : 0839 0001 4000      OUTC	BTST	#1,ACIAC	; is port 1 ready for a character?
+              BCE : 0001             
+    1530/     BD0 : 67F6                	BEQ	OUTC		; if not, wait for it
+    1531/     BD2 : 13C0 4000 0000      	MOVE.B	D0,ACIAD	; out it goes.
+    1532/     BD8 : 4E75                	RTS
+    1533/     BDA :                     
+    1534/     BDA :                     ;
+    1535/     BDA :                     ; ===== Input a character from the console into register D0 (or
+    1536/     BDA :                     ;	return Zero status if there's no character available).
+    1537/     BDA :                     ;
+    1538/     BDA : 0839 0000 4000      INC	BTST	#0,ACIAC	; is character ready?
+              BE0 : 0001             
+    1539/     BE2 : 670A                	BEQ	INCRET		; if not, return Zero status
+    1540/     BE4 : 1039 4000 0000      	MOVE.B	ACIAD,D0	; else get the character
+    1541/     BEA : 0200 007F           	ANDI.B	#$7F,D0		; zero out the high bit
+    1542/     BEE : 4E75                INCRET	RTS
+    1543/     BF0 :                     
+    1544/     BF0 :                     ;
+    1545/     BF0 :                     ; ===== Output character to the host (Port 2) from register D0
+    1546/     BF0 :                     ;	(Preserves all registers.)
+    1547/     BF0 :                     ;
+    1548/     BF0 : 4E75                AUXOUT	RTS
+    1549/     BF2 :                     
+    1550/     BF2 :                     ;
+    1551/     BF2 :                     ; ===== Input a character from the host into register D0 (or
+    1552/     BF2 :                     ;	return Zero status if there's no character available).
+    1553/     BF2 :                     ;
+    1554/     BF2 : 4E75                AUXIN	RTS
+    1555/     BF4 :                     
+    1556/     BF4 :                     ;
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 27 - 11/3/2023 20:35:53
+
+
+    1557/     BF4 :                     ; =====	Return to the resident monitor, operating system, etc.
+    1558/     BF4 :                     ;
+    1559/     BF4 : 4E75                BYEBYE	RTS
+    1560/     BF6 :                     
+    1561/     BF6 :                     
+    1562/     BF6 : 0D0A 476F 7264      INITMSG	DC.B	CR,LF,"Gordo's MC68000 Tiny BASIC, v1.2",CR,LF,LF,0
+              BFC : 6F27 7320 4D43 
+              C02 : 3638 3030 3020 
+              C08 : 5469 6E79 2042 
+              C0E : 4153 4943 2C20 
+              C14 : 7631 2E32 0D0A 
+              C1A : 0A00             
+    1563/     C1C : 0D0A 4F4B 0D0A 00   OKMSG	DC.B	CR,LF,'OK',CR,LF,0
+    1564/     C23 : 486F 773F 0D0A 00   HOWMSG	DC.B	'How?',CR,LF,0
+    1565/     C2A : 5768 6174 3F0D      WHTMSG	DC.B	'What?',CR,LF,0
+              C30 : 0A00             
+    1566/     C32 : 536F 7272 792E      SRYMSG	DC.B	'Sorry.'
+    1567/     C38 : 0D0A 00             CLMSG	DC.B	CR,LF,0
+    1568/     C3B :                     
+    1569/     C3B :                     	ALIGN	2
+    1570/     C3C :                     	
+    1571/     C3C : =$C3C               LSTROM	EQU	*		; end of possible ROM area
+    1572/     C3C :                     
+    1573/     C3C :                     ;
+    1574/     C3C :                     ; Internal variables follow:
+    1575/     C3C :                     ;
+    1576/    1000 :                     	ORG	TOPRAM
+    1577/    1000 :                     
+    1578/    1000 : 0000 00C0           RANPNT	DC.L	START		; random number pointer
+    1579/    1004 :                     CURRNT	DS.L	1		; Current line pointer
+    1580/    1008 :                     STKGOS	DS.L	1		; Saves stack pointer in 'GOSUB'
+    1581/    100C :                     STKINP	DS.L	1		; Saves stack pointer during 'INPUT'
+    1582/    1010 :                     LOPVAR	DS.L	1		; 'FOR' loop save area
+    1583/    1014 :                     LOPINC	DS.L	1		; increment
+    1584/    1018 :                     LOPLMT	DS.L	1		; limit
+    1585/    101C :                     LOPLN	DS.L	1		; line number
+    1586/    1020 :                     LOPPT	DS.L	1		; text pointer
+    1587/    1024 :                     TXTUNF	DS.L	1		; points to unfilled text area
+    1588/    1028 :                     VARBGN	DS.L	1		; points to variable area
+    1589/    102C :                     STKLMT	DS.L	1		; holds lower limit for stack growth
+    1590/    1030 :                     BUFFER	DS.B	BUFLEN		; Keyboard input buffer
+    1591/    1080 : =$1080              TXT	EQU	*
+    1592/    1080 :                     
+    1593/    1080 :                     	END
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 28 - 11/3/2023 20:35:53
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+ ABS :                          84E C |  ABSRT :                        85C C |
+ ACIAC :                   40000001 - |  ACIAD :                   40000000 - |
+ AHOW :                         8F2 C |
+*ARCHITECTURE :                                        "i386-unknown-win32" - |
+*ASORRY :                       8EA C |  AUXIN :                        BF2 C |
+ AUXOUT :                       BF0 C | *AWHAT :                        8AA C |
+ BUFFER :                      1030 C |  BUFLEN :                        50 - |
+ BYEBYE :                       BF4 C |  CALL :                         646 C |
+*CASESENSITIVE :                  0 - |  CHKIO :                        BA6 C |
+ CHKRET :                       BB6 C |  CLMSG :                        C38 C |
+*CONSTPI :        3.141592653589793 - |  CR :                             D - |
+ CRLF :                         BB8 C |  CSTART :                        E4 C |
+ CTRLC :                          3 - |  CTRLH :                          8 - |
+ CTRLS :                         13 - |  CTRLX :                         18 - |
+ CURRNT :                      1004 C | *DATE :                 "11/3/2023" - |
+ DEFLT :                        53C C |  DIRECT :                       272 C |
+ DIV1 :                         7E6 C |  DIV2 :                         7EC C |
+ DIV3 :                         7F2 C |  DIV32 :                        7D4 C |
+ DIV4 :                         800 C |  DIVRT :                        80E C |
+ DOQUO :                        B84 C |  DOQUO1 :                       B8C C |
+ ENDCHK :                       89C C |  ENDMEM :                        E0 C |
+ ENDRAM :                     1D000 - |  ERROR :                        8AE C |
+ EX1 :                          2A4 C |  EXEC :                         27A C |
+ EXGO :                         2B0 C |  EXLP :                         282 C |
+ EXMAT :                        2AA C |  EXNGO :                        28C C |
+ EXP4RT :                       722 C |  EXPR :                         65A C |
+ EXPR2 :                        6AE C |  EXPR3 :                        6E4 C |
+ EXPR4 :                        70C C | *FALSE :                          0 - |
+ FI1 :                          88E C |  FI2 :                          89A C |
+ FIN :                          882 C |  FINISH :                       3A6 C |
+ FNDLN :                        998 C |  FNDLNP :                       9A6 C |
+ FNDNXT :                       9BE C |  FNDRET :                       9BC C |
+ FNDSKP :                       9C0 C |  FOR :                          3F4 C |
+ FR1 :                          40C C |  FR2 :                          420 C |
+ FR3 :                          426 C |  FR4 :                          428 C |
+*FR5 :                          42C C |  FR6 :                          43A C |
+ FR7 :                          440 C |  FR8 :                          45A C |
+*FULLPMMU :                       0 - |  GBYTE :                        590 C |
+ GBYTE1 :                       594 C |  GBYTE2 :                       5A2 C |
+ GETLN :                        8F8 C |  GL1 :                          908 C |
+ GL2 :                          926 C |  GL3 :                          93A C |
+ GL4 :                          95E C |  GL5 :                          96A C |
+ GL6 :                          986 C |  GL7 :                          98E C |
+ GOAUXI :                        D4 C |  GOAUXO :                        D0 C |
+ GOBYE :                         D8 C |  GOIN :                          CC C |
+ GOOUT :                         C8 C |  GOSUB :                        3AE C |
+ GOTO :                         302 C | *GOWARM :                        C4 C |
+*HAS64 :                          0 - | *HASFPU :                         0 - |
+*HASPMMU :                        0 - |  HOWMSG :                       C23 C |
+ IF :                           4AE C | *IF1 :                          4B2 C |
+ IF2 :                          4B8 C | *IGB1 :                         B56 C |
+ IGBRET :                       B5A C |  IGNBLK :                       B50 C |
+ INC :                          BDA C |  INCRET :                       BEE C |
+ INITMSG :                      BF6 C | *INIVEC :                         0 C |
+ INPERR :                       4C8 C |  INPUT :                        4D4 C |
+*INSUPMODE :                      1 - |  IP2 :                          4E6 C |
+ IP3 :                          500 C |  IP4 :                          52E C |
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 29 - 11/3/2023 20:35:53
+
+
+ IP5 :                          538 C |  LET :                          542 C |
+ LF :                             A - |  LIST :                         316 C |
+*LISTON :                         1 - |  LOAD :                         552 C |
+ LOD1 :                         55E C |  LOD2 :                         578 C |
+ LODEND :                       588 C |  LOPINC :                      1014 C |
+ LOPLMT :                      1018 C |  LOPLN :                       101C C |
+ LOPPT :                       1020 C |  LOPVAR :                      1010 C |
+ LS1 :                          322 C |  LS2 :                          336 C |
+ LS3 :                          33C C |  LSTROM :                       C3C - |
+ LT1 :                          54E C | *MACEXP :                         7 - |
+ MLT1 :                         79C C |  MLT2 :                         7A2 C |
+ MLT3 :                         7B6 C |  MLTRET :                       7D2 C |
+*MOMCPU :                     68030 - | *MOMCPUNAME :               "68030" - |
+ MULT32 :                       792 C |  MVDOWN :                       9D2 C |
+ MVRET :                        9D0 C |  MVUP :                         9C8 C |
+*NESTMAX :                      100 - |  NEW :                          2B8 C |
+ NEXT :                         45E C |  NX0 :                          468 C |
+ NX1 :                          492 C |  NX2 :                          4A4 C |
+ NX3 :                          47A C |  OKMSG :                        C1C C |
+ OUTC :                         BC8 C | *PADDING :                        1 - |
+ PARN :                         72E C |  PBYTE :                        60E C |
+ PBYTE1 :                       610 C |  PBYTE2 :                       624 C |
+ PEEK :                         810 C |  PKER :                         642 C |
+ PN1 :                          A84 C |  PN3 :                          ABE C |
+ PN4 :                          ACA C |  PN5 :                          AD6 C |
+ PNOV :                         A94 C |  PNRET :                        AE4 C |
+ POKE :                         62E C |  POPA :                         9DA C |
+ PP1 :                          9F2 C |  PR0 :                          360 C |
+ PR1 :                          36E C |  PR2 :                          352 C |
+ PR3 :                          384 C |  PR4 :                          37E C |
+ PR6 :                          390 C |  PR8 :                          396 C |
+ PRINT :                        342 C |  PRMESG :                       BBC C |
+ PRMRET :                       BC6 C |  PRTLN :                        AE8 C |
+ PRTNUM :                       A74 C |  PRTRET :                       A34 C |
+ PRTSTG :                       A1A C |  PS1 :                          A1C C |
+ PU1 :                          A16 C |  PUSHA :                        9F4 C |
+ QHOW :                         8F0 C |  QSORRY :                       8E8 C |
+ QT1 :                          A40 C |  QT2 :                          A50 C |
+ QT3 :                          A54 C |  QT4 :                          A60 C |
+ QT5 :                          A72 C |  QTSTG :                        A36 C |
+ QWHAT :                        8A8 C |  RA1 :                          83C C |
+ RANPNT :                      1000 C | *RELAXED :                        0 - |
+ REM :                          4AC C |  RETURN :                       3D6 C |
+ RND :                          81C C |  RUN :                          2CA C |
+ RUNNXL :                       2D6 C |  RUNSML :                       2F2 C |
+ RUNTSL :                       2EA C |  SAVE :                         5B0 C |
+ SAVE1 :                        5B8 C |  SAVE2 :                        5DC C |
+ SAVEND :                       5EA C |  SETVAL :                       868 C |
+ SIZE :                         85E C |  SRYMSG :                       C32 C |
+ ST3 :                          13A C |  ST4 :                          186 C |
+ START :                         C0 C |  STKGOS :                      1008 C |
+ STKINP :                      100C C |  STKLMT :                      102C C |
+ STOP :                         2C2 C |  SV1 :                          880 C |
+*TAB :                            9 - |  TAB1 :                         1BE C |
+ TAB1_1 :                       22A C |  TAB2 :                         1D0 C |
+ TAB2_1 :                       234 C |  TAB4 :                         208 C |
+ TAB4_1 :                       252 C |  TAB5 :                         217 C |
+ TAB5_1 :                       25C C |  TAB6 :                         21A C |
+ TAB6_1 :                       260 C |  TAB8 :                         21F C |
+ TAB8_1 :                       264 C |  TC1 :                          B14 C |
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 30 - 11/3/2023 20:35:53
+
+
+*TIME :                  "20:35:53" - |  TN1 :                          B20 C |
+ TOASCII :                      AAE C |  TOPRAM :                      1000 - |
+ TOUPB1 :                       B62 C |  TOUPBRT :                      B82 C |
+ TOUPBUF :                      B5C C |  TOUPPER :                      B94 C |
+ TOUPRET :                      BA4 C | *TRUE :                           1 - |
+ TSNMRET :                      B4E C |  TSTC :                         B02 C |
+ TSTNUM :                       B1A C |  TSTV :                         744 C |
+ TSTVRT :                       790 C |  TV1 :                          77A C |
+ TXT :                         1080 - |  TXTBGN :                        DC C |
+ TXTUNF :                      1024 C |  VARBGN :                      1028 C |
+*VERSION :                     142F - |  WHTMSG :                       C2A C |
+ WSTART :                       120 C |  XP11 :                         66A C |
+ XP12 :                         670 C |  XP13 :                         676 C |
+ XP14 :                         67C C |  XP15 :                         682 C |
+*XP15RT :                       688 C |  XP16 :                         68A C |
+*XP16RT :                       690 C |  XP17 :                         69A C |
+ XP18 :                         69E C |  XP21 :                         6B8 C |
+ XP22 :                         6BE C |  XP23 :                         6C0 C |
+ XP24 :                         6CA C |  XP25 :                         6D4 C |
+ XP26 :                         6DA C |  XP31 :                         6E6 C |
+ XP34 :                         6F8 C |  XP40 :                         718 C |
+ XP41 :                         724 C |  XP42 :                         73E C |
+ XP43 :                         740 C |  XPRT0 :                        692 C |
+ XPRT1 :                        696 C |
+
+    279 symbols
+     30 unused symbols
+
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 31 - 11/3/2023 20:35:53
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.04 seconds assembly time
+
+   1594 lines source file
+      2 passes
+      0 errors
+      0 warnings

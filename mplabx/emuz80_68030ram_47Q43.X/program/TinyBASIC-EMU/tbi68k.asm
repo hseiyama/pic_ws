@@ -30,7 +30,7 @@
 ; RAM address 0x8000-
 ;
 
-	CPU	68000
+	CPU	68030
 
 	SUPMODE	ON
 
@@ -52,11 +52,11 @@ CTRLX	EQU	$18
 
 BUFLEN	EQU	80		; length of keyboard input buffer
 
-ACIAC:	EQU	$0000E001
-ACIAD:	EQU	$0000E000
+ACIAC:	EQU	$40000001
+ACIAD:	EQU	$40000000
 
-TOPRAM	EQU	$8000
-ENDRAM	EQU	TOPRAM+$2000
+TOPRAM	EQU	$1000
+ENDRAM	EQU	TOPRAM+$1C000
 
 	ORG	$C0		; first free address using Tutor
 
@@ -79,7 +79,9 @@ ENDMEM	DC.L	ENDRAM		; end of available memory
 ;
 ; The main interpreter starts here:
 ;
-CSTART	MOVE.L	ENDMEM,SP	; initialize stack pointer
+CSTART	MOVE.l	#$00000001,D0	; [add] Set instruction cache enable
+	MOVEC	D0,CACR		; [add] at cache control register
+	MOVE.L	ENDMEM,SP	; initialize stack pointer
 	LEA	INITMSG,A6	; tell who we are
 	BSR.L	PRMESG
 	MOVE.L	TXTBGN,TXTUNF	; init. end-of-program pointer
