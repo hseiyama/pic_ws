@@ -12,12 +12,16 @@
 
 ROM_B:	EQU	$00000000
 
-WORK_B:	EQU	$00009F00
-STACK:	EQU	$00009FF0
-USTACK:	EQU	$00009F00	; USP
+WORK_B:	EQU	$00009F00	; Work area 9F00-9FFF
+STACK:	EQU	$00009F00	; Monitor stack area 9E00-9EFF
+USTACK:	EQU	$00009E00	; User stack area xxxx-9DFF
+RAM_B	EQU	$00008000	; RAM base address
 
 BUFLEN:	EQU	24		; Input buffer size
 VECSIZ:	EQU	256		; Number of vectors to be initialized
+
+EBSC_CS	EQU	$00002000	; Enhanced BASIC cold start
+TBSC_CS	EQU	$00006000	; Tiny BASIC cold start
 
 ;;;
 ;;; Options
@@ -139,7 +143,7 @@ CSTART:
 	IF INIVEC <> $00000000
 	MOVE.L	#VECSIZ*4,D0
 	ELSE
-	MOVE.L	#ROM_E,D0
+	MOVE.L	#RAM_B,D0
 	ENDIF
 	MOVE.L	D0,DSADDR
 	MOVE.L	D0,GADDR
@@ -177,7 +181,7 @@ INIR0:
 	MOVE.L	#STACK,REGSSP
 	MOVE.L	GADDR,REGPC
 	MOVE.L	#USTACK,REGA7
-	
+
 	ENDIF
 
 	;; Opening message
@@ -225,6 +229,11 @@ WSTART:
 	CMP.B	#'R',D0
 	BEQ	REG
 	ENDIF
+
+	CMP.B	#'?',D0
+	BEQ	CMDHLP
+	CMP.B	#'#',D0
+	BEQ	LANCH
 
 ERR:
 	LEA	ERRMSG,A0
@@ -358,7 +367,7 @@ DPB2:
 	BEQ	DPB3
 	RTS
 	;; Found end address
-DPB3:	
+DPB3:
 	MOVE	#2,D2		; DSTATE
 	RTS
 
@@ -399,7 +408,7 @@ G0:
 	MOVEC	D0,SFC
 	MOVE.B	REGDFC,D0
 	MOVEC	D0,DFC
-	
+
 	RESTORE
 G1:
 	MOVE.L	REGPC,-(A7)
@@ -411,9 +420,9 @@ G1:
 	MOVEM.L	REGD0,D0-D7/A0-A6
 
 	RTE
-	
+
 	ELSE
-	
+
 	MOVE.L	D1,GADDR
 G0:
 	MOVE.L	GADDR,A0
@@ -709,7 +718,7 @@ SHLI0:
 	BRA	CRLF
 
 	;; Motorola S record
-SHLS:	
+SHLS:
 	MOVE.B	#'S',D0
 	BSR	CONOUT
 	MOVE.B	#'1',D0
@@ -774,7 +783,7 @@ RG2:
 	MOVE.B	(A0),D0
 	BSR	UPPER
 	BRA	RG1
-RG3:	
+RG3:
 	MOVE.B	1(A1),D3
 	BEQ	RGE		; Found end mark
 	BPL	RG30
@@ -833,7 +842,7 @@ RGR:
 	BRA	WSTART
 RGE:
 	BRA	ERR
-	
+
 RDUMP:
 	LEA	RDTAB,A1
 RD0:
@@ -841,8 +850,8 @@ RD0:
 	BEQ	CRLF		; Found END mark => CR,LF and return
 	BPL	RD00
 	TST.B	PSPEC
-	BEQ	CRLF		; 
-RD00:	
+	BEQ	CRLF
+RD00:
 	MOVE.L	(A1)+,A0	; String address
 	BSR	STROUT
 	MOVE.L	(A1)+,A0	; Register save area
@@ -867,6 +876,39 @@ RD2:
 	BRA	RD0
 
 	ENDIF
+
+;;;
+;;; Command help
+;;;
+
+CMDHLP:
+	LEA	HLPMSG,A0
+	BSR	STROUT
+	BRA	WSTART
+
+;;;
+;;; Launch appended program
+;;;
+
+LANCH:
+	ADDQ	#1,A0
+	MOVE.B	(A0),D0
+	BSR	UPPER
+	CMP.B	#'L',D0
+	BEQ	LA0
+	CMP.B	#'1',D0
+	BEQ	LA1
+	CMP.B	#'2',D0
+	BEQ	LA2
+	BRA	ERR
+LA0:
+	LEA	LNCMSG,A0
+	BSR	STROUT
+	BRA	WSTART
+LA1:
+	JMP	EBSC_CS		; Enhanced BASIC cold start
+LA2:
+	JMP	TBSC_CS		; Tiny BASIC cold start
 
 ;;;
 ;;; Other support routines
@@ -1047,7 +1089,7 @@ ILLINS_H:
 	ADDQ	#6,A7		; Drop stack frame
 	CLR.B	PSPEC
 	BRA	ID1
-	
+
 	ENDIF
 
 ILLINS0:
@@ -1242,9 +1284,9 @@ TRAP15_H:
 
 	BRA	COMM_H
 
-	;; 
+	;;
 	;; Common handler
-	;; 
+	;;
 COMM_H:
 	;; Save registers
 	IF USE_REGCMD
@@ -1255,7 +1297,7 @@ COMM_H:
 	ENDIF
 
 COMM_H0:
-	
+
 	IF USE_REGCMD
 
 	TST	EXGRP
@@ -1275,7 +1317,7 @@ CH0:
 
 	MOVE	USP,A0
 	MOVE.L	A0,REGA7
-	
+
 	TST.B	PSPEC
 	BEQ	CH2
 
@@ -1301,7 +1343,7 @@ CH0:
 CH1:
 	MOVE	(A7)+,(A0)+
 	DBF	D2,CH1
-	
+
 CH2:
 	MOVE.L	A7,REGSSP
 
@@ -1323,7 +1365,7 @@ CH0:
 	;; Group 1-3
 	ADD.L	#3*2,A7
 	BRA	CH3
-	
+
 CH1:
 	;; MC68010
 	MOVE	6(A7),D2
@@ -1338,7 +1380,7 @@ CH2:
 	;; Format:1000
 	ADD	#29*2,A7
 
-CH3:	
+CH3:
 	ENDIF
 
 	MOVE.L	EXMSG,A0
@@ -1348,7 +1390,7 @@ CH3:
 	TST	EXGRP
 	BNE	CH4
 	BSR	G0DUMP
-CH4:	
+CH4:
 	BSR	RDUMP
 	ELSE
 	BSR	CRLF
@@ -1361,8 +1403,8 @@ CH4:
 G0DUMP:
 	TST.B	PSPEC
 	BNE	G0D1
-	;; MC68000/MC68008
 
+	;; MC68000/MC68008
 	IFDEF DEBUG
 	MOVE	GR0BUF,D0
 	BSR	HEXOUT4
@@ -1417,8 +1459,22 @@ G0D1:
 
 ;;;
 ;;; Data area
-;;; 
-	
+;;;
+
+HLPMSG:
+	DC.B	"? :Command Help",CR,LF
+	DC.B	"#L|<num> :Launch program",CR,LF
+	DC.B	"D[<adr>] :Dump Memory",CR,LF
+	DC.B	"G[<adr>] :Go",CR,LF
+	DC.B	"L[<offset>] :Load HexFile",CR,LF
+	DC.B	"P(I|S)<adr,adr> :Save HexFile(I:Intel,S:Motorola)",CR,LF
+	DC.B	"R[<reg>] :Set or Dump Register",CR,LF
+	DC.B	"S[<adr>] :Set Memory",CR,LF,$00
+
+LNCMSG:
+	DC.B	"1. Enhanced BASIC Start",CR,LF
+	DC.B	"2. Tiny BASIC Start",CR,LF,$00
+
 OPNMSG:	DC.B	CR,LF,"Universal Monitor 68000",CR,LF,$00
 
 PROMPT:	DC.B	"] ",$00
@@ -1497,7 +1553,6 @@ TRAP15_M:
 BREAK_M:
 	DC.B	"BREAK",$00
 
-
 	IF USE_REGCMD
 
 	ALIGN	2
@@ -1547,8 +1602,8 @@ RDTAB:	DC.W	$0003		; LONG
 	DC.W	$8001		; BYTE
 	DC.L	RDSSFC, REGSFC
 	DC.W	$8001		; BYTE
-	DC.L	RDSDFC, REGDFC	
-	
+	DC.L	RDSDFC, REGDFC
+
 	DC.W	$0000		; END
 
 RDSD07:	DC.B	"D0-D7=",$00
@@ -1604,7 +1659,7 @@ RNTABA:
 RNTABC:
 	DC.B	'C', $0F	; "CC"
 	DC.L	RNTABCC, 0
-	
+
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
@@ -1659,35 +1714,35 @@ RNTABV:
 RNTABCC:
 	DC.B	'R', 1		; "CCR"
 	DC.L	REGSR+1, RNCCR
-	
+
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABDF:
 	DC.B	'C', $81	; "DFC"
 	DC.L	REGDFC, RNDFC
-	
+
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABSF:
 	DC.B	'C', $81	; "SFC"
 	DC.L	REGSFC, RNSFC
-	
+
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABSS:
 	DC.B	'P', 3		; "SSP"
 	DC.L	REGSSP, RNSSP
-	
+
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABVB:
 	DC.B	'R', $83	; "VBR"
 	DC.L	REGVBR, RNVBR
-	
+
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
@@ -1772,6 +1827,8 @@ CO0:
 
 ROM_E:
 
+	DC.B	[EBSC_CS-*]$FF
+
 ;;;
 ;;; RAM area
 ;;;
@@ -1825,7 +1882,7 @@ REGSFC:	DS.B	1
 REGDFC:	DS.B	1
 
 	DS.W	16		; Dummy
-	
+
 GR0BUF:	DS.W	25		; Group 0 exception
 REGFV:	DS.W	1		; Format / Vector offset
 REG_E:

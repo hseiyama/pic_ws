@@ -1,4 +1,4 @@
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 1 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 1 - 11/4/2023 21:1:25
 
 
        1/       0 :                     ;*****************************************************************
@@ -61,7 +61,7 @@
       58/       8 : =$1000              TOPRAM	EQU	$1000
       59/       8 : =$1D000             ENDRAM	EQU	TOPRAM+$1C000
       60/       8 :                     
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 2 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 2 - 11/4/2023 21:1:25
 
 
       61/      C0 :                     	ORG	$C0		; first free address using Tutor
@@ -124,7 +124,7 @@
      117/     170 : 2A49                	MOVE.L	A1,A5		; save possible line pointer
      118/     172 : 6612                	BNE	ST4		; if not found, insert
      119/     174 : 6100 0848           	BSR.L	FNDNXT		; find the next line (into A1)
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 3 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 3 - 11/4/2023 21:1:25
 
 
      120/     178 : 244D                	MOVE.L	A5,A2		; pointer to line to be deleted
@@ -187,7 +187,7 @@
      177/     1C6 : 4E45 D7             	DC.B	'NE',('W'+$80)
      178/     1C9 : 5255 CE             	DC.B	'RU',('N'+$80)
      179/     1CC : 5341 56C5           	DC.B	'SAV',('E'+$80)
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 4 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 4 - 11/4/2023 21:1:25
 
 
      180/     1D0 : 4E45 58D4           TAB2	DC.B	'NEX',('T'+$80)		; Direct / statement
@@ -250,7 +250,7 @@
      237/     258 : 085E                	DC.W	SIZE
      238/     25A : 0718                	DC.W	XP40
      239/     25C : 040C                TAB5_1	DC.W	FR1			; "TO" in "FOR"
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 5 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 5 - 11/4/2023 21:1:25
 
 
      240/     25E : 08A8                	DC.W	QWHAT
@@ -313,7 +313,7 @@
      297/     2B8 :                     ;******************************************************************
      298/     2B8 :                     ;
      299/     2B8 :                     ; *** NEW *** STOP *** RUN (& friends) *** GOTO ***
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 6 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 6 - 11/4/2023 21:1:25
 
 
      300/     2B8 :                     ;
@@ -376,7 +376,7 @@
      357/     316 :                     ; 'LIST #<CR>' starts listing at the line #
      358/     316 :                     ; Control-S pauses the listing, control-C stops it.
      359/     316 :                     ;
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 7 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 7 - 11/4/2023 21:1:25
 
 
      360/     316 :                     ; PRINT command is 'PRINT ....:' or 'PRINT ....<CR>'
@@ -439,7 +439,7 @@
      417/     38E : 60D0                	BRA	PR0
      418/     390 : 6100 0826           PR6	BSR.L	CRLF		; list ends here
      419/     394 : 6010                	BRA	FINISH
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 8 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 8 - 11/4/2023 21:1:25
 
 
      420/     396 : 3F04                PR8	MOVE	D4,-(SP)	; save the width value
@@ -502,7 +502,7 @@
      477/     3F4 :                     ; 'FOR' has two forms:
      478/     3F4 :                     ; 'FOR var=exp1 TO exp2 STEP exp1' and 'FOR var=exp1 TO exp2'
      479/     3F4 :                     ; The second form means the same thing as the first form with a
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 9 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 9 - 11/4/2023 21:1:25
 
 
      480/     3F4 :                     ; STEP of positive 1.  The interpreter will find the variable 'var'
@@ -565,7 +565,7 @@
      537/     468 : 2038 1010           NX0	MOVE.L	LOPVAR,D0	; If 'LOPVAR' is zero, we never...
      538/     46C : 6700 043A           	BEQ.L	QWHAT		; had a FOR loop, so say "What?"
      539/     470 : B3C0                	CMP.L	D0,A1		; else we check them
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 10 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 10 - 11/4/2023 21:1:25
 
 
      540/     472 : 6706                	BEQ	NX3		; OK, they agree
@@ -628,7 +628,7 @@
      597/     4AE : 6100 01AA           IF	BSR.L	EXPR		; evaluate the expression
      598/     4B2 : 4A80                IF1	TST.L	D0		; is it zero?
      599/     4B4 : 6600 FE3C           	BNE	RUNSML		; if not, continue
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 11 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 11 - 11/4/2023 21:1:25
 
 
      600/     4B8 : 2248                IF2	MOVE.L	A0,A1
@@ -691,7 +691,7 @@
      656/     552 :                     ;
      657/     552 :                     ;******************************************************************
      658/     552 :                     ;
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 12 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 12 - 11/4/2023 21:1:25
 
 
      659/     552 :                     ; *** LOAD *** & SAVE ***
@@ -754,7 +754,7 @@
      716/     5D8 : 1218                	MOVE.B	(A0)+,D1	; and send 2nd half
      717/     5DA : 6132                	BSR	PBYTE
      718/     5DC : 1018                SAVE2	MOVE.B	(A0)+,D0	; get a text char.
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 13 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 13 - 11/4/2023 21:1:25
 
 
      719/     5DE : 0C00 000D           	CMPI.B	#CR,D0		; is it the end of the line?
@@ -817,7 +817,7 @@
      776/     65A :                     ;
      777/     65A :                     ;******************************************************************
      778/     65A :                     ;
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 14 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 14 - 11/4/2023 21:1:25
 
 
      779/     65A :                     ; *** EXPR ***
@@ -880,7 +880,7 @@
      836/     69E :                     
      837/     69E : 201F                XP18	MOVE.L	(SP)+,D0	; reverse the top two stack items
      838/     6A0 : 221F                	MOVE.L	(SP)+,D1
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 15 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 15 - 11/4/2023 21:1:25
 
 
      839/     6A2 : 2F00                	MOVE.L	D0,-(SP)
@@ -943,7 +943,7 @@
      896/     72A : 4A42                	TST	D2		; (if not, # of digits will be zero)
      897/     72C : 66F4                	BNE	EXP4RT		; if so, return it in D0
      898/     72E : 6100 03D2           PARN	BSR.L	TSTC		; else look for ( EXPR )
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 16 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 16 - 11/4/2023 21:1:25
 
 
      899/     732 : 280D                	DC.B	'(',XP43-1-*
@@ -1006,7 +1006,7 @@
      956/     7AC : 0C81 0000 FFFF      	CMPI.L	#$FFFF,D1	; and check 2nd argument again
      957/     7B2 : 6200 013C           	BHI.L	QHOW		; one of them MUST be 16 bits
      958/     7B6 : 3400                MLT3	MOVE	D0,D2		; prepare for 32 bit X 16 bit multiply
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 17 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 17 - 11/4/2023 21:1:25
 
 
      959/     7B8 : C4C1                	MULU	D1,D2		; multiply low word
@@ -1069,7 +1069,7 @@
     1016/     81C :                     ;
     1017/     81C :                     ; =====	The RND function returns a random number from 1 to
     1018/     81C :                     ;	the value of the following expression in D0.
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 18 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 18 - 11/4/2023 21:1:25
 
 
     1019/     81C :                     ;
@@ -1132,7 +1132,7 @@
     1076/     868 :                     ; 'INPUT' command in progress), the input line is not printed
     1077/     868 :                     ; and execution is not terminated but continues at 'INPERR'.
     1078/     868 :                     ;
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 19 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 19 - 11/4/2023 21:1:25
 
 
     1079/     868 :                     ; Related to 'ERROR' are the following:
@@ -1195,7 +1195,7 @@
     1136/     8F8 :                     ;
     1137/     8F8 :                     ;******************************************************************
     1138/     8F8 :                     ;
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 20 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 20 - 11/4/2023 21:1:25
 
 
     1139/     8F8 :                     ; *** GETLN *** FNDLN (& friends) ***
@@ -1258,7 +1258,7 @@
     1196/     966 : 671E                	BEQ	GL6		; if none needed, branch
     1197/     968 : 5341                	SUBQ	#1,D1		; adjust for DBRA
     1198/     96A : 103C 0008           GL5	MOVE.B	#CTRLH,D0	; and display BS-space-BS sequences
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 21 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 21 - 11/4/2023 21:1:25
 
 
     1199/     96E : 6100 F758           	BSR	GOOUT
@@ -1321,7 +1321,7 @@
     1256/     9D6 : 1721                	MOVE.B	-(A1),-(A3)
     1257/     9D8 : 60F8                	BRA	MVDOWN
     1258/     9DA :                     
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 22 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 22 - 11/4/2023 21:1:25
 
 
     1259/     9DA : 2C5F                POPA	MOVE.L	(SP)+,A6	; A6 = return address
@@ -1384,7 +1384,7 @@
     1316/     A34 : 4E75                PRTRET	RTS			; then return
     1317/     A36 :                     
     1318/     A36 : 6100 00CA           QTSTG	BSR.L	TSTC		; *** QTSTG ***
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 23 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 23 - 11/4/2023 21:1:25
 
 
     1319/     A3A : 2219                	DC.B	'"',QT3-1-*
@@ -1447,7 +1447,7 @@
     1376/     ACC : 6A08                	BPL	PN5
     1377/     ACE : 103C 002D           	MOVE.B	#'-',D0		; if so, display the sign
     1378/     AD2 : 6100 F5F4           	BSR	GOOUT
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 24 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 24 - 11/4/2023 21:1:25
 
 
     1379/     AD6 : 101F                PN5	MOVE.B	(SP)+,D0	; now unstack the digits and display
@@ -1510,7 +1510,7 @@
     1436/     B40 : 1018                	MOVE.B	(A0)+,D0	; add in the new digit
     1437/     B42 : 0280 0000 000F      	ANDI.L	#$F,D0
     1438/     B48 : D280                	ADD.L	D0,D1
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 25 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 25 - 11/4/2023 21:1:25
 
 
     1439/     B4A : 5242                	ADDQ	#1,D2		; increment the no. of digits
@@ -1573,7 +1573,7 @@
     1496/     BA6 :                     ; control-C is read, 'CHKIO' will warm-start BASIC and will not
     1497/     BA6 :                     ; return to the caller.
     1498/     BA6 :                     ;
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 26 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 26 - 11/4/2023 21:1:25
 
 
     1499/     BA6 : 6100 F524           CHKIO	BSR.L	GOIN		; get input if possible
@@ -1636,7 +1636,7 @@
     1554/     BF2 : 4E75                AUXIN	RTS
     1555/     BF4 :                     
     1556/     BF4 :                     ;
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 27 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 27 - 11/4/2023 21:1:25
 
 
     1557/     BF4 :                     ; =====	Return to the resident monitor, operating system, etc.
@@ -1667,23 +1667,24 @@
     1575/     C3C :                     ;
     1576/    1000 :                     	ORG	TOPRAM
     1577/    1000 :                     
-    1578/    1000 : 0000 00C0           RANPNT	DC.L	START		; random number pointer
-    1579/    1004 :                     CURRNT	DS.L	1		; Current line pointer
-    1580/    1008 :                     STKGOS	DS.L	1		; Saves stack pointer in 'GOSUB'
-    1581/    100C :                     STKINP	DS.L	1		; Saves stack pointer during 'INPUT'
-    1582/    1010 :                     LOPVAR	DS.L	1		; 'FOR' loop save area
-    1583/    1014 :                     LOPINC	DS.L	1		; increment
-    1584/    1018 :                     LOPLMT	DS.L	1		; limit
-    1585/    101C :                     LOPLN	DS.L	1		; line number
-    1586/    1020 :                     LOPPT	DS.L	1		; text pointer
-    1587/    1024 :                     TXTUNF	DS.L	1		; points to unfilled text area
-    1588/    1028 :                     VARBGN	DS.L	1		; points to variable area
-    1589/    102C :                     STKLMT	DS.L	1		; holds lower limit for stack growth
-    1590/    1030 :                     BUFFER	DS.B	BUFLEN		; Keyboard input buffer
-    1591/    1080 : =$1080              TXT	EQU	*
-    1592/    1080 :                     
-    1593/    1080 :                     	END
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 28 - 11/3/2023 20:35:53
+    1578/    1000 :                     ;RANPNT	DC.L	START		; random number pointer
+    1579/    1000 :                     RANPNT	DS.L	1		; random number pointer
+    1580/    1004 :                     CURRNT	DS.L	1		; Current line pointer
+    1581/    1008 :                     STKGOS	DS.L	1		; Saves stack pointer in 'GOSUB'
+    1582/    100C :                     STKINP	DS.L	1		; Saves stack pointer during 'INPUT'
+    1583/    1010 :                     LOPVAR	DS.L	1		; 'FOR' loop save area
+    1584/    1014 :                     LOPINC	DS.L	1		; increment
+    1585/    1018 :                     LOPLMT	DS.L	1		; limit
+    1586/    101C :                     LOPLN	DS.L	1		; line number
+    1587/    1020 :                     LOPPT	DS.L	1		; text pointer
+    1588/    1024 :                     TXTUNF	DS.L	1		; points to unfilled text area
+    1589/    1028 :                     VARBGN	DS.L	1		; points to variable area
+    1590/    102C :                     STKLMT	DS.L	1		; holds lower limit for stack growth
+    1591/    1030 :                     BUFFER	DS.B	BUFLEN		; Keyboard input buffer
+    1592/    1080 : =$1080              TXT	EQU	*
+    1593/    1080 :                     
+    1594/    1080 :                     	END
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 28 - 11/4/2023 21:1:25
 
 
   Symbol Table (* = unused):
@@ -1703,7 +1704,7 @@
  CRLF :                         BB8 C |  CSTART :                        E4 C |
  CTRLC :                          3 - |  CTRLH :                          8 - |
  CTRLS :                         13 - |  CTRLX :                         18 - |
- CURRNT :                      1004 C | *DATE :                 "11/3/2023" - |
+ CURRNT :                      1004 C | *DATE :                 "11/4/2023" - |
  DEFLT :                        53C C |  DIRECT :                       272 C |
  DIV1 :                         7E6 C |  DIV2 :                         7EC C |
  DIV3 :                         7F2 C |  DIV32 :                        7D4 C |
@@ -1746,7 +1747,7 @@
  INPERR :                       4C8 C |  INPUT :                        4D4 C |
 *INSUPMODE :                      1 - |  IP2 :                          4E6 C |
  IP3 :                          500 C |  IP4 :                          52E C |
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 29 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 29 - 11/4/2023 21:1:25
 
 
  IP5 :                          538 C |  LET :                          542 C |
@@ -1809,10 +1810,10 @@
  TAB5_1 :                       25C C |  TAB6 :                         21A C |
  TAB6_1 :                       260 C |  TAB8 :                         21F C |
  TAB8_1 :                       264 C |  TC1 :                          B14 C |
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 30 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 30 - 11/4/2023 21:1:25
 
 
-*TIME :                  "20:35:53" - |  TN1 :                          B20 C |
+*TIME :                   "21:1:25" - |  TN1 :                          B20 C |
  TOASCII :                      AAE C |  TOPRAM :                      1000 - |
  TOUPB1 :                       B62 C |  TOUPBRT :                      B82 C |
  TOUPBUF :                      B5C C |  TOUPPER :                      B94 C |
@@ -1840,7 +1841,7 @@
     279 symbols
      30 unused symbols
 
- AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 31 - 11/3/2023 20:35:53
+ AS V1.42 Beta [Bld 246] - Source File tbi68k.asm - Page 31 - 11/4/2023 21:1:25
 
 
   Code Pages:
@@ -1850,9 +1851,9 @@ STANDARD (0 changed characters)
 
 1 code page
 
-0.04 seconds assembly time
+0.03 seconds assembly time
 
-   1594 lines source file
+   1595 lines source file
       2 passes
       0 errors
       0 warnings

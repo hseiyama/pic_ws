@@ -1,0 +1,3029 @@
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 1 - 11/4/2023 8:24:53
+
+
+       1/       0 :                     ;;;
+       2/       0 :                     ;;; Universal Monitor 68000
+       3/       0 :                     ;;;   Copyright (C) 2021 Haruo Asano
+       4/       0 :                     ;;;
+       5/       0 :                     
+       6/       0 :                     	CPU	68000
+       7/       0 :                     	SUPMODE	ON
+       8/       0 :                     
+       9/       0 :                     ;;;
+      10/       0 :                     ;;; Memory
+      11/       0 :                     ;;;
+      12/       0 :                     
+      13/       0 : =$0                 ROM_B:	EQU	$00000000
+      14/       0 :                     
+      15/       0 : =$9F00              WORK_B:	EQU	$00009F00	; Work area 9F00-9FFF
+      16/       0 : =$9F00              STACK:	EQU	$00009F00	; Monitor stack area 9E00-9EFF
+      17/       0 : =$9E00              USTACK:	EQU	$00009E00	; User stack area xxxx-9DFF
+      18/       0 : =$8000              RAM_B	EQU	$00008000	; RAM base address
+      19/       0 :                     
+      20/       0 : =$18                BUFLEN:	EQU	24		; Input buffer size
+      21/       0 : =$100               VECSIZ:	EQU	256		; Number of vectors to be initialized
+      22/       0 :                     
+      23/       0 : =$2000              EBSC_CS	EQU	$00002000	; Enhanced BASIC cold start
+      24/       0 : =$6000              TBSC_CS	EQU	$00006000	; Tiny BASIC cold start
+      25/       0 :                     
+      26/       0 :                     ;;;
+      27/       0 :                     ;;; Options
+      28/       0 :                     ;;;
+      29/       0 :                     
+      30/       0 : =$1                 USE_IDENT = 1			; MPU Identification
+      31/       0 : =$0                 MPU_SPEC = 0			; MPU Spec. (Effective when USE_IDENT=0) 0:MC68000/8 1:MC68010
+      32/       0 :                     
+      33/       0 : =$1                 USE_REGCMD = 1			; R(egister) command and related functions
+      34/       0 :                     
+      35/       0 :                     ;;;
+      36/       0 :                     ;;; Motorola MC6850
+      37/       0 :                     ;;;
+      38/       0 :                     
+      39/       0 : =$1                 USE_DEV_6850 = 1
+      40/       0 : =>TRUE              	IF USE_DEV_6850
+      41/       0 : =$E001              ACIAC:	EQU	$0000E001
+      42/       0 : =$E000              ACIAD:	EQU	$0000E000
+      43/       0 :                     ;CR_V:	EQU	$15		; x16, 8bit, N, 1
+      44/       0 : [40]                	ENDIF
+      45/       0 :                     
+      46/       0 :                     ;;;
+      47/       0 :                     ;;; Common header file
+      48/       0 :                     ;;;
+      49/       0 :                     
+      50/       0 :                     	RELAXED	ON
+      51/       0 :                     
+      52/       0 :                     ;;; Constants
+      53/       0 : =$D                 CR:	EQU	0x0D
+      54/       0 : =$A                 LF:	EQU	0x0A
+      55/       0 : =$8                 BS:	EQU	0x08
+      56/       0 : =$7F                DEL:	EQU	0x7F
+      57/       0 :                     
+      58/       0 :                     ;;; Functions
+      59/       0 :                     low	function	x,(x & 255)
+      60/       0 :                     high	function	x,(x >> 8)
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 2 - 11/4/2023 8:24:53
+
+
+      61/       0 :                     
+      62/       0 :                     	RELAXED	OFF
+      63/       0 :                     
+      64/       0 :                     ;;;
+      65/       0 :                     ;;; ROM area
+      66/       0 :                     ;;;
+      67/       0 :                     
+      68/       0 :                     	ORG	ROM_B
+      69/       0 :                     
+      70/       0 :                     INIVEC:
+      71/       0 :                     	;; 0-7
+      72/       0 : 0000 9F00           	DC.L	STACK		; Reset: Initial SSP
+      73/       4 : 0000 00C0           	DC.L	CSTART		; Reset: Initial PC
+      74/       8 :                     
+      75/       8 : 0000 0898           	DC.L	BUSERR_H	; Bus Error
+      76/       C : 0000 08AC           	DC.L	ADDERR_H	; Address Error
+      77/      10 :                     
+      78/      10 : 0000 08C0           	DC.L	ILLINS_H	; Illegal Instruction
+      79/      14 : 0000 091E           	DC.L	ZERDIV_H	; Zero Divide
+      80/      18 : 0000 0934           	DC.L	CHK_H		; CHK Instruction
+      81/      1C : 0000 094A           	DC.L	TRAPV_H		; TRAPV Instruction
+      82/      20 :                     
+      83/      20 :                     	;; 8-15
+      84/      20 : 0000 0960           	DC.L	PRIV_H		; Privilege Violation
+      85/      24 : 0000 0976           	DC.L	TRACE_H		; Trace
+      86/      28 : 0000 098C           	DC.L	L1010_H		; Line 1010 Emulator
+      87/      2C : 0000 09A2           	DC.L	L1111_H		; Line 1111 Emulator
+      88/      30 :                     
+      89/      30 : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+      90/      34 : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+      91/      38 : 0000 09B8           	DC.L	FORMAT_H	; Format Error (MC68010)
+      92/      3C : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+      93/      40 :                     
+      94/      40 :                     	;; 16-23
+      95/      40 : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+      96/      44 : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+      97/      48 : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+      98/      4C : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+      99/      50 :                     
+     100/      50 : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+     101/      54 : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+     102/      58 : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+     103/      5C : 0000 0896           	DC.L	DUMMY_H		; (Unassigned, reserved)
+     104/      60 :                     
+     105/      60 :                     	;; 24-31
+     106/      60 : 0000 0896           	DC.L	DUMMY_H		; Spurious Interrupt
+     107/      64 : 0000 0896           	DC.L	DUMMY_H		; Level 1 Interrupt Autovector
+     108/      68 : 0000 0896           	DC.L	DUMMY_H		; Level 2 Interrupt Autovector
+     109/      6C : 0000 0896           	DC.L	DUMMY_H		; Level 3 Interrupt Autovector
+     110/      70 :                     
+     111/      70 : 0000 0896           	DC.L	DUMMY_H		; Level 4 Interrupt Autovector
+     112/      74 : 0000 0896           	DC.L	DUMMY_H		; Level 5 Interrupt Autovector
+     113/      78 : 0000 0896           	DC.L	DUMMY_H		; Level 6 Interrupt Autovector
+     114/      7C : 0000 0896           	DC.L	DUMMY_H		; Level 7 Interrupt Autovector
+     115/      80 :                     
+     116/      80 :                     	;; 32-39
+     117/      80 : 0000 09CE           	DC.L	TRAP0_H		; TRAP Instruction Vector #0
+     118/      84 : 0000 09E4           	DC.L	TRAP1_H		; TRAP Instruction Vector #1
+     119/      88 : 0000 09FA           	DC.L	TRAP2_H		; TRAP Instruction Vector #2
+     120/      8C : 0000 0A10           	DC.L	TRAP3_H		; TRAP Instruction Vector #3
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 3 - 11/4/2023 8:24:53
+
+
+     121/      90 :                     
+     122/      90 : 0000 0A26           	DC.L	TRAP4_H		; TRAP Instruction Vector #4
+     123/      94 : 0000 0A3C           	DC.L	TRAP5_H		; TRAP Instruction Vector #5
+     124/      98 : 0000 0A52           	DC.L	TRAP6_H		; TRAP Instruction Vector #6
+     125/      9C : 0000 0A68           	DC.L	TRAP7_H		; TRAP Instruction Vector #7
+     126/      A0 :                     
+     127/      A0 :                     	;; 40-47
+     128/      A0 : 0000 0A7E           	DC.L	TRAP8_H		; TRAP Instruction Vector #8
+     129/      A4 : 0000 0A94           	DC.L	TRAP9_H		; TRAP Instruction Vector #9
+     130/      A8 : 0000 0AA8           	DC.L	TRAP10_H	; TRAP Instruction Vector #10
+     131/      AC : 0000 0ABC           	DC.L	TRAP11_H	; TRAP Instruction Vector #11
+     132/      B0 :                     
+     133/      B0 : 0000 0AD0           	DC.L	TRAP12_H	; TRAP Instruction Vector #12
+     134/      B4 : 0000 0AE4           	DC.L	TRAP13_H	; TRAP Instruction Vector #13
+     135/      B8 : 0000 0AF8           	DC.L	TRAP14_H	; TRAP Instruction Vector #14
+     136/      BC : 0000 0B0C           	DC.L	TRAP15_H	; TRAP Instruction Vector #15
+     137/      C0 :                     
+     138/      C0 :                     INIVECE:
+     139/      C0 :                     
+     140/      C0 :                     CSTART:
+     141/      C0 : 6100 11DE           	BSR	INIT
+     142/      C4 :                     
+     143/      C4 : =>FALSE             	IF INIVEC <> $00000000
+     144/      C4 :                     	MOVE.L	#VECSIZ*4,D0
+     145/      C4 : =>TRUE              	ELSE
+     146/      C4 : 203C 0000 8000      	MOVE.L	#RAM_B,D0
+     147/      CA : [143]               	ENDIF
+     148/      CA : 23C0 0000 9F18      	MOVE.L	D0,DSADDR
+     149/      D0 : 23C0 0000 9F22      	MOVE.L	D0,GADDR
+     150/      D6 : 23C0 0000 9F26      	MOVE.L	D0,SADDR
+     151/      DC : 13FC 0053 0000      	MOVE.B	#'S',HEXMOD
+               E2 : 9F2A             
+     152/      E4 : 13FC 0000 0000      	MOVE.B	#MPU_SPEC,PSPEC
+               EA : 9F2C             
+     153/      EC :                     
+     154/      EC : =>FALSE             	IF INIVEC <> $00000000
+     155/      EC :                     	;; Initialize vector area
+     156/      EC :                     	MOVE.L	#INIVEC,A0
+     157/      EC :                     	MOVE.L	#$00000000,A1
+     158/      EC :                     	MOVE	#VECSIZ,D1
+     159/      EC :                     INI0:
+     160/      EC :                     	MOVE.L	(A0)+,(A1)+
+     161/      EC :                     	SUBQ	#1,D1
+     162/      EC :                     	BEQ	INI2
+     163/      EC :                     	CMP.L	INIVECE,A0
+     164/      EC :                     	BNE	INI0
+     165/      EC :                     	MOVE.L	#DUMMY_H,D0
+     166/      EC :                     INI1:
+     167/      EC :                     	MOVE.L	D0,(A1)+
+     168/      EC :                     	SUBQ.L	#1,D1
+     169/      EC :                     	BNE	INI1
+     170/      EC :                     INI2:
+     171/      EC : [154]               	ENDIF
+     172/      EC :                     
+     173/      EC : =>TRUE              	IF USE_REGCMD
+     174/      EC :                     
+     175/      EC :                     	;; Initialize register save area
+     176/      EC : 41F9 0000 9F34      	LEA	REG_B,A0
+     177/      F2 : 303C 00A3           	MOVE	#(REG_E-REG_B)-1,D0
+     178/      F6 :                     INIR0:
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 4 - 11/4/2023 8:24:53
+
+
+     179/      F6 : 4218                	CLR.B	(A0)+
+     180/      F8 : 51C8 FFFC           	DBF	D0,INIR0
+     181/      FC : 23FC 0000 9F00      	MOVE.L	#STACK,REGSSP
+              102 : 0000 9F78          
+     182/     106 : 23F9 0000 9F22      	MOVE.L	GADDR,REGPC
+              10C : 0000 9F34          
+     183/     110 : 23FC 0000 9E00      	MOVE.L	#USTACK,REGA7
+              116 : 0000 9F74          
+     184/     11A :                     
+     185/     11A : [173]               	ENDIF
+     186/     11A :                     
+     187/     11A :                     	;; Opening message
+     188/     11A : 41F8 0D2A           	LEA	OPNMSG,A0
+     189/     11E : 6100 0638           	BSR	STROUT
+     190/     122 :                     
+     191/     122 : =>TRUE              	IF USE_IDENT
+     192/     122 :                     
+     193/     122 : 41F8 0D8D           	LEA	IM000,A0
+     194/     126 :                     	SAVE
+     195/     126 :                     	CPU	68010
+     196/     126 : 4E7A 0801           ID0:	MOVEC	VBR,D0		; Try MC68010 instruction
+     197/     12A : ALL                 	RESTORE
+     198/     12A : 41F8 0D97           	LEA	IM010,A0
+     199/     12E : 13FC 0001 0000      	MOVE.B	#1,PSPEC
+              134 : 9F2C             
+     200/     136 :                     ID1:
+     201/     136 : 6100 0620           	BSR	STROUT
+     202/     13A :                     
+     203/     13A : [191]               	ENDIF
+     204/     13A :                     
+     205/     13A :                     WSTART:
+     206/     13A : 41F8 0D46           	LEA	PROMPT,A0
+     207/     13E : 6100 0618           	BSR	STROUT
+     208/     142 : 6100 0698           	BSR	GETLIN
+     209/     146 : 41F9 0000 9F00      	LEA	INBUF,A0
+     210/     14C : 6100 06F8           	BSR	SKIPSP
+     211/     150 : 1010                	MOVE.B	(A0),D0
+     212/     152 : 6100 06FC           	BSR	UPPER
+     213/     156 : 4A00                	TST.B	D0
+     214/     158 : 67E0                	BEQ	WSTART
+     215/     15A :                     
+     216/     15A : B03C 0044           	CMP.B	#'D',D0
+     217/     15E : 6742                	BEQ	DUMP
+     218/     160 : B03C 0047           	CMP.B	#'G',D0
+     219/     164 : 6700 017C           	BEQ	GO
+     220/     168 : B03C 0053           	CMP.B	#'S',D0
+     221/     16C : 6700 01EA           	BEQ	SETM
+     222/     170 :                     
+     223/     170 : B03C 004C           	CMP.B	#'L',D0
+     224/     174 : 6700 026E           	BEQ	LOADH
+     225/     178 : B03C 0050           	CMP.B	#'P',D0
+     226/     17C : 6700 037E           	BEQ	SAVEH
+     227/     180 :                     
+     228/     180 : =>TRUE              	IF USE_REGCMD
+     229/     180 : B03C 0052           	CMP.B	#'R',D0
+     230/     184 : 6700 048E           	BEQ	REG
+     231/     188 : [228]               	ENDIF
+     232/     188 :                     
+     233/     188 : B03C 003F           	CMP.B	#'?',D0
+     234/     18C : 6700 0590           	BEQ	CMDHLP
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 5 - 11/4/2023 8:24:53
+
+
+     235/     190 : B03C 0023           	CMP.B	#'#',D0
+     236/     194 : 6700 0592           	BEQ	LANCH
+     237/     198 :                     
+     238/     198 :                     ERR:
+     239/     198 : 41F8 0D63           	LEA	ERRMSG,A0
+     240/     19C : 6100 05BA           	BSR	STROUT
+     241/     1A0 : 6098                	BRA	WSTART
+     242/     1A2 :                     
+     243/     1A2 :                     ;;;
+     244/     1A2 :                     ;;; Dump memory
+     245/     1A2 :                     ;;;
+     246/     1A2 :                     
+     247/     1A2 :                     DUMP:
+     248/     1A2 : 5248                	ADDQ	#1,A0
+     249/     1A4 : 6100 06A0           	BSR	SKIPSP
+     250/     1A8 : 6100 06B8           	BSR	RDHEX		; 1st arg.
+     251/     1AC : 4A42                	TST	D2
+     252/     1AE : 661C                	BNE	DP0
+     253/     1B0 :                     	;; No arg.
+     254/     1B0 : 6100 0694           	BSR	SKIPSP
+     255/     1B4 : 4A10                	TST.B	(A0)
+     256/     1B6 : 66E0                	BNE	ERR
+     257/     1B8 : 2039 0000 9F18      	MOVE.L	DSADDR,D0
+     258/     1BE : D0BC 0000 0080      	ADD.L	#128,D0
+     259/     1C4 : 23C0 0000 9F1C      	MOVE.L	D0,DEADDR
+     260/     1CA : 6040                	BRA	DPM
+     261/     1CC :                     
+     262/     1CC :                     	;; 1st arg. found
+     263/     1CC :                     DP0:
+     264/     1CC : 23C1 0000 9F18      	MOVE.L	D1,DSADDR
+     265/     1D2 : 6100 0672           	BSR	SKIPSP
+     266/     1D6 : 0C10 002C           	CMP.B	#',',(A0)
+     267/     1DA : 6712                	BEQ	DP1
+     268/     1DC : 4A10                	TST.B	(A0)
+     269/     1DE : 66B8                	BNE	ERR
+     270/     1E0 :                     	;; No 2nd arg.
+     271/     1E0 : D2BC 0000 0080      	ADD.L	#128,D1
+     272/     1E6 : 23C1 0000 9F1C      	MOVE.L	D1,DEADDR
+     273/     1EC : 601E                	BRA	DPM
+     274/     1EE :                     
+     275/     1EE :                     DP1:
+     276/     1EE : 5248                	ADDQ	#1,A0
+     277/     1F0 : 6100 0654           	BSR	SKIPSP
+     278/     1F4 : 6100 066C           	BSR	RDHEX
+     279/     1F8 : 6100 064C           	BSR	SKIPSP
+     280/     1FC : 4A42                	TST	D2
+     281/     1FE : 6798                	BEQ	ERR
+     282/     200 : 4A10                	TST.B	(A0)
+     283/     202 : 6694                	BNE	ERR
+     284/     204 : 5281                	ADDQ.L	#1,D1
+     285/     206 : 23C1 0000 9F1C      	MOVE.L	D1,DEADDR
+     286/     20C :                     
+     287/     20C :                     	;; DUMP main
+     288/     20C :                     DPM:
+     289/     20C : 2039 0000 9F18      	MOVE.L	DSADDR,D0
+     290/     212 : C03C 00F0           	AND.B	#$F0,D0
+     291/     216 : 2240                	MOVE.L	D0,A1
+     292/     218 : 4242                	CLR	D2		; DSTATE
+     293/     21A :                     DPM0:
+     294/     21A : 612A                	BSR	DPL
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 6 - 11/4/2023 8:24:53
+
+
+     295/     21C : 6100 1098           	BSR	CONST
+     296/     220 : 4A00                	TST.B	D0
+     297/     222 : 6614                	BNE	DPM1
+     298/     224 : B47C 0002           	CMP	#2,D2		; DSTATE
+     299/     228 : 65F0                	BCS	DPM0
+     300/     22A : 23F9 0000 9F1C      	MOVE.L	DEADDR,DSADDR
+              230 : 0000 9F18          
+     301/     234 : 6000 FF04           	BRA	WSTART
+     302/     238 :                     DPM1:
+     303/     238 : 23C9 0000 9F18      	MOVE.L	A1,DSADDR
+     304/     23E : 6100 1062           	BSR	CONIN
+     305/     242 : 6000 FEF6           	BRA	WSTART
+     306/     246 :                     
+     307/     246 :                     	;; DUMP line
+     308/     246 :                     DPL:
+     309/     246 : 2009                	MOVE.L	A1,D0
+     310/     248 : 6100 051C           	BSR	HEXOUT8
+     311/     24C : 41F8 0D6B           	LEA	DSEP0,A0
+     312/     250 : 6100 0506           	BSR	STROUT
+     313/     254 : 45F9 0000 9F00      	LEA	INBUF,A2
+     314/     25A : 363C 000F           	MOVE	#15,D3
+     315/     25E :                     DPL0:
+     316/     25E : 613A                	BSR	DPB
+     317/     260 : 51CB FFFC           	DBF	D3,DPL0
+     318/     264 :                     
+     319/     264 : 41F8 0D6E           	LEA	DSEP1,A0
+     320/     268 : 6100 04EE           	BSR	STROUT
+     321/     26C :                     
+     322/     26C : 45F9 0000 9F00      	LEA	INBUF,A2
+     323/     272 : 363C 000F           	MOVE	#15,D3
+     324/     276 :                     DPL1:
+     325/     276 : 101A                	MOVE.B	(A2)+,D0
+     326/     278 : B03C 0020           	CMP.B	#' ',D0
+     327/     27C : 650C                	BCS	DPL2
+     328/     27E : B03C 007F           	CMP.B	#$7F,D0
+     329/     282 : 6406                	BCC	DPL2
+     330/     284 : 6100 103C           	BSR	CONOUT
+     331/     288 : 6008                	BRA	DPL3
+     332/     28A :                     DPL2:
+     333/     28A : 103C 002E           	MOVE.B	#'.',D0
+     334/     28E : 6100 1032           	BSR	CONOUT
+     335/     292 :                     DPL3:
+     336/     292 : 51CB FFE2           	DBF	D3,DPL1
+     337/     296 : 6000 0534           	BRA	CRLF
+     338/     29A :                     
+     339/     29A :                     	;; DUMP byte
+     340/     29A :                     DPB:
+     341/     29A : 103C 0020           	MOVE.B	#' ',D0
+     342/     29E : 6100 1022           	BSR	CONOUT
+     343/     2A2 : 4A42                	TST	D2		; DSTATE
+     344/     2A4 : 661E                	BNE	DPB2
+     345/     2A6 :                     	;; Dump state 0
+     346/     2A6 : B3F9 0000 9F18      	CMP.L	DSADDR,A1
+     347/     2AC : 6712                	BEQ	DPB1
+     348/     2AE :                     	;; Still 0 or 2
+     349/     2AE :                     DPB0:
+     350/     2AE : 103C 0020           	MOVE.B	#' ',D0
+     351/     2B2 : 6100 100E           	BSR	CONOUT
+     352/     2B6 : 6100 100A           	BSR	CONOUT
+     353/     2BA : 14C0                	MOVE.B	D0,(A2)+
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 7 - 11/4/2023 8:24:53
+
+
+     354/     2BC : 5249                	ADDQ	#1,A1
+     355/     2BE : 4E75                	RTS
+     356/     2C0 :                     	;; Found start address
+     357/     2C0 :                     DPB1:
+     358/     2C0 : 343C 0001           	MOVE	#1,D2		; DSTATE
+     359/     2C4 :                     DPB2:
+     360/     2C4 : B47C 0001           	CMP	#1,D2		; DSTATE
+     361/     2C8 : 66E4                	BNE	DPB0
+     362/     2CA :                     	;; Dump state 1
+     363/     2CA : 1019                	MOVE.B	(A1)+,D0
+     364/     2CC : 14C0                	MOVE.B	D0,(A2)+
+     365/     2CE : 6100 04A6           	BSR	HEXOUT2
+     366/     2D2 : B3F9 0000 9F1C      	CMP.L	DEADDR,A1
+     367/     2D8 : 6702                	BEQ	DPB3
+     368/     2DA : 4E75                	RTS
+     369/     2DC :                     	;; Found end address
+     370/     2DC :                     DPB3:
+     371/     2DC : 343C 0002           	MOVE	#2,D2		; DSTATE
+     372/     2E0 : 4E75                	RTS
+     373/     2E2 :                     
+     374/     2E2 :                     ;;;
+     375/     2E2 :                     ;;; GO address
+     376/     2E2 :                     ;;;
+     377/     2E2 :                     
+     378/     2E2 :                     GO:
+     379/     2E2 : 5248                	ADDQ	#1,A0
+     380/     2E4 : 6100 0560           	BSR	SKIPSP
+     381/     2E8 : 6100 0578           	BSR	RDHEX
+     382/     2EC : 4A10                	TST.B	(A0)
+     383/     2EE : 6600 FEA8           	BNE	ERR
+     384/     2F2 : 4A42                	TST	D2
+     385/     2F4 : 6706                	BEQ	G0
+     386/     2F6 :                     
+     387/     2F6 : =>TRUE              	IF USE_REGCMD
+     388/     2F6 :                     
+     389/     2F6 : 23C1 0000 9F34      	MOVE.L	D1,REGPC
+     390/     2FC :                     G0:
+     391/     2FC : 2039 0000 9F78      	MOVE.L	REGSSP,D0
+     392/     302 : C0BC FFFF FFFE      	AND.L	#$FFFFFFFE,D0
+     393/     308 : 2E40                	MOVE.L	D0,A7
+     394/     30A :                     
+     395/     30A : 4A39 0000 9F2C      	TST.B	PSPEC
+     396/     310 : 6728                	BEQ	G1
+     397/     312 :                     
+     398/     312 :                     	;; MC68010 only
+     399/     312 :                     	SAVE
+     400/     312 :                     	CPU	68010
+     401/     312 :                     
+     402/     312 : 3F3C 0000           	MOVE	#$0000,-(A7)	; Format / Dummy (Vector Offset)
+     403/     316 :                     
+     404/     316 : 2039 0000 9F7E      	MOVE.L	REGVBR,D0
+     405/     31C : C0BC FFFF FFFE      	AND.L	#$FFFFFFFE,D0
+     406/     322 : 4E7B 0801           	MOVEC	D0,VBR		; Be careful!
+     407/     326 : 1039 0000 9F82      	MOVE.B	REGSFC,D0
+     408/     32C : 4E7B 0000           	MOVEC	D0,SFC
+     409/     330 : 1039 0000 9F83      	MOVE.B	REGDFC,D0
+     410/     336 : 4E7B 0001           	MOVEC	D0,DFC
+     411/     33A :                     
+     412/     33A : ALL                 	RESTORE
+     413/     33A :                     G1:
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 8 - 11/4/2023 8:24:53
+
+
+     414/     33A : 2F39 0000 9F34      	MOVE.L	REGPC,-(A7)
+     415/     340 : 3F39 0000 9F7C      	MOVE	REGSR,-(A7)
+     416/     346 :                     
+     417/     346 : 2079 0000 9F74      	MOVE.L	REGA7,A0
+     418/     34C : 4E60                	MOVE	A0,USP
+     419/     34E :                     
+     420/     34E : 4CF9 7FFF 0000      	MOVEM.L	REGD0,D0-D7/A0-A6
+              354 : 9F38             
+     421/     356 :                     
+     422/     356 : 4E73                	RTE
+     423/     358 :                     
+     424/     358 : =>FALSE             	ELSE
+     425/     358 :                     
+     426/     358 :                     	MOVE.L	D1,GADDR
+     427/     358 :                     G0:
+     428/     358 :                     	MOVE.L	GADDR,A0
+     429/     358 :                     	JMP	(A0)
+     430/     358 :                     
+     431/     358 : [387]               	ENDIF
+     432/     358 :                     
+     433/     358 :                     ;;;
+     434/     358 :                     ;;; SET memory
+     435/     358 :                     ;;;
+     436/     358 :                     
+     437/     358 :                     SETM:
+     438/     358 : 5248                	ADDQ	#1,A0
+     439/     35A : 6100 04EA           	BSR	SKIPSP
+     440/     35E : 6100 0502           	BSR	RDHEX
+     441/     362 : 6100 04E2           	BSR	SKIPSP
+     442/     366 : 4A10                	TST.B	(A0)
+     443/     368 : 6600 FE2E           	BNE	ERR
+     444/     36C : 2241                	MOVE.L	D1,A1
+     445/     36E : 4A42                	TST	D2
+     446/     370 : 6606                	BNE	SM0
+     447/     372 : 2279 0000 9F26      	MOVE.L	SADDR,A1
+     448/     378 :                     SM0:
+     449/     378 :                     SM1:
+     450/     378 : 2009                	MOVE.L	A1,D0
+     451/     37A : 6100 03EA           	BSR	HEXOUT8
+     452/     37E : 41F8 0D6E           	LEA	DSEP1,A0
+     453/     382 : 6100 03D4           	BSR	STROUT
+     454/     386 : 1011                	MOVE.B	(A1),D0
+     455/     388 : 6100 03EC           	BSR	HEXOUT2
+     456/     38C : 103C 0020           	MOVE.B	#' ',D0
+     457/     390 : 6100 0F30           	BSR	CONOUT
+     458/     394 : 6100 0446           	BSR	GETLIN
+     459/     398 : 41F9 0000 9F00      	LEA	INBUF,A0
+     460/     39E : 6100 04A6           	BSR	SKIPSP
+     461/     3A2 : 1010                	MOVE.B	(A0),D0
+     462/     3A4 : 660A                	BNE	SM2
+     463/     3A6 :                     	;; Empty (Increment address)
+     464/     3A6 : 5249                	ADDQ	#1,A1
+     465/     3A8 : 23C9 0000 9F26      	MOVE.L	A1,SADDR
+     466/     3AE : 60C8                	BRA	SM1
+     467/     3B0 :                     SM2:
+     468/     3B0 : B03C 002D           	CMP.B	#'-',D0
+     469/     3B4 : 660A                	BNE	SM3
+     470/     3B6 :                     	;; '-' (Decrement address)
+     471/     3B6 : 5349                	SUBQ	#1,A1
+     472/     3B8 : 23C9 0000 9F26      	MOVE.L	A1,SADDR
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 9 - 11/4/2023 8:24:53
+
+
+     473/     3BE : 60B8                	BRA	SM1
+     474/     3C0 :                     SM3:
+     475/     3C0 : B03C 002E           	CMP.B	#'.',D0
+     476/     3C4 : 660A                	BNE	SM4
+     477/     3C6 :                     	;; '.' (Quit)
+     478/     3C6 : 23C9 0000 9F26      	MOVE.L	A1,SADDR
+     479/     3CC : 6000 FD6C           	BRA	WSTART
+     480/     3D0 :                     SM4:
+     481/     3D0 : 6100 0490           	BSR	RDHEX
+     482/     3D4 : 4A42                	TST	D2
+     483/     3D6 : 6700 FDC0           	BEQ	ERR
+     484/     3DA : 12C1                	MOVE.B	D1,(A1)+
+     485/     3DC : 23C9 0000 9F26      	MOVE.L	A1,SADDR
+     486/     3E2 : 6094                	BRA	SM1
+     487/     3E4 :                     
+     488/     3E4 :                     ;;;
+     489/     3E4 :                     ;;; LOAD HEX file
+     490/     3E4 :                     ;;;
+     491/     3E4 :                     
+     492/     3E4 :                     LOADH:
+     493/     3E4 : 5248                	ADDQ	#1,A0
+     494/     3E6 : 6100 045E           	BSR	SKIPSP
+     495/     3EA : 6100 0476           	BSR	RDHEX
+     496/     3EE : 6100 0456           	BSR	SKIPSP
+     497/     3F2 : 4A10                	TST.B	(A0)
+     498/     3F4 : 6600 FDA2           	BNE	ERR
+     499/     3F8 :                     
+     500/     3F8 : 4A42                	TST	D2
+     501/     3FA : 6602                	BNE	LH0
+     502/     3FC :                     
+     503/     3FC : 4281                	CLR.L	D1		; Offset
+     504/     3FE :                     LH0:
+     505/     3FE : 6100 0EA2           	BSR	CONIN
+     506/     402 : 6100 044C           	BSR	UPPER
+     507/     406 : B03C 0053           	CMP.B	#'S',D0
+     508/     40A : 6700 0082           	BEQ	LHS0
+     509/     40E :                     LH1:
+     510/     40E : B03C 003A           	CMP.B	#':',D0
+     511/     412 : 6712                	BEQ	LHI0
+     512/     414 :                     	;; Skip to EOL
+     513/     414 :                     LH2:
+     514/     414 : B03C 000D           	CMP.B	#CR,D0
+     515/     418 : 67E4                	BEQ	LH0
+     516/     41A : B03C 000A           	CMP.B	#LF,D0
+     517/     41E : 67DE                	BEQ	LH0
+     518/     420 :                     LH3:
+     519/     420 : 6100 0E80           	BSR	CONIN
+     520/     424 : 60EE                	BRA	LH2
+     521/     426 :                     
+     522/     426 :                     	;; Intel HEX
+     523/     426 :                     LHI0:
+     524/     426 : 6100 036E           	BSR	HEXIN
+     525/     42A : 4242                	CLR	D2
+     526/     42C : 1400                	MOVE.B	D0,D2		; Length
+     527/     42E : 1600                	MOVE.B	D0,D3		; Checksum
+     528/     430 :                     
+     529/     430 : 6100 0364           	BSR	HEXIN
+     530/     434 : 4284                	CLR.L	D4
+     531/     436 : 1800                	MOVE.B	D0,D4		; Address H
+     532/     438 : D600                	ADD.B	D0,D3		; Checksum
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 10 - 11/4/2023 8:24:53
+
+
+     533/     43A :                     
+     534/     43A : 6100 035A           	BSR	HEXIN
+     535/     43E : E14C                	LSL	#8,D4
+     536/     440 : 1800                	MOVE.B	D0,D4		; Address L
+     537/     442 : D600                	ADD.B	D0,D3		; Checksum
+     538/     444 :                     
+     539/     444 :                     	;; Add offset
+     540/     444 : D881                	ADD.L	D1,D4
+     541/     446 : 2244                	MOVE.L	D4,A1
+     542/     448 :                     
+     543/     448 : 6100 034C           	BSR	HEXIN
+     544/     44C : 13C0 0000 9F2B      	MOVE.B	D0,RECTYP
+     545/     452 : D600                	ADD.B	D0,D3		; Checksum
+     546/     454 :                     
+     547/     454 : 4A42                	TST	D2
+     548/     456 : 6716                	BEQ	LHI3
+     549/     458 : 5342                	SUBQ	#1,D2
+     550/     45A :                     LHI1:
+     551/     45A : 6100 033A           	BSR	HEXIN
+     552/     45E : D600                	ADD.B	D0,D3		; Checksum
+     553/     460 :                     
+     554/     460 : 4A39 0000 9F2B      	TST.B	RECTYP
+     555/     466 : 6602                	BNE	LHI2
+     556/     468 :                     
+     557/     468 : 12C0                	MOVE.B	D0,(A1)+
+     558/     46A :                     LHI2:
+     559/     46A : 51CA FFEE           	DBF	D2,LHI1
+     560/     46E :                     LHI3:
+     561/     46E : 6100 0326           	BSR	HEXIN
+     562/     472 : D600                	ADD.B	D0,D3		; Checksum
+     563/     474 : 660C                	BNE	LHIE		; Checksum error
+     564/     476 : 4A39 0000 9F2B      	TST.B	RECTYP
+     565/     47C : 67A2                	BEQ	LH3
+     566/     47E : 6000 FCBA           	BRA	WSTART
+     567/     482 :                     LHIE:
+     568/     482 : 41F8 0D49           	LEA	IHEMSG,A0
+     569/     486 : 6100 02D0           	BSR	STROUT
+     570/     48A : 6000 FCAE           	BRA	WSTART
+     571/     48E :                     
+     572/     48E :                     	;; Motorola S record
+     573/     48E :                     LHS0:
+     574/     48E : 6100 0E12           	BSR	CONIN
+     575/     492 : 13C0 0000 9F2B      	MOVE.B	D0,RECTYP
+     576/     498 :                     
+     577/     498 : 6100 02FC           	BSR	HEXIN
+     578/     49C : 4242                	CLR	D2
+     579/     49E : 1400                	MOVE.B	D0,D2		; Length+3
+     580/     4A0 : 1600                	MOVE.B	D0,D3		; Checksum
+     581/     4A2 :                     
+     582/     4A2 : 6100 02F2           	BSR	HEXIN
+     583/     4A6 : 4284                	CLR.L	D4
+     584/     4A8 : 1800                	MOVE.B	D0,D4		; Address H
+     585/     4AA : D600                	ADD.B	D0,D3		; Checksum
+     586/     4AC :                     
+     587/     4AC : 6100 02E8           	BSR	HEXIN
+     588/     4B0 : E18C                	LSL.L	#8,D4
+     589/     4B2 : 1800                	MOVE.B	D0,D4		; Address L
+     590/     4B4 : D600                	ADD.B	D0,D3		; Checksum
+     591/     4B6 :                     
+     592/     4B6 :                     	;; Add offset
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 11 - 11/4/2023 8:24:53
+
+
+     593/     4B6 : D881                	ADD.L	D1,D4
+     594/     4B8 : 2244                	MOVE.L	D4,A1
+     595/     4BA :                     
+     596/     4BA : 5742                	SUBQ	#3,D2
+     597/     4BC : 6718                	BEQ	LHS3
+     598/     4BE : 5342                	SUBQ	#1,D2
+     599/     4C0 :                     LHS1:
+     600/     4C0 : 6100 02D4           	BSR	HEXIN
+     601/     4C4 : D600                	ADD.B	D0,D3		; Checksum
+     602/     4C6 :                     
+     603/     4C6 : 0C39 0031 0000      	CMP.B	#'1',RECTYP
+              4CC : 9F2B             
+     604/     4CE : 6602                	BNE	LHS2
+     605/     4D0 :                     
+     606/     4D0 : 12C0                	MOVE.B	D0,(A1)+
+     607/     4D2 :                     LHS2:
+     608/     4D2 : 51CA FFEC           	DBF	D2,LHS1
+     609/     4D6 :                     LHS3:
+     610/     4D6 : 6100 02BE           	BSR	HEXIN
+     611/     4DA : D600                	ADD.B	D0,D3		; Checksum
+     612/     4DC : B63C 00FF           	CMP.B	#$FF,D3
+     613/     4E0 : 660E                	BNE	LHSE		; Checksum error
+     614/     4E2 :                     
+     615/     4E2 : 0C39 0039 0000      	CMP.B	#'9',RECTYP
+              4E8 : 9F2B             
+     616/     4EA : 670C                	BEQ	LHSR
+     617/     4EC : 6000 FF32           	BRA	LH3
+     618/     4F0 :                     LHSE:
+     619/     4F0 : 41F8 0D56           	LEA	SHEMSG,A0
+     620/     4F4 : 6100 0262           	BSR	STROUT
+     621/     4F8 :                     LHSR:
+     622/     4F8 : 6000 FC40           	BRA	WSTART
+     623/     4FC :                     
+     624/     4FC :                     ;;;
+     625/     4FC :                     ;;;  SAVE HEX file
+     626/     4FC :                     ;;;
+     627/     4FC :                     
+     628/     4FC :                     SAVEH:
+     629/     4FC : 5248                	ADDQ	#1,A0
+     630/     4FE : 1010                	MOVE.B	(A0),D0
+     631/     500 : 6100 034E           	BSR	UPPER
+     632/     504 : B03C 0049           	CMP.B	#'I',D0
+     633/     508 : 6706                	BEQ	SH0
+     634/     50A : B03C 0053           	CMP.B	#'S',D0
+     635/     50E : 6608                	BNE	SH1
+     636/     510 :                     SH0:
+     637/     510 : 5248                	ADDQ	#1,A0
+     638/     512 : 13C0 0000 9F2A      	MOVE.B	D0,HEXMOD
+     639/     518 :                     SH1:
+     640/     518 : 6100 032C           	BSR	SKIPSP
+     641/     51C : 6100 0344           	BSR	RDHEX
+     642/     520 : 4A42                	TST	D2
+     643/     522 : 6700 FC74           	BEQ	ERR
+     644/     526 : 2241                	MOVE.L	D1,A1		; Start address
+     645/     528 : 6100 031C           	BSR	SKIPSP
+     646/     52C : 0C18 002C           	CMP.B	#',',(A0)+
+     647/     530 : 6600 FC66           	BNE	ERR
+     648/     534 : 6100 0310           	BSR	SKIPSP
+     649/     538 : 6100 0328           	BSR	RDHEX		; D1 = End address
+     650/     53C : 4A42                	TST	D2
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 12 - 11/4/2023 8:24:53
+
+
+     651/     53E : 6700 FC58           	BEQ	ERR
+     652/     542 : 6100 0302           	BSR	SKIPSP
+     653/     546 : 4A10                	TST.B	(A0)
+     654/     548 : 6600 FC4E           	BNE	ERR
+     655/     54C :                     
+     656/     54C :                     SH2:
+     657/     54C : 9289                	SUB.L	A1,D1
+     658/     54E : 5241                	ADDQ	#1,D1		; D1 = Length
+     659/     550 :                     SH3:
+     660/     550 : 6126                	BSR	SHL
+     661/     552 : 4A81                	TST.L	D1
+     662/     554 : 66FA                	BNE	SH3
+     663/     556 :                     
+     664/     556 : 0C39 0049 0000      	CMP.B	#'I',HEXMOD
+              55C : 9F2A             
+     665/     55E : 660C                	BNE	SH4
+     666/     560 :                     	;; End record for Intel HEX
+     667/     560 : 41F8 0D72           	LEA	IHEXER,A0
+     668/     564 : 6100 01F2           	BSR	STROUT
+     669/     568 : 6000 FBD0           	BRA	WSTART
+     670/     56C :                     	;; End record for Motorola S record
+     671/     56C :                     SH4:
+     672/     56C : 41F8 0D80           	LEA	SRECER,A0
+     673/     570 : 6100 01E6           	BSR	STROUT
+     674/     574 : 6000 FBC4           	BRA	WSTART
+     675/     578 :                     
+     676/     578 :                     SHL:
+     677/     578 : 7410                	MOVEQ.L	#16,D2
+     678/     57A : B282                	CMP.L	D2,D1
+     679/     57C : 6402                	BCC	SHL0
+     680/     57E : 2401                	MOVE.L	D1,D2
+     681/     580 :                     SHL0:
+     682/     580 : 9282                	SUB.L	D2,D1		; D1 = remain
+     683/     582 :                     
+     684/     582 : 0C39 0049 0000      	CMP.B	#'I',HEXMOD
+              588 : 9F2A             
+     685/     58A : 6642                	BNE	SHLS
+     686/     58C :                     
+     687/     58C :                     	;; Intel HEX
+     688/     58C : 103C 003A           	MOVE.B	#':',D0
+     689/     590 : 6100 0D30           	BSR	CONOUT
+     690/     594 :                     
+     691/     594 : 1002                	MOVE.B	D2,D0
+     692/     596 : 1602                	MOVE.B	D2,D3		; Checksum
+     693/     598 : 6100 01DC           	BSR	HEXOUT2		; Length
+     694/     59C :                     
+     695/     59C : 2009                	MOVE.L	A1,D0
+     696/     59E : E048                	LSR	#8,D0
+     697/     5A0 : D600                	ADD.B	D0,D3		; Checksum
+     698/     5A2 : 6100 01D2           	BSR	HEXOUT2		; Address H
+     699/     5A6 :                     
+     700/     5A6 : 2009                	MOVE.L	A1,D0
+     701/     5A8 : D600                	ADD.B	D0,D3		; Checksum
+     702/     5AA : 6100 01CA           	BSR	HEXOUT2		; Address L
+     703/     5AE :                     
+     704/     5AE : 4200                	CLR.B	D0
+     705/     5B0 : 6100 01C4           	BSR	HEXOUT2		; Record type
+     706/     5B4 :                     
+     707/     5B4 : 5342                	SUBQ	#1,D2
+     708/     5B6 :                     SHLI0:
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 13 - 11/4/2023 8:24:53
+
+
+     709/     5B6 : 1019                	MOVE.B	(A1)+,D0
+     710/     5B8 : D600                	ADD.B	D0,D3		; Checksum
+     711/     5BA : 6100 01BA           	BSR	HEXOUT2
+     712/     5BE :                     
+     713/     5BE : 51CA FFF6           	DBF	D2,SHLI0
+     714/     5C2 :                     
+     715/     5C2 : 1003                	MOVE.B	D3,D0
+     716/     5C4 : 4400                	NEG.B	D0
+     717/     5C6 : 6100 01AE           	BSR	HEXOUT2		; Checksum
+     718/     5CA : 6000 0200           	BRA	CRLF
+     719/     5CE :                     
+     720/     5CE :                     	;; Motorola S record
+     721/     5CE :                     SHLS:
+     722/     5CE : 103C 0053           	MOVE.B	#'S',D0
+     723/     5D2 : 6100 0CEE           	BSR	CONOUT
+     724/     5D6 : 103C 0031           	MOVE.B	#'1',D0
+     725/     5DA : 6100 0CE6           	BSR	CONOUT
+     726/     5DE :                     
+     727/     5DE : 1002                	MOVE.B	D2,D0
+     728/     5E0 : 5600                	ADDQ.B	#2+1,D0		; DataLength + 2(Addr) + 1(Sum)
+     729/     5E2 : 1600                	MOVE.B	D0,D3		; Checksum
+     730/     5E4 : 6100 0190           	BSR	HEXOUT2		; Length
+     731/     5E8 :                     
+     732/     5E8 : 2009                	MOVE.L	A1,D0
+     733/     5EA : E088                	LSR.L	#8,D0
+     734/     5EC : D600                	ADD.B	D0,D3		; Checksum
+     735/     5EE : 6100 0186           	BSR	HEXOUT2		; Address H
+     736/     5F2 :                     
+     737/     5F2 : 2009                	MOVE.L	A1,D0
+     738/     5F4 : D600                	ADD.B	D0,D3		; Checksum
+     739/     5F6 : 6100 017E           	BSR	HEXOUT2		; Address L
+     740/     5FA :                     
+     741/     5FA : 5342                	SUBQ	#1,D2
+     742/     5FC :                     SHLS0:
+     743/     5FC : 1019                	MOVE.B	(A1)+,D0
+     744/     5FE : D600                	ADD.B	D0,D3		; Checksum
+     745/     600 : 6100 0174           	BSR	HEXOUT2		; Data
+     746/     604 :                     
+     747/     604 : 51CA FFF6           	DBF	D2,SHLS0
+     748/     608 :                     
+     749/     608 : 1003                	MOVE.B	D3,D0
+     750/     60A : 4600                	NOT.B	D0
+     751/     60C : 6100 0168           	BSR	HEXOUT2
+     752/     610 : 6000 01BA           	BRA	CRLF
+     753/     614 :                     
+     754/     614 :                     ;;;
+     755/     614 :                     ;;; Register
+     756/     614 :                     ;;;
+     757/     614 : =>TRUE              	IF USE_REGCMD
+     758/     614 :                     
+     759/     614 :                     REG:
+     760/     614 : 5248                	ADDQ	#1,A0
+     761/     616 : 6100 022E           	BSR	SKIPSP
+     762/     61A : 1010                	MOVE.B	(A0),D0
+     763/     61C : 6100 0232           	BSR	UPPER
+     764/     620 : 4A00                	TST.B	D0
+     765/     622 : 6608                	BNE	RG0
+     766/     624 : 6100 00BA           	BSR	RDUMP
+     767/     628 : 6000 FB10           	BRA	WSTART
+     768/     62C :                     RG0:
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 14 - 11/4/2023 8:24:53
+
+
+     769/     62C : 43F8 0FEC           	LEA	RNTAB,A1
+     770/     630 :                     RG1:
+     771/     630 : B011                	CMP.B	(A1),D0
+     772/     632 : 6710                	BEQ	RG2		; Character match
+     773/     634 : 4A29 0001           	TST.B	1(A1)
+     774/     638 : 6700 00A2           	BEQ	RGE
+     775/     63C : D3FC 0000 000A      	ADD.L	#10,A1
+     776/     642 : 60EC                	BRA	RG1
+     777/     644 :                     RG2:
+     778/     644 : 0C29 000F 0001      	CMP.B	#$0F,1(A1)
+     779/     64A : 660E                	BNE	RG3
+     780/     64C :                     	;; Next table
+     781/     64C : 2269 0002           	MOVE.L	2(A1),A1
+     782/     650 : 5248                	ADDQ	#1,A0
+     783/     652 : 1010                	MOVE.B	(A0),D0
+     784/     654 : 6100 01FA           	BSR	UPPER
+     785/     658 : 60D6                	BRA	RG1
+     786/     65A :                     RG3:
+     787/     65A : 1629 0001           	MOVE.B	1(A1),D3
+     788/     65E : 677C                	BEQ	RGE		; Found end mark
+     789/     660 : 6A08                	BPL	RG30
+     790/     662 :                     	;; Check MC68010
+     791/     662 : 4A39 0000 9F2C      	TST.B	PSPEC
+     792/     668 : 6772                	BEQ	RGE
+     793/     66A :                     RG30:
+     794/     66A : 2069 0006           	MOVE.L	6(A1),A0
+     795/     66E : 6100 00E8           	BSR	STROUT
+     796/     672 : 103C 003D           	MOVE.B	#'=',D0
+     797/     676 : 6100 0C4A           	BSR	CONOUT
+     798/     67A : 2469 0002           	MOVE.L	2(A1),A2
+     799/     67E : C63C 0007           	AND.B	#$07,D3
+     800/     682 : B63C 0001           	CMP.B	#1,D3
+     801/     686 : 6608                	BNE	RG4
+     802/     688 :                     	;; 8 bit register
+     803/     688 : 1012                	MOVE.B	(A2),D0
+     804/     68A : 6100 00EA           	BSR	HEXOUT2
+     805/     68E : 6014                	BRA	RG6
+     806/     690 :                     RG4:
+     807/     690 : B63C 0002           	CMP.B	#2,D3
+     808/     694 : 6608                	BNE	RG5
+     809/     696 :                     	;; 16 bit register
+     810/     696 : 3012                	MOVE	(A2),D0
+     811/     698 : 6100 00D4           	BSR	HEXOUT4
+     812/     69C : 6006                	BRA	RG6
+     813/     69E :                     RG5:
+     814/     69E :                     	;; 32 bit register
+     815/     69E : 2012                	MOVE.L	(A2),D0
+     816/     6A0 : 6100 00C4           	BSR	HEXOUT8
+     817/     6A4 :                     RG6:
+     818/     6A4 : 103C 0020           	MOVE.B	#' ',D0
+     819/     6A8 : 6100 0C18           	BSR	CONOUT
+     820/     6AC : 6100 012E           	BSR	GETLIN
+     821/     6B0 : 41F9 0000 9F00      	LEA	INBUF,A0
+     822/     6B6 : 6100 018E           	BSR	SKIPSP
+     823/     6BA : 6100 01A6           	BSR	RDHEX
+     824/     6BE : 4A42                	TST	D2
+     825/     6C0 : 6716                	BEQ	RGR
+     826/     6C2 : B63C 0001           	CMP.B	#1,D3
+     827/     6C6 : 6604                	BNE	RG7
+     828/     6C8 :                     	;; 8 bit register
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 15 - 11/4/2023 8:24:53
+
+
+     829/     6C8 : 1481                	MOVE.B	D1,(A2)
+     830/     6CA : 600C                	BRA	RG9
+     831/     6CC :                     RG7:
+     832/     6CC : B63C 0002           	CMP.B	#2,D3
+     833/     6D0 : 6604                	BNE	RG8
+     834/     6D2 :                     	;; 16 bit register
+     835/     6D2 : 3481                	MOVE	D1,(A2)
+     836/     6D4 : 6002                	BRA	RG9
+     837/     6D6 :                     RG8:
+     838/     6D6 :                     	;; 32 bit register
+     839/     6D6 : 2481                	MOVE.L	D1,(A2)
+     840/     6D8 :                     RG9:
+     841/     6D8 :                     RGR:
+     842/     6D8 : 6000 FA60           	BRA	WSTART
+     843/     6DC :                     RGE:
+     844/     6DC : 6000 FABA           	BRA	ERR
+     845/     6E0 :                     
+     846/     6E0 :                     RDUMP:
+     847/     6E0 : 43F8 0ED4           	LEA	RDTAB,A1
+     848/     6E4 :                     RD0:
+     849/     6E4 : 3219                	MOVE	(A1)+,D1	; Flag
+     850/     6E6 : 6700 00E4           	BEQ	CRLF		; Found END mark => CR,LF and return
+     851/     6EA : 6A0A                	BPL	RD00
+     852/     6EC : 4A39 0000 9F2C      	TST.B	PSPEC
+     853/     6F2 : 6700 00D8           	BEQ	CRLF
+     854/     6F6 :                     RD00:
+     855/     6F6 : 2059                	MOVE.L	(A1)+,A0	; String address
+     856/     6F8 : 615E                	BSR	STROUT
+     857/     6FA : 2059                	MOVE.L	(A1)+,A0	; Register save area
+     858/     6FC : C27C 0003           	AND	#$0003,D1
+     859/     700 : B27C 0001           	CMP	#1,D1
+     860/     704 : 6606                	BNE	RD1
+     861/     706 :                     	;; BYTE size
+     862/     706 : 1010                	MOVE.B	(A0),D0
+     863/     708 : 616C                	BSR	HEXOUT2
+     864/     70A : 60D8                	BRA	RD0
+     865/     70C :                     RD1:
+     866/     70C : B27C 0002           	CMP	#2,D1
+     867/     710 : 6606                	BNE	RD2
+     868/     712 :                     	;; WORD size
+     869/     712 : 3010                	MOVE	(A0),D0
+     870/     714 : 6158                	BSR	HEXOUT4
+     871/     716 : 60CC                	BRA	RD0
+     872/     718 :                     RD2:
+     873/     718 :                     	;; LONG size
+     874/     718 : 2010                	MOVE.L	(A0),D0
+     875/     71A : 614A                	BSR	HEXOUT8
+     876/     71C : 60C6                	BRA	RD0
+     877/     71E :                     
+     878/     71E : [757]               	ENDIF
+     879/     71E :                     
+     880/     71E :                     ;;;
+     881/     71E :                     ;;; Command help
+     882/     71E :                     ;;;
+     883/     71E :                     
+     884/     71E :                     CMDHLP:
+     885/     71E : 41F8 0C26           	LEA	HLPMSG,A0
+     886/     722 : 6134                	BSR	STROUT
+     887/     724 : 6000 FA14           	BRA	WSTART
+     888/     728 :                     
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 16 - 11/4/2023 8:24:53
+
+
+     889/     728 :                     ;;;
+     890/     728 :                     ;;; Launch appended program
+     891/     728 :                     ;;;
+     892/     728 :                     
+     893/     728 :                     LANCH:
+     894/     728 : 5248                	ADDQ	#1,A0
+     895/     72A : 1010                	MOVE.B	(A0),D0
+     896/     72C : 6100 0122           	BSR	UPPER
+     897/     730 : B03C 004C           	CMP.B	#'L',D0
+     898/     734 : 6710                	BEQ	LA0
+     899/     736 : B03C 0031           	CMP.B	#'1',D0
+     900/     73A : 6714                	BEQ	LA1
+     901/     73C : B03C 0032           	CMP.B	#'2',D0
+     902/     740 : 6712                	BEQ	LA2
+     903/     742 : 6000 FA54           	BRA	ERR
+     904/     746 :                     LA0:
+     905/     746 : 41F8 0CFB           	LEA	LNCMSG,A0
+     906/     74A : 610C                	BSR	STROUT
+     907/     74C : 6000 F9EC           	BRA	WSTART
+     908/     750 :                     LA1:
+     909/     750 : 4EF8 2000           	JMP	EBSC_CS		; Enhanced BASIC cold start
+     910/     754 :                     LA2:
+     911/     754 : 4EF8 6000           	JMP	TBSC_CS		; Tiny BASIC cold start
+     912/     758 :                     
+     913/     758 :                     ;;;
+     914/     758 :                     ;;; Other support routines
+     915/     758 :                     ;;;
+     916/     758 :                     
+     917/     758 :                     STROUT:
+     918/     758 : 1018                	MOVE.B	(A0)+,D0
+     919/     75A : 4A00                	TST.B	D0
+     920/     75C : 6706                	BEQ	STROE
+     921/     75E : 6100 0B62           	BSR	CONOUT
+     922/     762 : 60F4                	BRA	STROUT
+     923/     764 :                     STROE:
+     924/     764 : 4E75                	RTS
+     925/     766 :                     
+     926/     766 :                     HEXOUT8:
+     927/     766 : 2F00                	MOVE.L	D0,-(A7)
+     928/     768 : 4840                	SWAP	D0
+     929/     76A : 6102                	BSR	HEXOUT4
+     930/     76C : 201F                	MOVE.L	(A7)+,D0
+     931/     76E :                     HEXOUT4:
+     932/     76E : 2F00                	MOVE.L	D0,-(A7)
+     933/     770 : E058                	ROR	#8,D0
+     934/     772 : 6102                	BSR	HEXOUT2
+     935/     774 : 201F                	MOVE.L	(A7)+,D0
+     936/     776 :                     HEXOUT2:
+     937/     776 : 2F00                	MOVE.L	D0,-(A7)
+     938/     778 : E818                	ROR.B	#4,D0
+     939/     77A : 6102                	BSR	HEXOUT1
+     940/     77C : 201F                	MOVE.L	(A7)+,D0
+     941/     77E :                     HEXOUT1:
+     942/     77E : C03C 000F           	AND.B	#$0F,D0
+     943/     782 : D03C 0030           	ADD.B	#'0',D0
+     944/     786 : B03C 003A           	CMP.B	#'9'+1,D0
+     945/     78A : 6500 0B36           	BCS	CONOUT
+     946/     78E : D07C 0007           	ADD	#'A'-'9'-1,D0
+     947/     792 : 6000 0B2E           	BRA	CONOUT
+     948/     796 :                     
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 17 - 11/4/2023 8:24:53
+
+
+     949/     796 :                     HEXIN:
+     950/     796 : 4200                	CLR.B	D0
+     951/     798 : 6102                	BSR	HI0
+     952/     79A : E908                	LSL.B	#4,D0
+     953/     79C :                     HI0:
+     954/     79C : 3F00                	MOVE	D0,-(A7)
+     955/     79E : 6100 0B02           	BSR	CONIN
+     956/     7A2 : 6100 00AC           	BSR	UPPER
+     957/     7A6 : B03C 0030           	CMP.B	#'0',D0
+     958/     7AA : 651C                	BCS	HIR
+     959/     7AC : B03C 003A           	CMP.B	#'9'+1,D0
+     960/     7B0 : 6510                	BCS	HI1
+     961/     7B2 : B03C 0041           	CMP.B	#'A',D0
+     962/     7B6 : 6510                	BCS	HIR
+     963/     7B8 : B03C 0047           	CMP.B	#'F'+1,D0
+     964/     7BC : 640A                	BCC	HIR
+     965/     7BE : 903C 0007           	SUB.B	#'A'-'9'-1,D0
+     966/     7C2 :                     HI1:
+     967/     7C2 : 903C 0030           	SUB.B	#'0',D0
+     968/     7C6 : 8057                	OR	(A7),D0
+     969/     7C8 :                     HIR:
+     970/     7C8 : 544F                	ADDQ	#2,A7
+     971/     7CA : 4E75                	RTS
+     972/     7CC :                     
+     973/     7CC :                     CRLF:
+     974/     7CC : 103C 000D           	MOVE.B	#CR,D0
+     975/     7D0 : 6100 0AF0           	BSR	CONOUT
+     976/     7D4 : 103C 000A           	MOVE.B	#LF,D0
+     977/     7D8 : 6000 0AE8           	BRA	CONOUT
+     978/     7DC :                     
+     979/     7DC :                     GETLIN:
+     980/     7DC : 41F9 0000 9F00      	LEA	INBUF,A0
+     981/     7E2 : 4201                	CLR.B	D1
+     982/     7E4 :                     GL0:
+     983/     7E4 : 6100 0ABC           	BSR	CONIN
+     984/     7E8 : B03C 000D           	CMP.B	#CR,D0
+     985/     7EC : 6750                	BEQ	GLE
+     986/     7EE : B03C 000A           	CMP.B	#LF,D0
+     987/     7F2 : 674A                	BEQ	GLE
+     988/     7F4 : B03C 0008           	CMP.B	#BS,D0
+     989/     7F8 : 6722                	BEQ	GLB
+     990/     7FA : B03C 007F           	CMP.B	#DEL,D0
+     991/     7FE : 671C                	BEQ	GLB
+     992/     800 : B03C 0020           	CMP.B	#' ',D0
+     993/     804 : 65DE                	BCS	GL0
+     994/     806 : B03C 0080           	CMP.B	#$80,D0
+     995/     80A : 64D8                	BCC	GL0
+     996/     80C : B23C 0017           	CMP.B	#BUFLEN-1,D1
+     997/     810 : 64D2                	BCC	GL0		; Too long
+     998/     812 : 5201                	ADDQ.B	#1,D1
+     999/     814 : 10C0                	MOVE.B	D0,(A0)+
+    1000/     816 : 6100 0AAA           	BSR	CONOUT
+    1001/     81A : 60C8                	BRA	GL0
+    1002/     81C :                     GLB:
+    1003/     81C : 4A01                	TST.B	D1
+    1004/     81E : 67C4                	BEQ	GL0
+    1005/     820 : 5388                	SUBQ.L	#1,A0
+    1006/     822 : 5301                	SUBQ.B	#1,D1
+    1007/     824 : 103C 0008           	MOVE.B	#BS,D0
+    1008/     828 : 6100 0A98           	BSR	CONOUT
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 18 - 11/4/2023 8:24:53
+
+
+    1009/     82C : 103C 0020           	MOVE.B	#' ',D0
+    1010/     830 : 6100 0A90           	BSR	CONOUT
+    1011/     834 : 103C 0008           	MOVE.B	#BS,D0
+    1012/     838 : 6100 0A88           	BSR	CONOUT
+    1013/     83C : 60A6                	BRA	GL0
+    1014/     83E :                     GLE:
+    1015/     83E : 618C                	BSR	CRLF
+    1016/     840 : 10BC 0000           	MOVE.B	#$00,(A0)
+    1017/     844 : 4E75                	RTS
+    1018/     846 :                     
+    1019/     846 :                     SKIPSP:
+    1020/     846 : 0C18 0020           	CMP.B	#' ',(A0)+
+    1021/     84A : 67FA                	BEQ	SKIPSP
+    1022/     84C : 5388                	SUBQ.L	#1,A0
+    1023/     84E : 4E75                	RTS
+    1024/     850 :                     
+    1025/     850 :                     UPPER:
+    1026/     850 : B03C 0061           	CMP.B	#'a',D0
+    1027/     854 : 650A                	BCS	UPR
+    1028/     856 : B03C 007B           	CMP.B	#'z'+1,D0
+    1029/     85A : 6404                	BCC	UPR
+    1030/     85C : D03C 00E0           	ADD.B	#'A'-'a',D0
+    1031/     860 :                     UPR:
+    1032/     860 : 4E75                	RTS
+    1033/     862 :                     
+    1034/     862 :                     RDHEX:
+    1035/     862 : 4242                	CLR	D2		; Count
+    1036/     864 : 4281                	CLR.L	D1		; Value
+    1037/     866 :                     RH0:
+    1038/     866 : 1010                	MOVE.B	(A0),D0
+    1039/     868 : 61E6                	BSR	UPPER
+    1040/     86A : B03C 0030           	CMP.B	#'0',D0
+    1041/     86E : 6524                	BCS	RHE
+    1042/     870 : B03C 003A           	CMP.B	#'9'+1,D0
+    1043/     874 : 6510                	BCS	RH1
+    1044/     876 : B03C 0041           	CMP.B	#'A',D0
+    1045/     87A : 6518                	BCS	RHE
+    1046/     87C : B03C 0047           	CMP.B	#'F'+1,D0
+    1047/     880 : 6412                	BCC	RHE
+    1048/     882 : 903C 0007           	SUB.B	#'A'-'9'-1,D0
+    1049/     886 :                     RH1:
+    1050/     886 : 903C 0030           	SUB.B	#'0',D0
+    1051/     88A : E989                	LSL.L	#4,D1
+    1052/     88C : 8200                	OR.B	D0,D1
+    1053/     88E : 5248                	ADDQ	#1,A0
+    1054/     890 : 5242                	ADDQ	#1,D2
+    1055/     892 : 60D2                	BRA	RH0
+    1056/     894 :                     RHE:
+    1057/     894 : 4E75                	RTS
+    1058/     896 :                     
+    1059/     896 :                     ;;;
+    1060/     896 :                     ;;; Exception Handler
+    1061/     896 :                     ;;;
+    1062/     896 :                     
+    1063/     896 :                     	;; Dummy
+    1064/     896 :                     DUMMY_H:
+    1065/     896 : 4E73                	RTE
+    1066/     898 :                     
+    1067/     898 :                     	;; 02 Bus Error
+    1068/     898 :                     BUSERR_H:
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 19 - 11/4/2023 8:24:53
+
+
+    1069/     898 : 23FC 0000 0DA1      	MOVE.L	#BUSERR_M,EXMSG
+              89E : 0000 9F2E          
+    1070/     8A2 : 4279 0000 9F32      	CLR	EXGRP		; Exception Group 0
+    1071/     8A8 :                     
+    1072/     8A8 : 6000 0276           	BRA	COMM_H
+    1073/     8AC :                     
+    1074/     8AC :                     	;; 03 Address Error
+    1075/     8AC :                     ADDERR_H:
+    1076/     8AC : 23FC 0000 0DAB      	MOVE.L	#ADDERR_M,EXMSG
+              8B2 : 0000 9F2E          
+    1077/     8B6 : 4279 0000 9F32      	CLR	EXGRP		; Exception Group 0
+    1078/     8BC :                     
+    1079/     8BC : 6000 0262           	BRA	COMM_H
+    1080/     8C0 :                     
+    1081/     8C0 :                     	;; 04 Illegal Instruction
+    1082/     8C0 :                     ILLINS_H:
+    1083/     8C0 :                     	;; Check IDENT
+    1084/     8C0 : =>TRUE              	IF USE_IDENT
+    1085/     8C0 :                     
+    1086/     8C0 : 0CAF 0000 0126      	CMP.L	#ID0,2(A7)	; Check PC on system stack
+              8C6 : 0002             
+    1087/     8C8 : 660C                	BNE	ILLINS0		; PC is not IDENT routine
+    1088/     8CA :                     
+    1089/     8CA : 5C4F                	ADDQ	#6,A7		; Drop stack frame
+    1090/     8CC : 4239 0000 9F2C      	CLR.B	PSPEC
+    1091/     8D2 : 6000 F862           	BRA	ID1
+    1092/     8D6 :                     
+    1093/     8D6 : [1084]              	ENDIF
+    1094/     8D6 :                     
+    1095/     8D6 :                     ILLINS0:
+    1096/     8D6 : =>TRUE              	IF USE_REGCMD
+    1097/     8D6 : 48F9 7FFF 0000      	MOVEM.L	D0-D7/A0-A6,REGD0
+              8DC : 9F38             
+    1098/     8DE : =>FALSE             	ELSE
+    1099/     8DE :                     	MOVEM.L	D0-D3,REGD0
+    1100/     8DE :                     	MOVEM.L	A0-A3,REGA0
+    1101/     8DE : [1096]              	ENDIF
+    1102/     8DE :                     
+    1103/     8DE : 23FC 0000 0DB9      	MOVE.L	#ILLINS_M,EXMSG
+              8E4 : 0000 9F2E          
+    1104/     8E8 : 33FC 0001 0000      	MOVE	#1,EXGRP	; Exception Group 1
+              8EE : 9F32             
+    1105/     8F0 :                     
+    1106/     8F0 :                     	;; Check BREAK
+    1107/     8F0 : 206F 0002           	MOVE.L	2(A7),A0	; Get PC
+    1108/     8F4 : 3010                	MOVE	(A0),D0		; Read OP-code
+    1109/     8F6 : B07C 4AFC           	CMP	#$4AFC,D0
+    1110/     8FA : 670C                	BEQ	BREAK
+    1111/     8FC : C07C FFF8           	AND	#$FFF8,D0
+    1112/     900 : B07C 4848           	CMP	#$4848,D0
+    1113/     904 : 6600 0222           	BNE	COMM_H0
+    1114/     908 :                     BREAK:
+    1115/     908 : 23FC 0000 0ECE      	MOVE.L	#BREAK_M,EXMSG
+              90E : 0000 9F2E          
+    1116/     912 : 33FC 0101 0000      	MOVE	#$0101,EXGRP	; BREAK
+              918 : 9F32             
+    1117/     91A : 6000 020C           	BRA	COMM_H0
+    1118/     91E :                     
+    1119/     91E :                     	;; 05 Zero Divide
+    1120/     91E :                     ZERDIV_H:
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 20 - 11/4/2023 8:24:53
+
+
+    1121/     91E : 23FC 0000 0DCD      	MOVE.L	#ZERDIV_M,EXMSG
+              924 : 0000 9F2E          
+    1122/     928 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              92E : 9F32             
+    1123/     930 :                     
+    1124/     930 : 6000 01EE           	BRA	COMM_H
+    1125/     934 :                     
+    1126/     934 :                     	;; 06 CHK Instruction
+    1127/     934 :                     CHK_H:
+    1128/     934 : 23FC 0000 0DD9      	MOVE.L	#CHK_M,EXMSG
+              93A : 0000 9F2E          
+    1129/     93E : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              944 : 9F32             
+    1130/     946 :                     
+    1131/     946 : 6000 01D8           	BRA	COMM_H
+    1132/     94A :                     
+    1133/     94A :                     	;; 07 TRAPV Instruction
+    1134/     94A :                     TRAPV_H:
+    1135/     94A : 23FC 0000 0DE9      	MOVE.L	#TRAPV_M,EXMSG
+              950 : 0000 9F2E          
+    1136/     954 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              95A : 9F32             
+    1137/     95C :                     
+    1138/     95C : 6000 01C2           	BRA	COMM_H
+    1139/     960 :                     
+    1140/     960 :                     	;; 08 Privilege Violation
+    1141/     960 :                     PRIV_H:
+    1142/     960 : 23FC 0000 0DFB      	MOVE.L	#PRIV_M,EXMSG
+              966 : 0000 9F2E          
+    1143/     96A : 33FC 0001 0000      	MOVE	#1,EXGRP	; Exception Group 1
+              970 : 9F32             
+    1144/     972 :                     
+    1145/     972 : 6000 01AC           	BRA	COMM_H
+    1146/     976 :                     
+    1147/     976 :                     	;; 09 Trace
+    1148/     976 :                     TRACE_H:
+    1149/     976 : 23FC 0000 0E0F      	MOVE.L	#TRACE_M,EXMSG
+              97C : 0000 9F2E          
+    1150/     980 : 33FC 0001 0000      	MOVE	#1,EXGRP	; Exception Group 1
+              986 : 9F32             
+    1151/     988 :                     
+    1152/     988 : 6000 0196           	BRA	COMM_H
+    1153/     98C :                     
+    1154/     98C :                     	;; 10 Line 1010 Emulator
+    1155/     98C :                     L1010_H:
+    1156/     98C : 23FC 0000 0E15      	MOVE.L	#L1010_M,EXMSG
+              992 : 0000 9F2E          
+    1157/     996 : 33FC 0001 0000      	MOVE	#1,EXGRP	; Exception Group 1
+              99C : 9F32             
+    1158/     99E :                     
+    1159/     99E : 6000 0180           	BRA	COMM_H
+    1160/     9A2 :                     
+    1161/     9A2 :                     	;; 11 Line 1111 Emulator
+    1162/     9A2 :                     L1111_H:
+    1163/     9A2 : 23FC 0000 0E28      	MOVE.L	#L1111_M,EXMSG
+              9A8 : 0000 9F2E          
+    1164/     9AC : 33FC 0001 0000      	MOVE	#1,EXGRP	; Exception Group 1
+              9B2 : 9F32             
+    1165/     9B4 :                     
+    1166/     9B4 : 6000 016A           	BRA	COMM_H
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 21 - 11/4/2023 8:24:53
+
+
+    1167/     9B8 :                     
+    1168/     9B8 :                     	;; 14 Format Error
+    1169/     9B8 :                     FORMAT_H:
+    1170/     9B8 : 23FC 0000 0E3B      	MOVE.L	#FORMAT_M,EXMSG
+              9BE : 0000 9F2E          
+    1171/     9C2 : 33FC 0001 0000      	MOVE	#1,EXGRP	; Exception Group 1
+              9C8 : 9F32             
+    1172/     9CA :                     
+    1173/     9CA : 6000 0154           	BRA	COMM_H
+    1174/     9CE :                     
+    1175/     9CE :                     	;; 32 TRAP #0
+    1176/     9CE :                     TRAP0_H:
+    1177/     9CE : 23FC 0000 0E48      	MOVE.L	#TRAP0_M,EXMSG
+              9D4 : 0000 9F2E          
+    1178/     9D8 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              9DE : 9F32             
+    1179/     9E0 :                     
+    1180/     9E0 : 6000 013E           	BRA	COMM_H
+    1181/     9E4 :                     
+    1182/     9E4 :                     	;; 33 TRAP #1
+    1183/     9E4 :                     TRAP1_H:
+    1184/     9E4 : 23FC 0000 0E50      	MOVE.L	#TRAP1_M,EXMSG
+              9EA : 0000 9F2E          
+    1185/     9EE : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              9F4 : 9F32             
+    1186/     9F6 :                     
+    1187/     9F6 : 6000 0128           	BRA	COMM_H
+    1188/     9FA :                     
+    1189/     9FA :                     	;; 34 TRAP #2
+    1190/     9FA :                     TRAP2_H:
+    1191/     9FA : 23FC 0000 0E58      	MOVE.L	#TRAP2_M,EXMSG
+              A00 : 0000 9F2E          
+    1192/     A04 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              A0A : 9F32             
+    1193/     A0C :                     
+    1194/     A0C : 6000 0112           	BRA	COMM_H
+    1195/     A10 :                     
+    1196/     A10 :                     	;; 35 TRAP #3
+    1197/     A10 :                     TRAP3_H:
+    1198/     A10 : 23FC 0000 0E60      	MOVE.L	#TRAP3_M,EXMSG
+              A16 : 0000 9F2E          
+    1199/     A1A : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              A20 : 9F32             
+    1200/     A22 :                     
+    1201/     A22 : 6000 00FC           	BRA	COMM_H
+    1202/     A26 :                     
+    1203/     A26 :                     	;; 36 TRAP #4
+    1204/     A26 :                     TRAP4_H:
+    1205/     A26 : 23FC 0000 0E68      	MOVE.L	#TRAP4_M,EXMSG
+              A2C : 0000 9F2E          
+    1206/     A30 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              A36 : 9F32             
+    1207/     A38 :                     
+    1208/     A38 : 6000 00E6           	BRA	COMM_H
+    1209/     A3C :                     
+    1210/     A3C :                     	;; 37 TRAP #5
+    1211/     A3C :                     TRAP5_H:
+    1212/     A3C : 23FC 0000 0E70      	MOVE.L	#TRAP5_M,EXMSG
+              A42 : 0000 9F2E          
+    1213/     A46 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 22 - 11/4/2023 8:24:53
+
+
+              A4C : 9F32             
+    1214/     A4E :                     
+    1215/     A4E : 6000 00D0           	BRA	COMM_H
+    1216/     A52 :                     
+    1217/     A52 :                     	;; 38 TRAP #6
+    1218/     A52 :                     TRAP6_H:
+    1219/     A52 : 23FC 0000 0E78      	MOVE.L	#TRAP6_M,EXMSG
+              A58 : 0000 9F2E          
+    1220/     A5C : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              A62 : 9F32             
+    1221/     A64 :                     
+    1222/     A64 : 6000 00BA           	BRA	COMM_H
+    1223/     A68 :                     
+    1224/     A68 :                     	;; 39 TRAP #7
+    1225/     A68 :                     TRAP7_H:
+    1226/     A68 : 23FC 0000 0E80      	MOVE.L	#TRAP7_M,EXMSG
+              A6E : 0000 9F2E          
+    1227/     A72 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              A78 : 9F32             
+    1228/     A7A :                     
+    1229/     A7A : 6000 00A4           	BRA	COMM_H
+    1230/     A7E :                     
+    1231/     A7E :                     	;; 40 TRAP #8
+    1232/     A7E :                     TRAP8_H:
+    1233/     A7E : 23FC 0000 0E88      	MOVE.L	#TRAP8_M,EXMSG
+              A84 : 0000 9F2E          
+    1234/     A88 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              A8E : 9F32             
+    1235/     A90 :                     
+    1236/     A90 : 6000 008E           	BRA	COMM_H
+    1237/     A94 :                     
+    1238/     A94 :                     	;; 41 TRAP #9
+    1239/     A94 :                     TRAP9_H:
+    1240/     A94 : 23FC 0000 0E90      	MOVE.L	#TRAP9_M,EXMSG
+              A9A : 0000 9F2E          
+    1241/     A9E : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              AA4 : 9F32             
+    1242/     AA6 :                     
+    1243/     AA6 : 6078                	BRA	COMM_H
+    1244/     AA8 :                     
+    1245/     AA8 :                     	;; 42 TRAP #10
+    1246/     AA8 :                     TRAP10_H:
+    1247/     AA8 : 23FC 0000 0E98      	MOVE.L	#TRAP10_M,EXMSG
+              AAE : 0000 9F2E          
+    1248/     AB2 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              AB8 : 9F32             
+    1249/     ABA :                     
+    1250/     ABA : 6064                	BRA	COMM_H
+    1251/     ABC :                     
+    1252/     ABC :                     	;; 43 TRAP #11
+    1253/     ABC :                     TRAP11_H:
+    1254/     ABC : 23FC 0000 0EA1      	MOVE.L	#TRAP11_M,EXMSG
+              AC2 : 0000 9F2E          
+    1255/     AC6 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              ACC : 9F32             
+    1256/     ACE :                     
+    1257/     ACE : 6050                	BRA	COMM_H
+    1258/     AD0 :                     
+    1259/     AD0 :                     	;; 44 TRAP #12
+    1260/     AD0 :                     TRAP12_H:
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 23 - 11/4/2023 8:24:53
+
+
+    1261/     AD0 : 23FC 0000 0EAA      	MOVE.L	#TRAP12_M,EXMSG
+              AD6 : 0000 9F2E          
+    1262/     ADA : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              AE0 : 9F32             
+    1263/     AE2 :                     
+    1264/     AE2 : 603C                	BRA	COMM_H
+    1265/     AE4 :                     
+    1266/     AE4 :                     	;; 45 TRAP #13
+    1267/     AE4 :                     TRAP13_H:
+    1268/     AE4 : 23FC 0000 0EB3      	MOVE.L	#TRAP13_M,EXMSG
+              AEA : 0000 9F2E          
+    1269/     AEE : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              AF4 : 9F32             
+    1270/     AF6 :                     
+    1271/     AF6 : 6028                	BRA	COMM_H
+    1272/     AF8 :                     
+    1273/     AF8 :                     	;; 46 TRAP #14
+    1274/     AF8 :                     TRAP14_H:
+    1275/     AF8 : 23FC 0000 0EBC      	MOVE.L	#TRAP14_M,EXMSG
+              AFE : 0000 9F2E          
+    1276/     B02 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              B08 : 9F32             
+    1277/     B0A :                     
+    1278/     B0A : 6014                	BRA	COMM_H
+    1279/     B0C :                     
+    1280/     B0C :                     	;; 47 TRAP #15
+    1281/     B0C :                     TRAP15_H:
+    1282/     B0C : 23FC 0000 0EC5      	MOVE.L	#TRAP15_M,EXMSG
+              B12 : 0000 9F2E          
+    1283/     B16 : 33FC 0002 0000      	MOVE	#2,EXGRP	; Exception Group 2
+              B1C : 9F32             
+    1284/     B1E :                     
+    1285/     B1E : 4E71                	BRA	COMM_H
+    1286/     B20 :                     
+    1287/     B20 :                     	;;
+    1288/     B20 :                     	;; Common handler
+    1289/     B20 :                     	;;
+    1290/     B20 :                     COMM_H:
+    1291/     B20 :                     	;; Save registers
+    1292/     B20 : =>TRUE              	IF USE_REGCMD
+    1293/     B20 : 48F9 7FFF 0000      	MOVEM.L	D0-D7/A0-A6,REGD0
+              B26 : 9F38             
+    1294/     B28 : =>FALSE             	ELSE
+    1295/     B28 :                     	MOVEM.L	D0-D3,REGD0
+    1296/     B28 :                     	MOVEM.L	A0-A3,REGA0
+    1297/     B28 : [1292]              	ENDIF
+    1298/     B28 :                     
+    1299/     B28 :                     COMM_H0:
+    1300/     B28 :                     
+    1301/     B28 : =>TRUE              	IF USE_REGCMD
+    1302/     B28 :                     
+    1303/     B28 : 4A79 0000 9F32      	TST	EXGRP
+    1304/     B2E : 6614                	BNE	CH0		; not Group 0
+    1305/     B30 : 4A39 0000 9F2C      	TST.B	PSPEC
+    1306/     B36 : 660C                	BNE	CH0		; not MC68000/8
+    1307/     B38 :                     
+    1308/     B38 :                     	;; MC68000/8 : Group 0 (Bus/address error)
+    1309/     B38 : 41F9 0000 9FA4      	LEA	GR0BUF,A0
+    1310/     B3E : 30DF                	MOVE	(A7)+,(A0)+
+    1311/     B40 : 20DF                	MOVE.L	(A7)+,(A0)+	; Access address
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 24 - 11/4/2023 8:24:53
+
+
+    1312/     B42 : 30DF                	MOVE	(A7)+,(A0)+	; Instruction register
+    1313/     B44 :                     CH0:
+    1314/     B44 :                     	;; Common
+    1315/     B44 : 33DF 0000 9F7C      	MOVE	(A7)+,REGSR
+    1316/     B4A : 23DF 0000 9F34      	MOVE.L	(A7)+,REGPC
+    1317/     B50 :                     
+    1318/     B50 : 4E68                	MOVE	USP,A0
+    1319/     B52 : 23C8 0000 9F74      	MOVE.L	A0,REGA7
+    1320/     B58 :                     
+    1321/     B58 : 4A39 0000 9F2C      	TST.B	PSPEC
+    1322/     B5E : 673C                	BEQ	CH2
+    1323/     B60 :                     
+    1324/     B60 :                     	;; MC68010
+    1325/     B60 :                     	SAVE
+    1326/     B60 :                     	CPU	68010
+    1327/     B60 : 4E7A 0801           	MOVEC	VBR,D0
+    1328/     B64 : 23C0 0000 9F7E      	MOVE.L	D0,REGVBR
+    1329/     B6A : 4E7A 0000           	MOVEC	SFC,D0
+    1330/     B6E : 13C0 0000 9F82      	MOVE.B	D0,REGSFC
+    1331/     B74 : 4E7A 0000           	MOVEC	SFC,D0
+    1332/     B78 : 13C0 0000 9F83      	MOVE.B	D0,REGDFC
+    1333/     B7E : ALL                 	RESTORE
+    1334/     B7E :                     
+    1335/     B7E : 341F                	MOVE	(A7)+,D2	; Format / Vector offset
+    1336/     B80 : 33C2 0000 9FD6      	MOVE	D2,REGFV
+    1337/     B86 : C47C F000           	AND	#$F000,D2
+    1338/     B8A : 4A42                	TST	D2
+    1339/     B8C : 670E                	BEQ	CH2
+    1340/     B8E :                     	;; Format:1000 (29 Word)
+    1341/     B8E : 41F9 0000 9FA4      	LEA	GR0BUF,A0
+    1342/     B94 : 7418                	MOVEQ	#25-1,D2
+    1343/     B96 :                     CH1:
+    1344/     B96 : 30DF                	MOVE	(A7)+,(A0)+
+    1345/     B98 : 51CA FFFC           	DBF	D2,CH1
+    1346/     B9C :                     
+    1347/     B9C :                     CH2:
+    1348/     B9C : 23CF 0000 9F78      	MOVE.L	A7,REGSSP
+    1349/     BA2 :                     
+    1350/     BA2 : =>FALSE             	ELSE
+    1351/     BA2 :                     	;; USE_REGCMD == 0
+    1352/     BA2 :                     
+    1353/     BA2 :                     	TST.B	PSPEC
+    1354/     BA2 :                     	BNE	CH1
+    1355/     BA2 :                     
+    1356/     BA2 :                     	;; MC68000/8
+    1357/     BA2 :                     	TST	D2
+    1358/     BA2 :                     	BNE	CH0
+    1359/     BA2 :                     
+    1360/     BA2 :                     	;; Group 0
+    1361/     BA2 :                     	ADD.L	#7*2,A7
+    1362/     BA2 :                     	BRA	CH3
+    1363/     BA2 :                     
+    1364/     BA2 :                     CH0:
+    1365/     BA2 :                     	;; Group 1-3
+    1366/     BA2 :                     	ADD.L	#3*2,A7
+    1367/     BA2 :                     	BRA	CH3
+    1368/     BA2 :                     
+    1369/     BA2 :                     CH1:
+    1370/     BA2 :                     	;; MC68010
+    1371/     BA2 :                     	MOVE	6(A7),D2
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 25 - 11/4/2023 8:24:53
+
+
+    1372/     BA2 :                     	AND	#$F000,D2
+    1373/     BA2 :                     	BNE	CH2
+    1374/     BA2 :                     
+    1375/     BA2 :                     	;; Format:0000
+    1376/     BA2 :                     	ADD	#4*2,A7
+    1377/     BA2 :                     	BRA	CH3
+    1378/     BA2 :                     
+    1379/     BA2 :                     CH2:
+    1380/     BA2 :                     	;; Format:1000
+    1381/     BA2 :                     	ADD	#29*2,A7
+    1382/     BA2 :                     
+    1383/     BA2 :                     CH3:
+    1384/     BA2 : [1301]              	ENDIF
+    1385/     BA2 :                     
+    1386/     BA2 : 2079 0000 9F2E      	MOVE.L	EXMSG,A0
+    1387/     BA8 : 6100 FBAE           	BSR	STROUT
+    1388/     BAC : 6100 FC1E           	BSR	CRLF
+    1389/     BB0 : =>TRUE              	IF USE_REGCMD
+    1390/     BB0 : 4A79 0000 9F32      	TST	EXGRP
+    1391/     BB6 : 6602                	BNE	CH4
+    1392/     BB8 : 6108                	BSR	G0DUMP
+    1393/     BBA :                     CH4:
+    1394/     BBA : 6100 FB24           	BSR	RDUMP
+    1395/     BBE : =>FALSE             	ELSE
+    1396/     BBE :                     	BSR	CRLF
+    1397/     BBE : [1389]              	ENDIF
+    1398/     BBE :                     
+    1399/     BBE : 6000 F57A           	BRA	WSTART
+    1400/     BC2 :                     
+    1401/     BC2 : =>TRUE              	IF USE_REGCMD
+    1402/     BC2 :                     ;;; DUMP group 0 (Address/Bus Error)
+    1403/     BC2 :                     G0DUMP:
+    1404/     BC2 : 4A39 0000 9F2C      	TST.B	PSPEC
+    1405/     BC8 : 665A                	BNE	G0D1
+    1406/     BCA :                     
+    1407/     BCA :                     	;; MC68000/MC68008
+    1408/     BCA : =>UNDEFINED         	IFDEF DEBUG
+    1409/     BCA :                     	MOVE	GR0BUF,D0
+    1410/     BCA :                     	BSR	HEXOUT4
+    1411/     BCA :                     	MOVE.B	#' ',D0
+    1412/     BCA :                     	BSR	CONOUT
+    1413/     BCA :                     	MOVE.L	GR0BUF+2,D0
+    1414/     BCA :                     	BSR	HEXOUT8		; Access address
+    1415/     BCA :                     	MOVE.B	#' ',D0
+    1416/     BCA :                     	BSR	CONOUT
+    1417/     BCA :                     	MOVE	GR0BUF+6,D0
+    1418/     BCA :                     	BSR	HEXOUT4		; Instruction register
+    1419/     BCA : [1408]              	ENDIF
+    1420/     BCA :                     
+    1421/     BCA :                     	;; Function Code
+    1422/     BCA : 3039 0000 9FA4      	MOVE	GR0BUF,D0
+    1423/     BD0 : C07C 0007           	AND	#$0007,D0
+    1424/     BD4 : E548                	LSL	#2,D0
+    1425/     BD6 : 41F8 1202           	LEA	FCTAB,A0
+    1426/     BDA : 2070 0000           	MOVE.L	0(A0,D0),A0
+    1427/     BDE : 6100 FB78           	BSR	STROUT
+    1428/     BE2 :                     
+    1429/     BE2 :                     	;; Read / Write
+    1430/     BE2 : 3039 0000 9FA4      	MOVE	GR0BUF,D0
+    1431/     BE8 : C07C 0010           	AND	#$0010,D0
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 26 - 11/4/2023 8:24:53
+
+
+    1432/     BEC : 6606                	BNE	G0D00
+    1433/     BEE : 41F8 1289           	LEA	G0WR,A0
+    1434/     BF2 : 6004                	BRA	G0D01
+    1435/     BF4 :                     G0D00:
+    1436/     BF4 : 41F8 1290           	LEA	G0RD,A0
+    1437/     BF8 :                     G0D01:
+    1438/     BF8 : 6100 FB5E           	BSR	STROUT
+    1439/     BFC :                     
+    1440/     BFC :                     	;; Address
+    1441/     BFC : 2039 0000 9FA6      	MOVE.L	GR0BUF+2,D0
+    1442/     C02 : 6100 FB62           	BSR	HEXOUT8		; Access address
+    1443/     C06 :                     
+    1444/     C06 :                     	;; Instruction Register
+    1445/     C06 : 41F8 1296           	LEA	G0INS0,A0
+    1446/     C0A : 6100 FB4C           	BSR	STROUT
+    1447/     C0E : 3039 0000 9FAA      	MOVE	GR0BUF+6,D0
+    1448/     C14 : 6100 FB58           	BSR	HEXOUT4		; Instruction register
+    1449/     C18 : 103C 0029           	MOVE.B	#')',D0
+    1450/     C1C : 6100 06A4           	BSR	CONOUT
+    1451/     C20 :                     
+    1452/     C20 : 6000 FBAA           	BRA	CRLF
+    1453/     C24 :                     
+    1454/     C24 :                     G0D1:
+    1455/     C24 :                     	;; MC68010
+    1456/     C24 : 4E75                	RTS
+    1457/     C26 :                     
+    1458/     C26 : [1401]              	ENDIF
+    1459/     C26 :                     
+    1460/     C26 :                     ;;;
+    1461/     C26 :                     ;;; Data area
+    1462/     C26 :                     ;;;
+    1463/     C26 :                     
+    1464/     C26 :                     HLPMSG:
+    1465/     C26 : 3F20 3A43 6F6D      	DC.B	"? :Command Help",CR,LF
+              C2C : 6D61 6E64 2048 
+              C32 : 656C 700D 0A       
+    1466/     C37 : 234C 7C3C 6E75      	DC.B	"#L|<num> :Launch program",CR,LF
+              C3D : 6D3E 203A 4C61 
+              C43 : 756E 6368 2070 
+              C49 : 726F 6772 616D 
+              C4F : 0D0A             
+    1467/     C51 : 445B 3C61 6472      	DC.B	"D[<adr>] :Dump Memory",CR,LF
+              C57 : 3E5D 203A 4475 
+              C5D : 6D70 204D 656D 
+              C63 : 6F72 790D 0A       
+    1468/     C68 : 475B 3C61 6472      	DC.B	"G[<adr>] :Go",CR,LF
+              C6E : 3E5D 203A 476F 
+              C74 : 0D0A             
+    1469/     C76 : 4C5B 3C6F 6666      	DC.B	"L[<offset>] :Load HexFile",CR,LF
+              C7C : 7365 743E 5D20 
+              C82 : 3A4C 6F61 6420 
+              C88 : 4865 7846 696C 
+              C8E : 650D 0A          
+    1470/     C91 : 5028 497C 5329      	DC.B	"P(I|S)<adr,adr> :Save HexFile(I:Intel,S:Motorola)",CR,LF
+              C97 : 3C61 6472 2C61 
+              C9D : 6472 3E20 3A53 
+              CA3 : 6176 6520 4865 
+              CA9 : 7846 696C 6528 
+              CAF : 493A 496E 7465 
+              CB5 : 6C2C 533A 4D6F 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 27 - 11/4/2023 8:24:53
+
+
+              CBB : 746F 726F 6C61 
+              CC1 : 290D 0A          
+    1471/     CC4 : 525B 3C72 6567      	DC.B	"R[<reg>] :Set or Dump Register",CR,LF
+              CCA : 3E5D 203A 5365 
+              CD0 : 7420 6F72 2044 
+              CD6 : 756D 7020 5265 
+              CDC : 6769 7374 6572 
+              CE2 : 0D0A             
+    1472/     CE4 : 535B 3C61 6472      	DC.B	"S[<adr>] :Set Memory",CR,LF,$00
+              CEA : 3E5D 203A 5365 
+              CF0 : 7420 4D65 6D6F 
+              CF6 : 7279 0D0A 00       
+    1473/     CFB :                     
+    1474/     CFB :                     LNCMSG:
+    1475/     CFB : 312E 2045 6E68      	DC.B	"1. Enhanced BASIC Start",CR,LF
+              D01 : 616E 6365 6420 
+              D07 : 4241 5349 4320 
+              D0D : 5374 6172 740D 0A 
+    1476/     D14 : 322E 2054 696E      	DC.B	"2. Tiny BASIC Start",CR,LF,$00
+              D1A : 7920 4241 5349 
+              D20 : 4320 5374 6172 
+              D26 : 740D 0A00          
+    1477/     D2A :                     
+    1478/     D2A : 0D0A 556E 6976      OPNMSG:	DC.B	CR,LF,"Universal Monitor 68000",CR,LF,$00
+              D30 : 6572 7361 6C20 
+              D36 : 4D6F 6E69 746F 
+              D3C : 7220 3638 3030 
+              D42 : 300D 0A00          
+    1479/     D46 :                     
+    1480/     D46 : 5D20 00             PROMPT:	DC.B	"] ",$00
+    1481/     D49 :                     
+    1482/     D49 : 4572 726F 7220      IHEMSG:	DC.B	"Error ihex",CR,LF,$00
+              D4F : 6968 6578 0D0A 00 
+    1483/     D56 : 4572 726F 7220      SHEMSG:	DC.B	"Error srec",CR,LF,$00
+              D5C : 7372 6563 0D0A 00 
+    1484/     D63 : 4572 726F 720D      ERRMSG:	DC.B	"Error",CR,LF,$00
+              D69 : 0A00             
+    1485/     D6B :                     
+    1486/     D6B : 203A 00             DSEP0:	DC.B	" :",$00
+    1487/     D6E : 203A 2000           DSEP1:	DC.B	" : ",$00
+    1488/     D72 : 3A30 3030 3030      IHEXER:	DC.B	":00000001FF",CR,LF,$00
+              D78 : 3030 3146 460D 
+              D7E : 0A00             
+    1489/     D80 : 5339 3033 3030      SRECER: DC.B	"S9030000FC",CR,LF,$00
+              D86 : 3030 4643 0D0A 00 
+    1490/     D8D :                     
+    1491/     D8D : =>TRUE              	IF USE_IDENT
+    1492/     D8D :                     
+    1493/     D8D : 4D43 3638 3030      IM000:	DC.B	"MC68000",CR,LF,$00
+              D93 : 300D 0A00          
+    1494/     D97 : 4D43 3638 3031      IM010:	DC.B	"MC68010",CR,LF,$00
+              D9D : 300D 0A00          
+    1495/     DA1 :                     
+    1496/     DA1 : [1491]              	ENDIF
+    1497/     DA1 :                     
+    1498/     DA1 :                     BUSERR_M:
+    1499/     DA1 : 4275 7320 4572      	DC.B	"Bus Error",$00
+              DA7 : 726F 7200          
+    1500/     DAB :                     ADDERR_M:
+    1501/     DAB : 4164 6472 6573      	DC.B	"Address Error",$00
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 28 - 11/4/2023 8:24:53
+
+
+              DB1 : 7320 4572 726F 
+              DB7 : 7200             
+    1502/     DB9 :                     ILLINS_M:
+    1503/     DB9 : 496C 6C65 6761      	DC.B	"Illegal Instruction",$00
+              DBF : 6C20 496E 7374 
+              DC5 : 7275 6374 696F 
+              DCB : 6E00             
+    1504/     DCD :                     ZERDIV_M:
+    1505/     DCD : 5A65 726F 2044      	DC.B	"Zero Divide",$00
+              DD3 : 6976 6964 6500    
+    1506/     DD9 :                     CHK_M:
+    1507/     DD9 : 4348 4B20 496E      	DC.B	"CHK Instruction",$00
+              DDF : 7374 7275 6374 
+              DE5 : 696F 6E00          
+    1508/     DE9 :                     TRAPV_M:
+    1509/     DE9 : 5452 4150 5620      	DC.B	"TRAPV Instruction",$00
+              DEF : 496E 7374 7275 
+              DF5 : 6374 696F 6E00    
+    1510/     DFB :                     PRIV_M:
+    1511/     DFB : 5072 6976 696C      	DC.B	"Privilege Violation",$00
+              E01 : 6567 6520 5669 
+              E07 : 6F6C 6174 696F 
+              E0D : 6E00             
+    1512/     E0F :                     TRACE_M:
+    1513/     E0F : 5472 6163 6500      	DC.B	"Trace",$00
+    1514/     E15 :                     L1010_M:
+    1515/     E15 : 4C69 6E65 2031      	DC.B	"Line 1010 Emulator",$00
+              E1B : 3031 3020 456D 
+              E21 : 756C 6174 6F72 00 
+    1516/     E28 :                     L1111_M:
+    1517/     E28 : 4C69 6E65 2031      	DC.B	"Line 1111 Emulator",$00
+              E2E : 3131 3120 456D 
+              E34 : 756C 6174 6F72 00 
+    1518/     E3B :                     FORMAT_M:
+    1519/     E3B : 466F 726D 6174      	DC.B	"Format Error",$00
+              E41 : 2045 7272 6F72 00 
+    1520/     E48 :                     TRAP0_M:
+    1521/     E48 : 5452 4150 2023      	DC.B	"TRAP #0",$00
+              E4E : 3000             
+    1522/     E50 :                     TRAP1_M:
+    1523/     E50 : 5452 4150 2023      	DC.B	"TRAP #1",$00
+              E56 : 3100             
+    1524/     E58 :                     TRAP2_M:
+    1525/     E58 : 5452 4150 2023      	DC.B	"TRAP #2",$00
+              E5E : 3200             
+    1526/     E60 :                     TRAP3_M:
+    1527/     E60 : 5452 4150 2023      	DC.B	"TRAP #3",$00
+              E66 : 3300             
+    1528/     E68 :                     TRAP4_M:
+    1529/     E68 : 5452 4150 2023      	DC.B	"TRAP #4",$00
+              E6E : 3400             
+    1530/     E70 :                     TRAP5_M:
+    1531/     E70 : 5452 4150 2023      	DC.B	"TRAP #5",$00
+              E76 : 3500             
+    1532/     E78 :                     TRAP6_M:
+    1533/     E78 : 5452 4150 2023      	DC.B	"TRAP #6",$00
+              E7E : 3600             
+    1534/     E80 :                     TRAP7_M:
+    1535/     E80 : 5452 4150 2023      	DC.B	"TRAP #7",$00
+              E86 : 3700             
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 29 - 11/4/2023 8:24:53
+
+
+    1536/     E88 :                     TRAP8_M:
+    1537/     E88 : 5452 4150 2023      	DC.B	"TRAP #8",$00
+              E8E : 3800             
+    1538/     E90 :                     TRAP9_M:
+    1539/     E90 : 5452 4150 2023      	DC.B	"TRAP #9",$00
+              E96 : 3900             
+    1540/     E98 :                     TRAP10_M:
+    1541/     E98 : 5452 4150 2023      	DC.B	"TRAP #10",$00
+              E9E : 3130 00          
+    1542/     EA1 :                     TRAP11_M:
+    1543/     EA1 : 5452 4150 2023      	DC.B	"TRAP #11",$00
+              EA7 : 3131 00          
+    1544/     EAA :                     TRAP12_M:
+    1545/     EAA : 5452 4150 2023      	DC.B	"TRAP #12",$00
+              EB0 : 3132 00          
+    1546/     EB3 :                     TRAP13_M:
+    1547/     EB3 : 5452 4150 2023      	DC.B	"TRAP #13",$00
+              EB9 : 3133 00          
+    1548/     EBC :                     TRAP14_M:
+    1549/     EBC : 5452 4150 2023      	DC.B	"TRAP #14",$00
+              EC2 : 3134 00          
+    1550/     EC5 :                     TRAP15_M:
+    1551/     EC5 : 5452 4150 2023      	DC.B	"TRAP #15",$00
+              ECB : 3135 00          
+    1552/     ECE :                     
+    1553/     ECE :                     BREAK_M:
+    1554/     ECE : 4252 4541 4B00      	DC.B	"BREAK",$00
+    1555/     ED4 :                     
+    1556/     ED4 : =>TRUE              	IF USE_REGCMD
+    1557/     ED4 :                     
+    1558/     ED4 :                     	ALIGN	2
+    1559/     ED4 : 0003                RDTAB:	DC.W	$0003		; LONG
+    1560/     ED6 : 0000 0FB2 0000      	DC.L	RDSD07, REGD0
+              EDC : 9F38             
+    1561/     EDE : 0003                	DC.W	$0003
+    1562/     EE0 : 0000 0FE6 0000      	DC.L	RDSC,   REGD1
+              EE6 : 9F3C             
+    1563/     EE8 : 0003                	DC.W	$0003
+    1564/     EEA : 0000 0FE6 0000      	DC.L	RDSC,   REGD2
+              EF0 : 9F40             
+    1565/     EF2 : 0003                	DC.W	$0003
+    1566/     EF4 : 0000 0FE6 0000      	DC.L	RDSC,   REGD3
+              EFA : 9F44             
+    1567/     EFC : 0003                	DC.W	$0003
+    1568/     EFE : 0000 0FE8 0000      	DC.L	RDSCS,  REGD4
+              F04 : 9F48             
+    1569/     F06 : 0003                	DC.W	$0003
+    1570/     F08 : 0000 0FE6 0000      	DC.L	RDSC,   REGD5
+              F0E : 9F4C             
+    1571/     F10 : 0003                	DC.W	$0003
+    1572/     F12 : 0000 0FE6 0000      	DC.L	RDSC,   REGD6
+              F18 : 9F50             
+    1573/     F1A : 0003                	DC.W	$0003
+    1574/     F1C : 0000 0FE6 0000      	DC.L	RDSC,   REGD7
+              F22 : 9F54             
+    1575/     F24 :                     
+    1576/     F24 : 0003                	DC.W	$0003
+    1577/     F26 : 0000 0FB9 0000      	DC.L	RDSA07, REGA0
+              F2C : 9F58             
+    1578/     F2E : 0003                	DC.W	$0003
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 30 - 11/4/2023 8:24:53
+
+
+    1579/     F30 : 0000 0FE6 0000      	DC.L	RDSC,   REGA1
+              F36 : 9F5C             
+    1580/     F38 : 0003                	DC.W	$0003
+    1581/     F3A : 0000 0FE6 0000      	DC.L	RDSC,   REGA2
+              F40 : 9F60             
+    1582/     F42 : 0003                	DC.W	$0003
+    1583/     F44 : 0000 0FE6 0000      	DC.L	RDSC,   REGA3
+              F4A : 9F64             
+    1584/     F4C : 0003                	DC.W	$0003
+    1585/     F4E : 0000 0FE8 0000      	DC.L	RDSCS,  REGA4
+              F54 : 9F68             
+    1586/     F56 : 0003                	DC.W	$0003
+    1587/     F58 : 0000 0FE6 0000      	DC.L	RDSC,   REGA5
+              F5E : 9F6C             
+    1588/     F60 : 0003                	DC.W	$0003
+    1589/     F62 : 0000 0FE6 0000      	DC.L	RDSC,   REGA6
+              F68 : 9F70             
+    1590/     F6A : 0003                	DC.W	$0003
+    1591/     F6C : 0000 0FE6 0000      	DC.L	RDSC,   REGA7
+              F72 : 9F74             
+    1592/     F74 :                     
+    1593/     F74 : 0003                	DC.W	$0003
+    1594/     F76 : 0000 0FC2 0000      	DC.L	RDSPC,  REGPC
+              F7C : 9F34             
+    1595/     F7E : 0003                	DC.W	$0003
+    1596/     F80 : 0000 0FC8 0000      	DC.L	RDSSSP, REGSSP
+              F86 : 9F78             
+    1597/     F88 : 0002                	DC.W	$0002		; WORD
+    1598/     F8A : 0000 0FCE 0000      	DC.L	RDSSR,  REGSR
+              F90 : 9F7C             
+    1599/     F92 :                     
+    1600/     F92 : 8003                	DC.W	$8003		; LONG + (END flag for MC68000/8)
+    1601/     F94 : 0000 0FD3 0000      	DC.L	RDSVBR, REGVBR
+              F9A : 9F7E             
+    1602/     F9C : 8001                	DC.W	$8001		; BYTE
+    1603/     F9E : 0000 0FDA 0000      	DC.L	RDSSFC, REGSFC
+              FA4 : 9F82             
+    1604/     FA6 : 8001                	DC.W	$8001		; BYTE
+    1605/     FA8 : 0000 0FE0 0000      	DC.L	RDSDFC, REGDFC
+              FAE : 9F83             
+    1606/     FB0 :                     
+    1607/     FB0 : 0000                	DC.W	$0000		; END
+    1608/     FB2 :                     
+    1609/     FB2 : 4430 2D44 373D 00   RDSD07:	DC.B	"D0-D7=",$00
+    1610/     FB9 : 0D0A 4130 2D41      RDSA07:	DC.B	CR,LF,"A0-A7=",$00
+              FBF : 373D 00          
+    1611/     FC2 : 0D0A 5043 3D00      RDSPC:	DC.B	CR,LF,"PC=",$00
+    1612/     FC8 : 2053 5350 3D00      RDSSSP:	DC.B	" SSP=",$00
+    1613/     FCE : 2053 523D 00        RDSSR:	DC.B	" SR=",$00
+    1614/     FD3 : 2020 5642 523D 00   RDSVBR:	DC.B	"  VBR=",$00
+    1615/     FDA : 2053 4643 3D00      RDSSFC:	DC.B	" SFC=",$00
+    1616/     FE0 : 2044 4643 3D00      RDSDFC:	DC.B	" DFC=",$00
+    1617/     FE6 : 2C00                RDSC:	DC.B	",",$00
+    1618/     FE8 : 2C20 00             RDSCS:	DC.B	", ",$00
+    1619/     FEB :                     
+    1620/     FEB :                     	ALIGN	2
+    1621/     FEC :                     RNTAB:
+    1622/     FEC : 410F                	DC.B	'A',$0F		; "A?"
+    1623/     FEE : 0000 1032 0000      	DC.L	RNTABA,0
+              FF4 : 0000             
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 31 - 11/4/2023 8:24:53
+
+
+    1624/     FF6 : 430F                	DC.B	'C',$0F		; "C?"
+    1625/     FF8 : 0000 108C 0000      	DC.L	RNTABC,0
+              FFE : 0000             
+    1626/    1000 : 440F                	DC.B	'D',$0F		; "D?"
+    1627/    1002 : 0000 10A0 0000      	DC.L	RNTABD,0
+             1008 : 0000             
+    1628/    100A : 500F                	DC.B	'P',$0F		; "P?"
+    1629/    100C : 0000 1104 0000      	DC.L	RNTABP,0
+             1012 : 0000             
+    1630/    1014 : 530F                	DC.B	'S',$0F		; "S?"
+    1631/    1016 : 0000 1118 0000      	DC.L	RNTABS,0
+             101C : 0000             
+    1632/    101E : 560F                	DC.B	'V',$0F		; "V?"
+    1633/    1020 : 0000 1140 0000      	DC.L	RNTABV,0
+             1026 : 0000             
+    1634/    1028 :                     
+    1635/    1028 : 0000                	DC.B	$00,$00		; End mark
+    1636/    102A : 0000 0000 0000      	DC.L	0,0
+             1030 : 0000             
+    1637/    1032 :                     
+    1638/    1032 :                     RNTABA:
+    1639/    1032 : 3003                	DC.B	'0',3		; "A0"
+    1640/    1034 : 0000 9F58 0000      	DC.L	REGA0, RNA0
+             103A : 11B8             
+    1641/    103C : 3103                	DC.B	'1',3		; "A1"
+    1642/    103E : 0000 9F5C 0000      	DC.L	REGA1, RNA1
+             1044 : 11BB             
+    1643/    1046 : 3203                	DC.B	'2',3		; "A2"
+    1644/    1048 : 0000 9F60 0000      	DC.L	REGA2, RNA2
+             104E : 11BE             
+    1645/    1050 : 3303                	DC.B	'3',3		; "A3"
+    1646/    1052 : 0000 9F64 0000      	DC.L	REGA3, RNA3
+             1058 : 11C1             
+    1647/    105A : 3403                	DC.B	'4',3		; "A4"
+    1648/    105C : 0000 9F68 0000      	DC.L	REGA4, RNA4
+             1062 : 11C4             
+    1649/    1064 : 3503                	DC.B	'5',3		; "A5"
+    1650/    1066 : 0000 9F6C 0000      	DC.L	REGA5, RNA5
+             106C : 11C7             
+    1651/    106E : 3603                	DC.B	'6',3		; "A6"
+    1652/    1070 : 0000 9F70 0000      	DC.L	REGA6, RNA6
+             1076 : 11CA             
+    1653/    1078 : 3703                	DC.B	'7',3		; "A7"
+    1654/    107A : 0000 9F74 0000      	DC.L	REGA7, RNA7
+             1080 : 11CD             
+    1655/    1082 :                     
+    1656/    1082 : 0000                	DC.B	$00,$00		; End mark
+    1657/    1084 : 0000 0000 0000      	DC.L	0,0
+             108A : 0000             
+    1658/    108C :                     
+    1659/    108C :                     RNTABC:
+    1660/    108C : 430F                	DC.B	'C', $0F	; "CC"
+    1661/    108E : 0000 1154 0000      	DC.L	RNTABCC, 0
+             1094 : 0000             
+    1662/    1096 :                     
+    1663/    1096 : 0000                	DC.B	$00,$00		; End mark
+    1664/    1098 : 0000 0000 0000      	DC.L	0,0
+             109E : 0000             
+    1665/    10A0 :                     
+    1666/    10A0 :                     RNTABD:
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 32 - 11/4/2023 8:24:53
+
+
+    1667/    10A0 : 3003                	DC.B	'0',3		; "D0"
+    1668/    10A2 : 0000 9F38 0000      	DC.L	REGD0, RND0
+             10A8 : 11D4             
+    1669/    10AA : 3103                	DC.B	'1',3		; "D1"
+    1670/    10AC : 0000 9F3C 0000      	DC.L	REGD1, RND1
+             10B2 : 11D7             
+    1671/    10B4 : 3203                	DC.B	'2',3		; "D2"
+    1672/    10B6 : 0000 9F40 0000      	DC.L	REGD2, RND2
+             10BC : 11DA             
+    1673/    10BE : 3303                	DC.B	'3',3		; "D3"
+    1674/    10C0 : 0000 9F44 0000      	DC.L	REGD3, RND3
+             10C6 : 11DD             
+    1675/    10C8 : 3403                	DC.B	'4',3		; "D4"
+    1676/    10CA : 0000 9F48 0000      	DC.L	REGD4, RND4
+             10D0 : 11E0             
+    1677/    10D2 : 3503                	DC.B	'5',3		; "D5"
+    1678/    10D4 : 0000 9F4C 0000      	DC.L	REGD5, RND5
+             10DA : 11E3             
+    1679/    10DC : 3603                	DC.B	'6',3		; "D6"
+    1680/    10DE : 0000 9F50 0000      	DC.L	REGD6, RND6
+             10E4 : 11E6             
+    1681/    10E6 : 3703                	DC.B	'7',3		; "D7"
+    1682/    10E8 : 0000 9F54 0000      	DC.L	REGD7, RND7
+             10EE : 11E9             
+    1683/    10F0 : 460F                	DC.B	'F', $0F	; "DF?"
+    1684/    10F2 : 0000 1168 0000      	DC.L	RNTABDF, 0
+             10F8 : 0000             
+    1685/    10FA :                     
+    1686/    10FA : 0000                	DC.B	$00,$00		; End mark
+    1687/    10FC : 0000 0000 0000      	DC.L	0,0
+             1102 : 0000             
+    1688/    1104 :                     
+    1689/    1104 :                     RNTABP:
+    1690/    1104 : 4303                	DC.B	'C',3		; "PC"
+    1691/    1106 : 0000 9F34 0000      	DC.L	REGPC, RNPC
+             110C : 11F0             
+    1692/    110E :                     
+    1693/    110E : 0000                	DC.B	$00,$00		; End mark
+    1694/    1110 : 0000 0000 0000      	DC.L	0,0
+             1116 : 0000             
+    1695/    1118 :                     
+    1696/    1118 :                     RNTABS:
+    1697/    1118 : 460F                	DC.B	'F', $0F	; "SF?"
+    1698/    111A : 0000 117C 0000      	DC.L	RNTABSF, 0
+             1120 : 0000             
+    1699/    1122 : 5202                	DC.B	'R', 2		; "SR"
+    1700/    1124 : 0000 9F7C 0000      	DC.L	REGSR, RNSR
+             112A : 11F7             
+    1701/    112C : 530F                	DC.B	'S', $0F	; "SS?"
+    1702/    112E : 0000 1190 0000      	DC.L	RNTABSS, 0
+             1134 : 0000             
+    1703/    1136 :                     
+    1704/    1136 : 0000                	DC.B	$00,$00		; End mark
+    1705/    1138 : 0000 0000 0000      	DC.L	0,0
+             113E : 0000             
+    1706/    1140 :                     
+    1707/    1140 :                     RNTABV:
+    1708/    1140 : 420F                	DC.B	'B', $0F	; "VB?"
+    1709/    1142 : 0000 11A4 0000      	DC.L	RNTABVB, 0
+             1148 : 0000             
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 33 - 11/4/2023 8:24:53
+
+
+    1710/    114A :                     
+    1711/    114A : 0000                	DC.B	$00,$00		; End mark
+    1712/    114C : 0000 0000 0000      	DC.L	0,0
+             1152 : 0000             
+    1713/    1154 :                     
+    1714/    1154 :                     RNTABCC:
+    1715/    1154 : 5201                	DC.B	'R', 1		; "CCR"
+    1716/    1156 : 0000 9F7D 0000      	DC.L	REGSR+1, RNCCR
+             115C : 11D0             
+    1717/    115E :                     
+    1718/    115E : 0000                	DC.B	$00,$00		; End mark
+    1719/    1160 : 0000 0000 0000      	DC.L	0,0
+             1166 : 0000             
+    1720/    1168 :                     
+    1721/    1168 :                     RNTABDF:
+    1722/    1168 : 4381                	DC.B	'C', $81	; "DFC"
+    1723/    116A : 0000 9F83 0000      	DC.L	REGDFC, RNDFC
+             1170 : 11EC             
+    1724/    1172 :                     
+    1725/    1172 : 0000                	DC.B	$00,$00		; End mark
+    1726/    1174 : 0000 0000 0000      	DC.L	0,0
+             117A : 0000             
+    1727/    117C :                     
+    1728/    117C :                     RNTABSF:
+    1729/    117C : 4381                	DC.B	'C', $81	; "SFC"
+    1730/    117E : 0000 9F82 0000      	DC.L	REGSFC, RNSFC
+             1184 : 11F3             
+    1731/    1186 :                     
+    1732/    1186 : 0000                	DC.B	$00,$00		; End mark
+    1733/    1188 : 0000 0000 0000      	DC.L	0,0
+             118E : 0000             
+    1734/    1190 :                     
+    1735/    1190 :                     RNTABSS:
+    1736/    1190 : 5003                	DC.B	'P', 3		; "SSP"
+    1737/    1192 : 0000 9F78 0000      	DC.L	REGSSP, RNSSP
+             1198 : 11FA             
+    1738/    119A :                     
+    1739/    119A : 0000                	DC.B	$00,$00		; End mark
+    1740/    119C : 0000 0000 0000      	DC.L	0,0
+             11A2 : 0000             
+    1741/    11A4 :                     
+    1742/    11A4 :                     RNTABVB:
+    1743/    11A4 : 5283                	DC.B	'R', $83	; "VBR"
+    1744/    11A6 : 0000 9F7E 0000      	DC.L	REGVBR, RNVBR
+             11AC : 11FE             
+    1745/    11AE :                     
+    1746/    11AE : 0000                	DC.B	$00,$00		; End mark
+    1747/    11B0 : 0000 0000 0000      	DC.L	0,0
+             11B6 : 0000             
+    1748/    11B8 :                     
+    1749/    11B8 : 4130 00             RNA0:	DC.B	"A0",$00
+    1750/    11BB : 4131 00             RNA1:	DC.B	"A1",$00
+    1751/    11BE : 4132 00             RNA2:	DC.B	"A2",$00
+    1752/    11C1 : 4133 00             RNA3:	DC.B	"A3",$00
+    1753/    11C4 : 4134 00             RNA4:	DC.B	"A4",$00
+    1754/    11C7 : 4135 00             RNA5:	DC.B	"A5",$00
+    1755/    11CA : 4136 00             RNA6:	DC.B	"A6",$00
+    1756/    11CD : 4137 00             RNA7:	DC.B	"A7",$00
+    1757/    11D0 : 4343 5200           RNCCR:	DC.B	"CCR",$00
+    1758/    11D4 : 4430 00             RND0:	DC.B	"D0",$00
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 34 - 11/4/2023 8:24:53
+
+
+    1759/    11D7 : 4431 00             RND1:	DC.B	"D1",$00
+    1760/    11DA : 4432 00             RND2:	DC.B	"D2",$00
+    1761/    11DD : 4433 00             RND3:	DC.B	"D3",$00
+    1762/    11E0 : 4434 00             RND4:	DC.B	"D4",$00
+    1763/    11E3 : 4435 00             RND5:	DC.B	"D5",$00
+    1764/    11E6 : 4436 00             RND6:	DC.B	"D6",$00
+    1765/    11E9 : 4437 00             RND7:	DC.B	"D7",$00
+    1766/    11EC : 4446 4300           RNDFC:	DC.B	"DFC",$00
+    1767/    11F0 : 5043 00             RNPC:	DC.B	"PC",$00
+    1768/    11F3 : 5346 4300           RNSFC:	DC.B	"SFC",$00
+    1769/    11F7 : 5352 00             RNSR:	DC.B	"SR",$00
+    1770/    11FA : 5353 5000           RNSSP:	DC.B	"SSP",$00
+    1771/    11FE : 5642 5200           RNVBR:	DC.B	"VBR",$00
+    1772/    1202 :                     
+    1773/    1202 : 0000 1222 0000      FCTAB:	DC.L	FCN0,FCN1,FCN2,FCN3
+             1208 : 1228 0000 1233 
+             120E : 0000 1241          
+    1774/    1212 : 0000 1247 0000      	DC.L	FCN4,FCN5,FCN6,FCN7
+             1218 : 124D 0000 125E 
+             121E : 0000 1272          
+    1775/    1222 : 4643 3D30 2000      FCN0:	DC.B	"FC=0 ",$00
+    1776/    1228 : 5573 6572 2044      FCN1:	DC.B	"User Data ",$00
+             122E : 6174 6120 00       
+    1777/    1233 : 5573 6572 2050      FCN2:	DC.B	"User Program ",$00
+             1239 : 726F 6772 616D 
+             123F : 2000             
+    1778/    1241 : 4643 3D33 2000      FCN3:	DC.B	"FC=3 ",$00
+    1779/    1247 : 4643 3D34 2000      FCN4:	DC.B	"FC=4 ",$00
+    1780/    124D : 5375 7065 7276      FCN5:	DC.B	"Supervisor Data ",$00
+             1253 : 6973 6F72 2044 
+             1259 : 6174 6120 00       
+    1781/    125E : 5375 7065 7276      FCN6:	DC.B	"Supervisor Program ",$00
+             1264 : 6973 6F72 2050 
+             126A : 726F 6772 616D 
+             1270 : 2000             
+    1782/    1272 : 496E 7465 7272      FCN7:	DC.B	"Interrupt Acknowledge ",$00
+             1278 : 7570 7420 4163 
+             127E : 6B6E 6F77 6C65 
+             1284 : 6467 6520 00       
+    1783/    1289 : 5772 6974 6520 00   G0WR:	DC.B	"Write ",$00
+    1784/    1290 : 5265 6164 2000      G0RD:	DC.B	"Read ",$00
+    1785/    1296 : 2020 2849 6E73      G0INS0:	DC.B	"  (Inst=",$00
+             129C : 743D 00          
+    1786/    129F :                     
+    1787/    129F : [1556]              	ENDIF
+    1788/    129F :                     
+    1789/    129F :                     	ALIGN	2
+    1790/    12A0 :                     
+    1791/    12A0 :                     ;;;
+    1792/    12A0 :                     ;;;	MC6850 (ACIA) Console Driver
+    1793/    12A0 :                     ;;;
+    1794/    12A0 :                     
+    1795/    12A0 :                     INIT:
+    1796/    12A0 :                     ;	MOVE.B	#$03,ACIAC	; Master reset
+    1797/    12A0 :                     ;	NOP
+    1798/    12A0 :                     ;	NOP
+    1799/    12A0 :                     ;	MOVE.B	#CR_V,ACIAC	; x16 8bit N 1
+    1800/    12A0 :                     
+    1801/    12A0 : 4E75                	RTS
+    1802/    12A2 :                     
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 35 - 11/4/2023 8:24:53
+
+
+    1803/    12A2 :                     CONIN:
+    1804/    12A2 : 1039 0000 E001      	MOVE.B	ACIAC,D0
+    1805/    12A8 : C03C 0001           	AND.B	#$01,D0
+    1806/    12AC : 67F4                	BEQ	CONIN
+    1807/    12AE : 1039 0000 E000      	MOVE.B	ACIAD,D0
+    1808/    12B4 :                     
+    1809/    12B4 : 4E75                	RTS
+    1810/    12B6 :                     
+    1811/    12B6 :                     CONST:
+    1812/    12B6 : 1039 0000 E001      	MOVE.B	ACIAC,D0
+    1813/    12BC : C03C 0001           	AND.B	#$01,D0
+    1814/    12C0 :                     
+    1815/    12C0 : 4E75                	RTS
+    1816/    12C2 :                     
+    1817/    12C2 :                     CONOUT:
+    1818/    12C2 : 4840                	SWAP	D0
+    1819/    12C4 :                     CO0:
+    1820/    12C4 : 1039 0000 E001      	MOVE.B	ACIAC,D0
+    1821/    12CA : C03C 0002           	AND.B	#$02,D0
+    1822/    12CE : 67F4                	BEQ	CO0
+    1823/    12D0 : 4840                	SWAP	D0
+    1824/    12D2 : 13C0 0000 E000      	MOVE.B	D0,ACIAD
+    1825/    12D8 :                     
+    1826/    12D8 : 4E75                	RTS
+    1827/    12DA :                     
+    1828/    12DA :                     ROM_E:
+    1829/    12DA :                     
+    1830/    12DA : FFFF FFFF FFFF      	DC.B	[EBSC_CS-*]$FF
+             12E0 : FFFF FFFF FFFF 
+             12E6 : FFFF FFFF FFFF 
+             12EC : FFFF FFFF FFFF 
+             12F2 : FFFF FFFF FFFF 
+             12F8 : FFFF FFFF FFFF 
+             12FE : FFFF FFFF FFFF 
+             1304 : FFFF FFFF FFFF 
+             130A : FFFF FFFF FFFF 
+             1310 : FFFF FFFF FFFF 
+             1316 : FFFF FFFF FFFF 
+             131C : FFFF FFFF FFFF 
+             1322 : FFFF FFFF FFFF 
+             1328 : FFFF FFFF FFFF 
+             132E : FFFF FFFF FFFF 
+             1334 : FFFF FFFF FFFF 
+             133A : FFFF FFFF FFFF 
+             1340 : FFFF FFFF FFFF 
+             1346 : FFFF FFFF FFFF 
+             134C : FFFF FFFF FFFF 
+             1352 : FFFF FFFF FFFF 
+             1358 : FFFF FFFF FFFF 
+             135E : FFFF FFFF FFFF 
+             1364 : FFFF FFFF FFFF 
+             136A : FFFF FFFF FFFF 
+             1370 : FFFF FFFF FFFF 
+             1376 : FFFF FFFF FFFF 
+             137C : FFFF FFFF FFFF 
+             1382 : FFFF FFFF FFFF 
+             1388 : FFFF FFFF FFFF 
+             138E : FFFF FFFF FFFF 
+             1394 : FFFF FFFF FFFF 
+             139A : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 36 - 11/4/2023 8:24:53
+
+
+             13A0 : FFFF FFFF FFFF 
+             13A6 : FFFF FFFF FFFF 
+             13AC : FFFF FFFF FFFF 
+             13B2 : FFFF FFFF FFFF 
+             13B8 : FFFF FFFF FFFF 
+             13BE : FFFF FFFF FFFF 
+             13C4 : FFFF FFFF FFFF 
+             13CA : FFFF FFFF FFFF 
+             13D0 : FFFF FFFF FFFF 
+             13D6 : FFFF FFFF FFFF 
+             13DC : FFFF FFFF FFFF 
+             13E2 : FFFF FFFF FFFF 
+             13E8 : FFFF FFFF FFFF 
+             13EE : FFFF FFFF FFFF 
+             13F4 : FFFF FFFF FFFF 
+             13FA : FFFF FFFF FFFF 
+             1400 : FFFF FFFF FFFF 
+             1406 : FFFF FFFF FFFF 
+             140C : FFFF FFFF FFFF 
+             1412 : FFFF FFFF FFFF 
+             1418 : FFFF FFFF FFFF 
+             141E : FFFF FFFF FFFF 
+             1424 : FFFF FFFF FFFF 
+             142A : FFFF FFFF FFFF 
+             1430 : FFFF FFFF FFFF 
+             1436 : FFFF FFFF FFFF 
+             143C : FFFF FFFF FFFF 
+             1442 : FFFF FFFF FFFF 
+             1448 : FFFF FFFF FFFF 
+             144E : FFFF FFFF FFFF 
+             1454 : FFFF FFFF FFFF 
+             145A : FFFF FFFF FFFF 
+             1460 : FFFF FFFF FFFF 
+             1466 : FFFF FFFF FFFF 
+             146C : FFFF FFFF FFFF 
+             1472 : FFFF FFFF FFFF 
+             1478 : FFFF FFFF FFFF 
+             147E : FFFF FFFF FFFF 
+             1484 : FFFF FFFF FFFF 
+             148A : FFFF FFFF FFFF 
+             1490 : FFFF FFFF FFFF 
+             1496 : FFFF FFFF FFFF 
+             149C : FFFF FFFF FFFF 
+             14A2 : FFFF FFFF FFFF 
+             14A8 : FFFF FFFF FFFF 
+             14AE : FFFF FFFF FFFF 
+             14B4 : FFFF FFFF FFFF 
+             14BA : FFFF FFFF FFFF 
+             14C0 : FFFF FFFF FFFF 
+             14C6 : FFFF FFFF FFFF 
+             14CC : FFFF FFFF FFFF 
+             14D2 : FFFF FFFF FFFF 
+             14D8 : FFFF FFFF FFFF 
+             14DE : FFFF FFFF FFFF 
+             14E4 : FFFF FFFF FFFF 
+             14EA : FFFF FFFF FFFF 
+             14F0 : FFFF FFFF FFFF 
+             14F6 : FFFF FFFF FFFF 
+             14FC : FFFF FFFF FFFF 
+             1502 : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 37 - 11/4/2023 8:24:53
+
+
+             1508 : FFFF FFFF FFFF 
+             150E : FFFF FFFF FFFF 
+             1514 : FFFF FFFF FFFF 
+             151A : FFFF FFFF FFFF 
+             1520 : FFFF FFFF FFFF 
+             1526 : FFFF FFFF FFFF 
+             152C : FFFF FFFF FFFF 
+             1532 : FFFF FFFF FFFF 
+             1538 : FFFF FFFF FFFF 
+             153E : FFFF FFFF FFFF 
+             1544 : FFFF FFFF FFFF 
+             154A : FFFF FFFF FFFF 
+             1550 : FFFF FFFF FFFF 
+             1556 : FFFF FFFF FFFF 
+             155C : FFFF FFFF FFFF 
+             1562 : FFFF FFFF FFFF 
+             1568 : FFFF FFFF FFFF 
+             156E : FFFF FFFF FFFF 
+             1574 : FFFF FFFF FFFF 
+             157A : FFFF FFFF FFFF 
+             1580 : FFFF FFFF FFFF 
+             1586 : FFFF FFFF FFFF 
+             158C : FFFF FFFF FFFF 
+             1592 : FFFF FFFF FFFF 
+             1598 : FFFF FFFF FFFF 
+             159E : FFFF FFFF FFFF 
+             15A4 : FFFF FFFF FFFF 
+             15AA : FFFF FFFF FFFF 
+             15B0 : FFFF FFFF FFFF 
+             15B6 : FFFF FFFF FFFF 
+             15BC : FFFF FFFF FFFF 
+             15C2 : FFFF FFFF FFFF 
+             15C8 : FFFF FFFF FFFF 
+             15CE : FFFF FFFF FFFF 
+             15D4 : FFFF FFFF FFFF 
+             15DA : FFFF FFFF FFFF 
+             15E0 : FFFF FFFF FFFF 
+             15E6 : FFFF FFFF FFFF 
+             15EC : FFFF FFFF FFFF 
+             15F2 : FFFF FFFF FFFF 
+             15F8 : FFFF FFFF FFFF 
+             15FE : FFFF FFFF FFFF 
+             1604 : FFFF FFFF FFFF 
+             160A : FFFF FFFF FFFF 
+             1610 : FFFF FFFF FFFF 
+             1616 : FFFF FFFF FFFF 
+             161C : FFFF FFFF FFFF 
+             1622 : FFFF FFFF FFFF 
+             1628 : FFFF FFFF FFFF 
+             162E : FFFF FFFF FFFF 
+             1634 : FFFF FFFF FFFF 
+             163A : FFFF FFFF FFFF 
+             1640 : FFFF FFFF FFFF 
+             1646 : FFFF FFFF FFFF 
+             164C : FFFF FFFF FFFF 
+             1652 : FFFF FFFF FFFF 
+             1658 : FFFF FFFF FFFF 
+             165E : FFFF FFFF FFFF 
+             1664 : FFFF FFFF FFFF 
+             166A : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 38 - 11/4/2023 8:24:53
+
+
+             1670 : FFFF FFFF FFFF 
+             1676 : FFFF FFFF FFFF 
+             167C : FFFF FFFF FFFF 
+             1682 : FFFF FFFF FFFF 
+             1688 : FFFF FFFF FFFF 
+             168E : FFFF FFFF FFFF 
+             1694 : FFFF FFFF FFFF 
+             169A : FFFF FFFF FFFF 
+             16A0 : FFFF FFFF FFFF 
+             16A6 : FFFF FFFF FFFF 
+             16AC : FFFF FFFF FFFF 
+             16B2 : FFFF FFFF FFFF 
+             16B8 : FFFF FFFF FFFF 
+             16BE : FFFF FFFF FFFF 
+             16C4 : FFFF FFFF FFFF 
+             16CA : FFFF FFFF FFFF 
+             16D0 : FFFF FFFF FFFF 
+             16D6 : FFFF FFFF FFFF 
+             16DC : FFFF FFFF FFFF 
+             16E2 : FFFF FFFF FFFF 
+             16E8 : FFFF FFFF FFFF 
+             16EE : FFFF FFFF FFFF 
+             16F4 : FFFF FFFF FFFF 
+             16FA : FFFF FFFF FFFF 
+             1700 : FFFF FFFF FFFF 
+             1706 : FFFF FFFF FFFF 
+             170C : FFFF FFFF FFFF 
+             1712 : FFFF FFFF FFFF 
+             1718 : FFFF FFFF FFFF 
+             171E : FFFF FFFF FFFF 
+             1724 : FFFF FFFF FFFF 
+             172A : FFFF FFFF FFFF 
+             1730 : FFFF FFFF FFFF 
+             1736 : FFFF FFFF FFFF 
+             173C : FFFF FFFF FFFF 
+             1742 : FFFF FFFF FFFF 
+             1748 : FFFF FFFF FFFF 
+             174E : FFFF FFFF FFFF 
+             1754 : FFFF FFFF FFFF 
+             175A : FFFF FFFF FFFF 
+             1760 : FFFF FFFF FFFF 
+             1766 : FFFF FFFF FFFF 
+             176C : FFFF FFFF FFFF 
+             1772 : FFFF FFFF FFFF 
+             1778 : FFFF FFFF FFFF 
+             177E : FFFF FFFF FFFF 
+             1784 : FFFF FFFF FFFF 
+             178A : FFFF FFFF FFFF 
+             1790 : FFFF FFFF FFFF 
+             1796 : FFFF FFFF FFFF 
+             179C : FFFF FFFF FFFF 
+             17A2 : FFFF FFFF FFFF 
+             17A8 : FFFF FFFF FFFF 
+             17AE : FFFF FFFF FFFF 
+             17B4 : FFFF FFFF FFFF 
+             17BA : FFFF FFFF FFFF 
+             17C0 : FFFF FFFF FFFF 
+             17C6 : FFFF FFFF FFFF 
+             17CC : FFFF FFFF FFFF 
+             17D2 : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 39 - 11/4/2023 8:24:53
+
+
+             17D8 : FFFF FFFF FFFF 
+             17DE : FFFF FFFF FFFF 
+             17E4 : FFFF FFFF FFFF 
+             17EA : FFFF FFFF FFFF 
+             17F0 : FFFF FFFF FFFF 
+             17F6 : FFFF FFFF FFFF 
+             17FC : FFFF FFFF FFFF 
+             1802 : FFFF FFFF FFFF 
+             1808 : FFFF FFFF FFFF 
+             180E : FFFF FFFF FFFF 
+             1814 : FFFF FFFF FFFF 
+             181A : FFFF FFFF FFFF 
+             1820 : FFFF FFFF FFFF 
+             1826 : FFFF FFFF FFFF 
+             182C : FFFF FFFF FFFF 
+             1832 : FFFF FFFF FFFF 
+             1838 : FFFF FFFF FFFF 
+             183E : FFFF FFFF FFFF 
+             1844 : FFFF FFFF FFFF 
+             184A : FFFF FFFF FFFF 
+             1850 : FFFF FFFF FFFF 
+             1856 : FFFF FFFF FFFF 
+             185C : FFFF FFFF FFFF 
+             1862 : FFFF FFFF FFFF 
+             1868 : FFFF FFFF FFFF 
+             186E : FFFF FFFF FFFF 
+             1874 : FFFF FFFF FFFF 
+             187A : FFFF FFFF FFFF 
+             1880 : FFFF FFFF FFFF 
+             1886 : FFFF FFFF FFFF 
+             188C : FFFF FFFF FFFF 
+             1892 : FFFF FFFF FFFF 
+             1898 : FFFF FFFF FFFF 
+             189E : FFFF FFFF FFFF 
+             18A4 : FFFF FFFF FFFF 
+             18AA : FFFF FFFF FFFF 
+             18B0 : FFFF FFFF FFFF 
+             18B6 : FFFF FFFF FFFF 
+             18BC : FFFF FFFF FFFF 
+             18C2 : FFFF FFFF FFFF 
+             18C8 : FFFF FFFF FFFF 
+             18CE : FFFF FFFF FFFF 
+             18D4 : FFFF FFFF FFFF 
+             18DA : FFFF FFFF FFFF 
+             18E0 : FFFF FFFF FFFF 
+             18E6 : FFFF FFFF FFFF 
+             18EC : FFFF FFFF FFFF 
+             18F2 : FFFF FFFF FFFF 
+             18F8 : FFFF FFFF FFFF 
+             18FE : FFFF FFFF FFFF 
+             1904 : FFFF FFFF FFFF 
+             190A : FFFF FFFF FFFF 
+             1910 : FFFF FFFF FFFF 
+             1916 : FFFF FFFF FFFF 
+             191C : FFFF FFFF FFFF 
+             1922 : FFFF FFFF FFFF 
+             1928 : FFFF FFFF FFFF 
+             192E : FFFF FFFF FFFF 
+             1934 : FFFF FFFF FFFF 
+             193A : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 40 - 11/4/2023 8:24:53
+
+
+             1940 : FFFF FFFF FFFF 
+             1946 : FFFF FFFF FFFF 
+             194C : FFFF FFFF FFFF 
+             1952 : FFFF FFFF FFFF 
+             1958 : FFFF FFFF FFFF 
+             195E : FFFF FFFF FFFF 
+             1964 : FFFF FFFF FFFF 
+             196A : FFFF FFFF FFFF 
+             1970 : FFFF FFFF FFFF 
+             1976 : FFFF FFFF FFFF 
+             197C : FFFF FFFF FFFF 
+             1982 : FFFF FFFF FFFF 
+             1988 : FFFF FFFF FFFF 
+             198E : FFFF FFFF FFFF 
+             1994 : FFFF FFFF FFFF 
+             199A : FFFF FFFF FFFF 
+             19A0 : FFFF FFFF FFFF 
+             19A6 : FFFF FFFF FFFF 
+             19AC : FFFF FFFF FFFF 
+             19B2 : FFFF FFFF FFFF 
+             19B8 : FFFF FFFF FFFF 
+             19BE : FFFF FFFF FFFF 
+             19C4 : FFFF FFFF FFFF 
+             19CA : FFFF FFFF FFFF 
+             19D0 : FFFF FFFF FFFF 
+             19D6 : FFFF FFFF FFFF 
+             19DC : FFFF FFFF FFFF 
+             19E2 : FFFF FFFF FFFF 
+             19E8 : FFFF FFFF FFFF 
+             19EE : FFFF FFFF FFFF 
+             19F4 : FFFF FFFF FFFF 
+             19FA : FFFF FFFF FFFF 
+             1A00 : FFFF FFFF FFFF 
+             1A06 : FFFF FFFF FFFF 
+             1A0C : FFFF FFFF FFFF 
+             1A12 : FFFF FFFF FFFF 
+             1A18 : FFFF FFFF FFFF 
+             1A1E : FFFF FFFF FFFF 
+             1A24 : FFFF FFFF FFFF 
+             1A2A : FFFF FFFF FFFF 
+             1A30 : FFFF FFFF FFFF 
+             1A36 : FFFF FFFF FFFF 
+             1A3C : FFFF FFFF FFFF 
+             1A42 : FFFF FFFF FFFF 
+             1A48 : FFFF FFFF FFFF 
+             1A4E : FFFF FFFF FFFF 
+             1A54 : FFFF FFFF FFFF 
+             1A5A : FFFF FFFF FFFF 
+             1A60 : FFFF FFFF FFFF 
+             1A66 : FFFF FFFF FFFF 
+             1A6C : FFFF FFFF FFFF 
+             1A72 : FFFF FFFF FFFF 
+             1A78 : FFFF FFFF FFFF 
+             1A7E : FFFF FFFF FFFF 
+             1A84 : FFFF FFFF FFFF 
+             1A8A : FFFF FFFF FFFF 
+             1A90 : FFFF FFFF FFFF 
+             1A96 : FFFF FFFF FFFF 
+             1A9C : FFFF FFFF FFFF 
+             1AA2 : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 41 - 11/4/2023 8:24:53
+
+
+             1AA8 : FFFF FFFF FFFF 
+             1AAE : FFFF FFFF FFFF 
+             1AB4 : FFFF FFFF FFFF 
+             1ABA : FFFF FFFF FFFF 
+             1AC0 : FFFF FFFF FFFF 
+             1AC6 : FFFF FFFF FFFF 
+             1ACC : FFFF FFFF FFFF 
+             1AD2 : FFFF FFFF FFFF 
+             1AD8 : FFFF FFFF FFFF 
+             1ADE : FFFF FFFF FFFF 
+             1AE4 : FFFF FFFF FFFF 
+             1AEA : FFFF FFFF FFFF 
+             1AF0 : FFFF FFFF FFFF 
+             1AF6 : FFFF FFFF FFFF 
+             1AFC : FFFF FFFF FFFF 
+             1B02 : FFFF FFFF FFFF 
+             1B08 : FFFF FFFF FFFF 
+             1B0E : FFFF FFFF FFFF 
+             1B14 : FFFF FFFF FFFF 
+             1B1A : FFFF FFFF FFFF 
+             1B20 : FFFF FFFF FFFF 
+             1B26 : FFFF FFFF FFFF 
+             1B2C : FFFF FFFF FFFF 
+             1B32 : FFFF FFFF FFFF 
+             1B38 : FFFF FFFF FFFF 
+             1B3E : FFFF FFFF FFFF 
+             1B44 : FFFF FFFF FFFF 
+             1B4A : FFFF FFFF FFFF 
+             1B50 : FFFF FFFF FFFF 
+             1B56 : FFFF FFFF FFFF 
+             1B5C : FFFF FFFF FFFF 
+             1B62 : FFFF FFFF FFFF 
+             1B68 : FFFF FFFF FFFF 
+             1B6E : FFFF FFFF FFFF 
+             1B74 : FFFF FFFF FFFF 
+             1B7A : FFFF FFFF FFFF 
+             1B80 : FFFF FFFF FFFF 
+             1B86 : FFFF FFFF FFFF 
+             1B8C : FFFF FFFF FFFF 
+             1B92 : FFFF FFFF FFFF 
+             1B98 : FFFF FFFF FFFF 
+             1B9E : FFFF FFFF FFFF 
+             1BA4 : FFFF FFFF FFFF 
+             1BAA : FFFF FFFF FFFF 
+             1BB0 : FFFF FFFF FFFF 
+             1BB6 : FFFF FFFF FFFF 
+             1BBC : FFFF FFFF FFFF 
+             1BC2 : FFFF FFFF FFFF 
+             1BC8 : FFFF FFFF FFFF 
+             1BCE : FFFF FFFF FFFF 
+             1BD4 : FFFF FFFF FFFF 
+             1BDA : FFFF FFFF FFFF 
+             1BE0 : FFFF FFFF FFFF 
+             1BE6 : FFFF FFFF FFFF 
+             1BEC : FFFF FFFF FFFF 
+             1BF2 : FFFF FFFF FFFF 
+             1BF8 : FFFF FFFF FFFF 
+             1BFE : FFFF FFFF FFFF 
+             1C04 : FFFF FFFF FFFF 
+             1C0A : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 42 - 11/4/2023 8:24:53
+
+
+             1C10 : FFFF FFFF FFFF 
+             1C16 : FFFF FFFF FFFF 
+             1C1C : FFFF FFFF FFFF 
+             1C22 : FFFF FFFF FFFF 
+             1C28 : FFFF FFFF FFFF 
+             1C2E : FFFF FFFF FFFF 
+             1C34 : FFFF FFFF FFFF 
+             1C3A : FFFF FFFF FFFF 
+             1C40 : FFFF FFFF FFFF 
+             1C46 : FFFF FFFF FFFF 
+             1C4C : FFFF FFFF FFFF 
+             1C52 : FFFF FFFF FFFF 
+             1C58 : FFFF FFFF FFFF 
+             1C5E : FFFF FFFF FFFF 
+             1C64 : FFFF FFFF FFFF 
+             1C6A : FFFF FFFF FFFF 
+             1C70 : FFFF FFFF FFFF 
+             1C76 : FFFF FFFF FFFF 
+             1C7C : FFFF FFFF FFFF 
+             1C82 : FFFF FFFF FFFF 
+             1C88 : FFFF FFFF FFFF 
+             1C8E : FFFF FFFF FFFF 
+             1C94 : FFFF FFFF FFFF 
+             1C9A : FFFF FFFF FFFF 
+             1CA0 : FFFF FFFF FFFF 
+             1CA6 : FFFF FFFF FFFF 
+             1CAC : FFFF FFFF FFFF 
+             1CB2 : FFFF FFFF FFFF 
+             1CB8 : FFFF FFFF FFFF 
+             1CBE : FFFF FFFF FFFF 
+             1CC4 : FFFF FFFF FFFF 
+             1CCA : FFFF FFFF FFFF 
+             1CD0 : FFFF FFFF FFFF 
+             1CD6 : FFFF FFFF FFFF 
+             1CDC : FFFF FFFF FFFF 
+             1CE2 : FFFF FFFF FFFF 
+             1CE8 : FFFF FFFF FFFF 
+             1CEE : FFFF FFFF FFFF 
+             1CF4 : FFFF FFFF FFFF 
+             1CFA : FFFF FFFF FFFF 
+             1D00 : FFFF FFFF FFFF 
+             1D06 : FFFF FFFF FFFF 
+             1D0C : FFFF FFFF FFFF 
+             1D12 : FFFF FFFF FFFF 
+             1D18 : FFFF FFFF FFFF 
+             1D1E : FFFF FFFF FFFF 
+             1D24 : FFFF FFFF FFFF 
+             1D2A : FFFF FFFF FFFF 
+             1D30 : FFFF FFFF FFFF 
+             1D36 : FFFF FFFF FFFF 
+             1D3C : FFFF FFFF FFFF 
+             1D42 : FFFF FFFF FFFF 
+             1D48 : FFFF FFFF FFFF 
+             1D4E : FFFF FFFF FFFF 
+             1D54 : FFFF FFFF FFFF 
+             1D5A : FFFF FFFF FFFF 
+             1D60 : FFFF FFFF FFFF 
+             1D66 : FFFF FFFF FFFF 
+             1D6C : FFFF FFFF FFFF 
+             1D72 : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 43 - 11/4/2023 8:24:53
+
+
+             1D78 : FFFF FFFF FFFF 
+             1D7E : FFFF FFFF FFFF 
+             1D84 : FFFF FFFF FFFF 
+             1D8A : FFFF FFFF FFFF 
+             1D90 : FFFF FFFF FFFF 
+             1D96 : FFFF FFFF FFFF 
+             1D9C : FFFF FFFF FFFF 
+             1DA2 : FFFF FFFF FFFF 
+             1DA8 : FFFF FFFF FFFF 
+             1DAE : FFFF FFFF FFFF 
+             1DB4 : FFFF FFFF FFFF 
+             1DBA : FFFF FFFF FFFF 
+             1DC0 : FFFF FFFF FFFF 
+             1DC6 : FFFF FFFF FFFF 
+             1DCC : FFFF FFFF FFFF 
+             1DD2 : FFFF FFFF FFFF 
+             1DD8 : FFFF FFFF FFFF 
+             1DDE : FFFF FFFF FFFF 
+             1DE4 : FFFF FFFF FFFF 
+             1DEA : FFFF FFFF FFFF 
+             1DF0 : FFFF FFFF FFFF 
+             1DF6 : FFFF FFFF FFFF 
+             1DFC : FFFF FFFF FFFF 
+             1E02 : FFFF FFFF FFFF 
+             1E08 : FFFF FFFF FFFF 
+             1E0E : FFFF FFFF FFFF 
+             1E14 : FFFF FFFF FFFF 
+             1E1A : FFFF FFFF FFFF 
+             1E20 : FFFF FFFF FFFF 
+             1E26 : FFFF FFFF FFFF 
+             1E2C : FFFF FFFF FFFF 
+             1E32 : FFFF FFFF FFFF 
+             1E38 : FFFF FFFF FFFF 
+             1E3E : FFFF FFFF FFFF 
+             1E44 : FFFF FFFF FFFF 
+             1E4A : FFFF FFFF FFFF 
+             1E50 : FFFF FFFF FFFF 
+             1E56 : FFFF FFFF FFFF 
+             1E5C : FFFF FFFF FFFF 
+             1E62 : FFFF FFFF FFFF 
+             1E68 : FFFF FFFF FFFF 
+             1E6E : FFFF FFFF FFFF 
+             1E74 : FFFF FFFF FFFF 
+             1E7A : FFFF FFFF FFFF 
+             1E80 : FFFF FFFF FFFF 
+             1E86 : FFFF FFFF FFFF 
+             1E8C : FFFF FFFF FFFF 
+             1E92 : FFFF FFFF FFFF 
+             1E98 : FFFF FFFF FFFF 
+             1E9E : FFFF FFFF FFFF 
+             1EA4 : FFFF FFFF FFFF 
+             1EAA : FFFF FFFF FFFF 
+             1EB0 : FFFF FFFF FFFF 
+             1EB6 : FFFF FFFF FFFF 
+             1EBC : FFFF FFFF FFFF 
+             1EC2 : FFFF FFFF FFFF 
+             1EC8 : FFFF FFFF FFFF 
+             1ECE : FFFF FFFF FFFF 
+             1ED4 : FFFF FFFF FFFF 
+             1EDA : FFFF FFFF FFFF 
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 44 - 11/4/2023 8:24:53
+
+
+             1EE0 : FFFF FFFF FFFF 
+             1EE6 : FFFF FFFF FFFF 
+             1EEC : FFFF FFFF FFFF 
+             1EF2 : FFFF FFFF FFFF 
+             1EF8 : FFFF FFFF FFFF 
+             1EFE : FFFF FFFF FFFF 
+             1F04 : FFFF FFFF FFFF 
+             1F0A : FFFF FFFF FFFF 
+             1F10 : FFFF FFFF FFFF 
+             1F16 : FFFF FFFF FFFF 
+             1F1C : FFFF FFFF FFFF 
+             1F22 : FFFF FFFF FFFF 
+             1F28 : FFFF FFFF FFFF 
+             1F2E : FFFF FFFF FFFF 
+             1F34 : FFFF FFFF FFFF 
+             1F3A : FFFF FFFF FFFF 
+             1F40 : FFFF FFFF FFFF 
+             1F46 : FFFF FFFF FFFF 
+             1F4C : FFFF FFFF FFFF 
+             1F52 : FFFF FFFF FFFF 
+             1F58 : FFFF FFFF FFFF 
+             1F5E : FFFF FFFF FFFF 
+             1F64 : FFFF FFFF FFFF 
+             1F6A : FFFF FFFF FFFF 
+             1F70 : FFFF FFFF FFFF 
+             1F76 : FFFF FFFF FFFF 
+             1F7C : FFFF FFFF FFFF 
+             1F82 : FFFF FFFF FFFF 
+             1F88 : FFFF FFFF FFFF 
+             1F8E : FFFF FFFF FFFF 
+             1F94 : FFFF FFFF FFFF 
+             1F9A : FFFF FFFF FFFF 
+             1FA0 : FFFF FFFF FFFF 
+             1FA6 : FFFF FFFF FFFF 
+             1FAC : FFFF FFFF FFFF 
+             1FB2 : FFFF FFFF FFFF 
+             1FB8 : FFFF FFFF FFFF 
+             1FBE : FFFF FFFF FFFF 
+             1FC4 : FFFF FFFF FFFF 
+             1FCA : FFFF FFFF FFFF 
+             1FD0 : FFFF FFFF FFFF 
+             1FD6 : FFFF FFFF FFFF 
+             1FDC : FFFF FFFF FFFF 
+             1FE2 : FFFF FFFF FFFF 
+             1FE8 : FFFF FFFF FFFF 
+             1FEE : FFFF FFFF FFFF 
+             1FF4 : FFFF FFFF FFFF 
+             1FFA : FFFF FFFF FFFF    
+    1831/    2000 :                     
+    1832/    2000 :                     ;;;
+    1833/    2000 :                     ;;; RAM area
+    1834/    2000 :                     ;;;
+    1835/    2000 :                     
+    1836/    9F00 :                     	ORG	WORK_B
+    1837/    9F00 :                     
+    1838/    9F00 :                     INBUF:	DS.B	BUFLEN		; Line input buffer
+    1839/    9F18 :                     DSADDR:	DS.L	1		; DUMP start address
+    1840/    9F1C :                     DEADDR:	DS.L	1
+    1841/    9F20 :                     DSTATE:	DS.B	1
+    1842/    9F21 :                     	ALIGN	2
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 45 - 11/4/2023 8:24:53
+
+
+    1843/    9F22 :                     GADDR:	DS.L	1
+    1844/    9F26 :                     SADDR:	DS.L	1		; SET address
+    1845/    9F2A :                     HEXMOD:	DS.B	1		; HEX file mode
+    1846/    9F2B :                     RECTYP:	DS.B	1		; Record type
+    1847/    9F2C :                     PSPEC:	DS.B	1		; Processor spec.
+    1848/    9F2D :                     
+    1849/    9F2D :                     	ALIGN	2
+    1850/    9F2E :                     
+    1851/    9F2E :                     EXMSG:	DS.L	1		; Exception message
+    1852/    9F32 :                     EXGRP:	DS.W	1		; Exception Group
+    1853/    9F34 :                     
+    1854/    9F34 :                     REG_B:
+    1855/    9F34 :                     REGPC:	DS.L	1
+    1856/    9F38 :                     
+    1857/    9F38 :                     REGD0:	DS.L	1
+    1858/    9F3C :                     REGD1:	DS.L	1
+    1859/    9F40 :                     REGD2:	DS.L	1
+    1860/    9F44 :                     REGD3:	DS.L	1
+    1861/    9F48 : =>TRUE              	IF USE_REGCMD
+    1862/    9F48 :                     REGD4:	DS.L	1
+    1863/    9F4C :                     REGD5:	DS.L	1
+    1864/    9F50 :                     REGD6:	DS.L	1
+    1865/    9F54 :                     REGD7:	DS.L	1
+    1866/    9F58 : [1861]              	ENDIF
+    1867/    9F58 :                     
+    1868/    9F58 :                     REGA0:	DS.L	1
+    1869/    9F5C :                     REGA1:	DS.L	1
+    1870/    9F60 :                     REGA2:	DS.L	1
+    1871/    9F64 :                     REGA3:	DS.L	1
+    1872/    9F68 : =>TRUE              	IF USE_REGCMD
+    1873/    9F68 :                     REGA4:	DS.L	1
+    1874/    9F6C :                     REGA5:	DS.L	1
+    1875/    9F70 :                     REGA6:	DS.L	1
+    1876/    9F74 :                     REGA7:	DS.L	1		; USP
+    1877/    9F78 :                     
+    1878/    9F78 :                     REGSSP:	DS.L	1
+    1879/    9F7C :                     REGSR:	DS.W	1
+    1880/    9F7E :                     REGVBR:	DS.L	1
+    1881/    9F82 :                     REGSFC:	DS.B	1
+    1882/    9F83 :                     REGDFC:	DS.B	1
+    1883/    9F84 :                     
+    1884/    9F84 :                     	DS.W	16		; Dummy
+    1885/    9FA4 :                     
+    1886/    9FA4 :                     GR0BUF:	DS.W	25		; Group 0 exception
+    1887/    9FD6 :                     REGFV:	DS.W	1		; Format / Vector offset
+    1888/    9FD8 :                     REG_E:
+    1889/    9FD8 :                     
+    1890/    9FD8 : [1872]              	ENDIF
+    1891/    9FD8 :                     
+    1892/    9FD8 :                     	END
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 46 - 11/4/2023 8:24:53
+
+
+  Symbol Table (* = unused):
+  --------------------------
+
+ ACIAC :                       E001 - |  ACIAD :                       E000 - |
+ ADDERR_H :                     8AC C |  ADDERR_M :                     DAB C |
+*ARCHITECTURE :                                        "i386-unknown-win32" - |
+ BREAK :                        908 C |  BREAK_M :                      ECE C |
+ BS :                             8 - |  BUFLEN :                        18 - |
+ BUSERR_H :                     898 C |  BUSERR_M :                     DA1 C |
+*CASESENSITIVE :                  0 - |  CH0 :                          B44 C |
+ CH1 :                          B96 C |  CH2 :                          B9C C |
+ CH4 :                          BBA C |  CHK_H :                        934 C |
+ CHK_M :                        DD9 C |  CMDHLP :                       71E C |
+ CO0 :                         12C4 C |  COMM_H :                       B20 C |
+ COMM_H0 :                      B28 C |  CONIN :                       12A2 C |
+ CONOUT :                      12C2 C |  CONST :                       12B6 C |
+*CONSTPI :        3.141592653589793 - |  CR :                             D - |
+ CRLF :                         7CC C |  CSTART :                        C0 C |
+*DATE :                 "11/4/2023" - |  DEADDR :                      9F1C C |
+ DEL :                           7F - |  DP0 :                          1CC C |
+ DP1 :                          1EE C |  DPB :                          29A C |
+ DPB0 :                         2AE C |  DPB1 :                         2C0 C |
+ DPB2 :                         2C4 C |  DPB3 :                         2DC C |
+ DPL :                          246 C |  DPL0 :                         25E C |
+ DPL1 :                         276 C |  DPL2 :                         28A C |
+ DPL3 :                         292 C |  DPM :                          20C C |
+ DPM0 :                         21A C |  DPM1 :                         238 C |
+ DSADDR :                      9F18 C |  DSEP0 :                        D6B C |
+ DSEP1 :                        D6E C | *DSTATE :                      9F20 C |
+ DUMMY_H :                      896 C |  DUMP :                         1A2 C |
+ EBSC_CS :                     2000 - |  ERR :                          198 C |
+ ERRMSG :                       D63 C |  EXGRP :                       9F32 C |
+ EXMSG :                       9F2E C | *FALSE :                          0 - |
+ FCN0 :                        1222 C |  FCN1 :                        1228 C |
+ FCN2 :                        1233 C |  FCN3 :                        1241 C |
+ FCN4 :                        1247 C |  FCN5 :                        124D C |
+ FCN6 :                        125E C |  FCN7 :                        1272 C |
+ FCTAB :                       1202 C |  FORMAT_H :                     9B8 C |
+ FORMAT_M :                     E3B C | *FULLPMMU :                       1 - |
+ G0 :                           2FC C |  G0D00 :                        BF4 C |
+ G0D01 :                        BF8 C |  G0D1 :                         C24 C |
+ G0DUMP :                       BC2 C |  G0INS0 :                      1296 C |
+ G0RD :                        1290 C |  G0WR :                        1289 C |
+ G1 :                           33A C |  GADDR :                       9F22 C |
+ GETLIN :                       7DC C |  GL0 :                          7E4 C |
+ GLB :                          81C C |  GLE :                          83E C |
+ GO :                           2E2 C |  GR0BUF :                      9FA4 C |
+*HAS64 :                          0 - | *HASFPU :                         0 - |
+*HASPMMU :                        0 - |  HEXIN :                        796 C |
+ HEXMOD :                      9F2A C |  HEXOUT1 :                      77E C |
+ HEXOUT2 :                      776 C |  HEXOUT4 :                      76E C |
+ HEXOUT8 :                      766 C |  HI0 :                          79C C |
+ HI1 :                          7C2 C |  HIR :                          7C8 C |
+ HLPMSG :                       C26 C |  ID0 :                          126 C |
+ ID1 :                          136 C |  IHEMSG :                       D49 C |
+ IHEXER :                       D72 C |  ILLINS0 :                      8D6 C |
+ ILLINS_H :                     8C0 C |  ILLINS_M :                     DB9 C |
+ IM000 :                        D8D C |  IM010 :                        D97 C |
+ INBUF :                       9F00 C |  INIR0 :                         F6 C |
+ INIT :                        12A0 C |  INIVEC :                         0 C |
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 47 - 11/4/2023 8:24:53
+
+
+*INIVECE :                       C0 C | *INSUPMODE :                      1 - |
+ L1010_H :                      98C C |  L1010_M :                      E15 C |
+ L1111_H :                      9A2 C |  L1111_M :                      E28 C |
+ LA0 :                          746 C |  LA1 :                          750 C |
+ LA2 :                          754 C |  LANCH :                        728 C |
+ LF :                             A - |  LH0 :                          3FE C |
+*LH1 :                          40E C |  LH2 :                          414 C |
+ LH3 :                          420 C |  LHI0 :                         426 C |
+ LHI1 :                         45A C |  LHI2 :                         46A C |
+ LHI3 :                         46E C |  LHIE :                         482 C |
+ LHS0 :                         48E C |  LHS1 :                         4C0 C |
+ LHS2 :                         4D2 C |  LHS3 :                         4D6 C |
+ LHSE :                         4F0 C |  LHSR :                         4F8 C |
+*LISTON :                         1 - |  LNCMSG :                       CFB C |
+ LOADH :                        3E4 C | *MACEXP :                         7 - |
+*MOMCPU :                     68000 - | *MOMCPUNAME :               "68000" - |
+ MPU_SPEC :                       0 - | *NESTMAX :                      100 - |
+ OPNMSG :                       D2A C | *PADDING :                        1 - |
+ PRIV_H :                       960 C |  PRIV_M :                       DFB C |
+ PROMPT :                       D46 C |  PSPEC :                       9F2C C |
+ RAM_B :                       8000 - |  RD0 :                          6E4 C |
+ RD00 :                         6F6 C |  RD1 :                          70C C |
+ RD2 :                          718 C |  RDHEX :                        862 C |
+ RDSA07 :                       FB9 C |  RDSC :                         FE6 C |
+ RDSCS :                        FE8 C |  RDSD07 :                       FB2 C |
+ RDSDFC :                       FE0 C |  RDSPC :                        FC2 C |
+ RDSSFC :                       FDA C |  RDSSR :                        FCE C |
+ RDSSSP :                       FC8 C |  RDSVBR :                       FD3 C |
+ RDTAB :                        ED4 C |  RDUMP :                        6E0 C |
+ RECTYP :                      9F2B C |  REG :                          614 C |
+ REGA0 :                       9F58 C |  REGA1 :                       9F5C C |
+ REGA2 :                       9F60 C |  REGA3 :                       9F64 C |
+ REGA4 :                       9F68 C |  REGA5 :                       9F6C C |
+ REGA6 :                       9F70 C |  REGA7 :                       9F74 C |
+ REGD0 :                       9F38 C |  REGD1 :                       9F3C C |
+ REGD2 :                       9F40 C |  REGD3 :                       9F44 C |
+ REGD4 :                       9F48 C |  REGD5 :                       9F4C C |
+ REGD6 :                       9F50 C |  REGD7 :                       9F54 C |
+ REGDFC :                      9F83 C |  REGFV :                       9FD6 C |
+ REGPC :                       9F34 C |  REGSFC :                      9F82 C |
+ REGSR :                       9F7C C |  REGSSP :                      9F78 C |
+ REGVBR :                      9F7E C |  REG_B :                       9F34 C |
+ REG_E :                       9FD8 C | *RELAXED :                        0 - |
+ RG0 :                          62C C |  RG1 :                          630 C |
+ RG2 :                          644 C |  RG3 :                          65A C |
+ RG30 :                         66A C |  RG4 :                          690 C |
+ RG5 :                          69E C |  RG6 :                          6A4 C |
+ RG7 :                          6CC C |  RG8 :                          6D6 C |
+ RG9 :                          6D8 C |  RGE :                          6DC C |
+ RGR :                          6D8 C |  RH0 :                          866 C |
+ RH1 :                          886 C |  RHE :                          894 C |
+ RNA0 :                        11B8 C |  RNA1 :                        11BB C |
+ RNA2 :                        11BE C |  RNA3 :                        11C1 C |
+ RNA4 :                        11C4 C |  RNA5 :                        11C7 C |
+ RNA6 :                        11CA C |  RNA7 :                        11CD C |
+ RNCCR :                       11D0 C |  RND0 :                        11D4 C |
+ RND1 :                        11D7 C |  RND2 :                        11DA C |
+ RND3 :                        11DD C |  RND4 :                        11E0 C |
+ RND5 :                        11E3 C |  RND6 :                        11E6 C |
+ RND7 :                        11E9 C |  RNDFC :                       11EC C |
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 48 - 11/4/2023 8:24:53
+
+
+ RNPC :                        11F0 C |  RNSFC :                       11F3 C |
+ RNSR :                        11F7 C |  RNSSP :                       11FA C |
+ RNTAB :                        FEC C |  RNTABA :                      1032 C |
+ RNTABC :                      108C C |  RNTABCC :                     1154 C |
+ RNTABD :                      10A0 C |  RNTABDF :                     1168 C |
+ RNTABP :                      1104 C |  RNTABS :                      1118 C |
+ RNTABSF :                     117C C |  RNTABSS :                     1190 C |
+ RNTABV :                      1140 C |  RNTABVB :                     11A4 C |
+ RNVBR :                       11FE C |  ROM_B :                          0 - |
+*ROM_E :                       12DA C |  SADDR :                       9F26 C |
+ SAVEH :                        4FC C |  SETM :                         358 C |
+ SH0 :                          510 C |  SH1 :                          518 C |
+*SH2 :                          54C C |  SH3 :                          550 C |
+ SH4 :                          56C C |  SHEMSG :                       D56 C |
+ SHL :                          578 C |  SHL0 :                         580 C |
+ SHLI0 :                        5B6 C |  SHLS :                         5CE C |
+ SHLS0 :                        5FC C |  SKIPSP :                       846 C |
+ SM0 :                          378 C |  SM1 :                          378 C |
+ SM2 :                          3B0 C |  SM3 :                          3C0 C |
+ SM4 :                          3D0 C |  SRECER :                       D80 C |
+ STACK :                       9F00 - |  STROE :                        764 C |
+ STROUT :                       758 C |  TBSC_CS :                     6000 - |
+*TIME :                   "8:24:53" - |  TRACE_H :                      976 C |
+ TRACE_M :                      E0F C |  TRAP0_H :                      9CE C |
+ TRAP0_M :                      E48 C |  TRAP10_H :                     AA8 C |
+ TRAP10_M :                     E98 C |  TRAP11_H :                     ABC C |
+ TRAP11_M :                     EA1 C |  TRAP12_H :                     AD0 C |
+ TRAP12_M :                     EAA C |  TRAP13_H :                     AE4 C |
+ TRAP13_M :                     EB3 C |  TRAP14_H :                     AF8 C |
+ TRAP14_M :                     EBC C |  TRAP15_H :                     B0C C |
+ TRAP15_M :                     EC5 C |  TRAP1_H :                      9E4 C |
+ TRAP1_M :                      E50 C |  TRAP2_H :                      9FA C |
+ TRAP2_M :                      E58 C |  TRAP3_H :                      A10 C |
+ TRAP3_M :                      E60 C |  TRAP4_H :                      A26 C |
+ TRAP4_M :                      E68 C |  TRAP5_H :                      A3C C |
+ TRAP5_M :                      E70 C |  TRAP6_H :                      A52 C |
+ TRAP6_M :                      E78 C |  TRAP7_H :                      A68 C |
+ TRAP7_M :                      E80 C |  TRAP8_H :                      A7E C |
+ TRAP8_M :                      E88 C |  TRAP9_H :                      A94 C |
+ TRAP9_M :                      E90 C |  TRAPV_H :                      94A C |
+ TRAPV_M :                      DE9 C | *TRUE :                           1 - |
+ UPPER :                        850 C |  UPR :                          860 C |
+ USE_DEV_6850 :                   1 - |  USE_IDENT :                      1 - |
+ USE_REGCMD :                     1 - |  USTACK :                      9E00 - |
+*VECSIZ :                       100 - | *VERSION :                     142F - |
+ WORK_B :                      9F00 - |  WSTART :                       13A C |
+ ZERDIV_H :                     91E C |  ZERDIV_M :                     DCD C |
+
+    327 symbols
+     26 unused symbols
+
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 49 - 11/4/2023 8:24:53
+
+
+  Defined Functions:
+  ------------------
+
+HIGH                                  | LOW                                  
+
+ AS V1.42 Beta [Bld 246] - Source File unimon_68000.asm - Page 50 - 11/4/2023 8:24:53
+
+
+  Code Pages:
+  ----------
+
+STANDARD (0 changed characters)
+
+1 code page
+
+0.14 seconds assembly time
+
+   1893 lines source file
+      6 passes
+      0 errors
+      0 warnings

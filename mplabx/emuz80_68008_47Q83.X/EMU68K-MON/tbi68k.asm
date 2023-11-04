@@ -34,12 +34,14 @@
 
 	SUPMODE	ON
 
-	ORG	$00000000
+TBSC_CS	EQU	$00006000	; Tiny BASIC cold start
 
-INIVEC:
-	;; 0-7
-	DC.L	ENDRAM		; Reset: Initial SSP
-	DC.L	CSTART		; Reset: Initial PC
+;	ORG	$00000000
+;
+;INIVEC:
+;	;; 0-7
+;	DC.L	ENDRAM		; Reset: Initial SSP
+;	DC.L	CSTART		; Reset: Initial PC
 
 
 CR	EQU	$0D		; ASCII equates
@@ -58,7 +60,11 @@ ACIAD:	EQU	$0000E000
 TOPRAM	EQU	$8000
 ENDRAM	EQU	TOPRAM+$2000
 
-	ORG	$C0		; first free address using Tutor
+	ORG	TBSC_CS		; first free address using Tutor
+
+	MOVE.L	#(ENDRAM),A7	; Reset: Initial SSP
+	MOVE.L	#CSTART,A0	; Reset: Initial PC
+	JMP	(A0)
 
 ;
 ; Standard jump table. You can change these addresses if you are
@@ -1568,12 +1574,15 @@ CLMSG	DC.B	CR,LF,0
 	
 LSTROM	EQU	*		; end of possible ROM area
 
+	DC.B	[(*+$100)&$FFFFFF00-*]$FF
+
 ;
 ; Internal variables follow:
 ;
 	ORG	TOPRAM
 
-RANPNT	DC.L	START		; random number pointer
+;RANPNT	DC.L	START		; random number pointer
+RANPNT	DS.L	1		; random number pointer
 CURRNT	DS.L	1		; Current line pointer
 STKGOS	DS.L	1		; Saves stack pointer in 'GOSUB'
 STKINP	DS.L	1		; Saves stack pointer during 'INPUT'

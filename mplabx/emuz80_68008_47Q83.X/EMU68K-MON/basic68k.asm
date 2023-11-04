@@ -78,12 +78,15 @@ nobrk		EQU	0					; null response to INPUT causes a break
 	CPU	68000
 	SUPMODE	ON
 
-	ORG	$00000000
+EBSC_CS	EQU	$00002000	; Enhanced BASIC cold start
+TBSC_CS	EQU	$00006000	; Tiny BASIC cold start
 
-INIVEC:
-	;; 0-7
-	DC.L	ram_addr+ram_base	; Reset: Initial SSP
-	DC.L	code_start			; Reset: Initial PC
+;	ORG	$00000000
+;
+;INIVEC:
+;	;; 0-7
+;	DC.L	ram_addr+ram_base	; Reset: Initial SSP
+;	DC.L	code_start			; Reset: Initial PC
 
 
 	INCLUDE	"basic68k.inc"
@@ -92,7 +95,11 @@ INIVEC:
 ; Use this value to run out of ROM
 ;	ORG		$00C000				; past the vectors in a real system
 ; Use this value to run out of RAM
-	ORG		$0000c0				; past the vectors in a real system
+	ORG		EBSC_CS				; past the vectors in a real system
+
+	MOVE.L	#(ram_addr+ram_base),A7	; Reset: Initial SSP
+	MOVE.L	#code_start,A0		; Reset: Initial PC
+	JMP	(A0)
 
 ACIAC:	EQU	$0000E001
 ACIAD:	EQU	$0000E000
@@ -8861,6 +8868,7 @@ LAB_SMSG
 	dc.b	' Bytes free',$0D,$0A,$0A
 	dc.b	'Enhanced 68k BASIC Version 3.54',$0D,$0A,$00
 
+	DC.B	[TBSC_CS-*]$FF
 
 ;************************************************************************************
 ;

@@ -1575,7 +1575,8 @@ LSTROM	EQU	*		; end of possible ROM area
 ;
 	ORG	TOPRAM
 
-RANPNT	DC.L	START		; random number pointer
+;RANPNT	DC.L	START		; random number pointer
+RANPNT	DS.L	1		; random number pointer
 CURRNT	DS.L	1		; Current line pointer
 STKGOS	DS.L	1		; Saves stack pointer in 'GOSUB'
 STKINP	DS.L	1		; Saves stack pointer during 'INPUT'
