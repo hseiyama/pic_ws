@@ -16,12 +16,14 @@ WORK_B:	EQU	$0001CE00	; Work area 1CE00-1CFFF
 STACK:	EQU	$0001CE00	; Monitor stack area 1C800-1CDFF
 USTACK:	EQU	$0001C800	; User stack area xxxxx-1C7FF
 
-RAM_B	EQU	ENTRY		; RAM base address
+RAM_B	EQU	$00008000	; RAM base address
 ;MON_SEG	EQU	$0001D000	; Monitor segment addiress
 ;SV_ROM	EQU	$00000100	; SAVE addiress for monitor code at POWER ON
 
 BUFLEN:	EQU	24		; Input buffer size
 VECSIZ:	EQU	256		; Number of vectors to be initialized
+
+F_bitSize	equ	16
 
 ;;;
 ;;; Options
@@ -204,6 +206,16 @@ INIR0:
 	MOVE.L	GADDR,REGPC
 	MOVE.L	#USTACK,REGA7
 
+	;; Initialize mode area
+	MOVE.B	#F_bitSize,D0
+	LEA	F_bit,A0
+INIM0:
+	MOVE.B	#'.',(A0)+
+	SUB.B	#1,D0
+	TST.B	D0
+	BNE	INIM0
+	MOVE.B	#$00,(A0)
+
 	ENDIF
 
 	;; Opening message
@@ -265,6 +277,8 @@ WSTART:
 	IF USE_REGCMD
 	CMP.B	#'R',D0
 	BEQ	REG
+	CMP.B	#'M',D0
+	BEQ	MODE
 	ENDIF
 
 	CMP.B	#'B',D0
@@ -912,6 +926,87 @@ RD2:
 	MOVE.L	(A0),D0
 	BSR	HEXOUT8
 	BRA	RD0
+
+	ENDIF
+
+;;;
+;;; Mode(SR System Byte)
+;;;
+	IF USE_REGCMD
+
+MODE:
+	;; Parse M command
+	ADDQ	#1,A0
+	MOVE.B	(A0),D0
+	BSR	UPPER
+	TST.B	D0
+	BEQ	MD10
+	CMP.B	#'T',D0		; Trace
+	BNE	MD01
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	BSR	RDHEX
+	TST	D2
+	BEQ	ERR
+	CMP.L	#3,D1
+	BCC	ERR
+	LSL.W	#8,D1
+	LSL.W	#6,D1
+	ANDI.W	#$3FFF,REGSR
+	OR.W	D1,REGSR
+	BRA	MD10
+MD01:
+	CMP.B	#'S',D0		; Supervisor
+	BNE	MD02
+	EORI.W	#$2000,REGSR
+	BRA	MD10
+MD02:
+	CMP.B	#'M',D0		; Master
+	BNE	MD03
+	EORI.W	#$1000,REGSR
+	BRA	MD10
+MD03:
+	CMP.B	#'I',D0		; Interrupt
+	BNE	ERR
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	BSR	RDHEX
+	TST	D2
+	BEQ	ERR
+	CMP.L	#8,D1
+	BCC	ERR
+	LSL.W	#8,D1
+	ANDI.W	#$F8FF,REGSR
+	OR.W	D1,REGSR
+MD10:
+	;; Show SR register
+	MOVE.W	REGSR,D0
+	MOVE.B	#F_bitSize,D1
+	LEA	F_bit,A0
+	LEA	F_bit_on,A1
+	LEA	F_bit_off,A2
+MD11:
+	LSL.W	#1,D0
+	BCS	MD12
+	MOVE.B	(A2)+,(A0)+	; bit_off
+	ADD.L	#1,A1
+	BRA	MD13
+MD12:
+	MOVE.B	(A1)+,(A0)+	; bit_on
+	ADD.L	#1,A2
+MD13:
+	SUB.B	#1,D1
+	TST.B	D1
+	BNE	MD11
+	LEA	RDSSR,A0
+	BSR	STROUT
+	LEA	F_bit,A0
+	BSR	STROUT
+	BSR	CRLF
+	BRA	WSTART
+
+F_bit_on:	DC.B	"TTSM.III...XNZVC"
+F_bit_off:	DC.B	"................"
 
 	ENDIF
 
@@ -1686,6 +1781,7 @@ HLPMSG:
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
 	DC.B	"G[<adr>] :Go",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
+	DC.B	"M[T(0-2)|S|M|I(0-7)] :Mode(SR System Byte)",CR,LF
 	DC.B	"P(I|S)<adr,adr> :Save HexFile(I:Intel,S:Motorola)",CR,LF
 	DC.B	"R[<reg>] :Set or Dump Register",CR,LF
 	DC.B	"S[<adr>] :Set Memory",CR,LF,$00
@@ -2138,6 +2234,8 @@ REGDFC:	DS.B	1
 GR0BUF:	DS.W	46-4		; Group 0 exception
 REGFV:	DS.W	1		; Format / Vector offset
 REG_E:
+
+F_bit:	DS.B	F_bitSize+1
 
 	ENDIF
 
