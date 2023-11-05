@@ -12,13 +12,13 @@
 
 ROM_B:	EQU	$00000000
 
-WORK_B:	EQU	$0001FE00	; Work area 1FE00-1FFFF
-STACK:	EQU	$0001FE00	; Monitor stack area 1F800-1FDFF
-USTACK:	EQU	$0001F800	; User stack area xxxxx-1F7FF
+WORK_B:	EQU	$0001CE00	; Work area 1CE00-1CFFF
+STACK:	EQU	$0001CE00	; Monitor stack area 1C800-1CDFF
+USTACK:	EQU	$0001C800	; User stack area xxxxx-1C7FF
 
 RAM_B	EQU	ENTRY		; RAM base address
-MON_SEG	EQU	$0001D000	; Monitor segment addiress
-SV_ROM	EQU	$00000100	; SAVE addiress for monitor code at POWER ON
+;MON_SEG	EQU	$0001D000	; Monitor segment addiress
+;SV_ROM	EQU	$00000100	; SAVE addiress for monitor code at POWER ON
 
 BUFLEN:	EQU	24		; Input buffer size
 VECSIZ:	EQU	256		; Number of vectors to be initialized
@@ -142,19 +142,19 @@ INIVEC:
 INIVECE:
 
 ENTRY:
-	MOVE.L	#CSTART,$00000004; Set new Initial PC
+;	MOVE.L	#CSTART,$00000004; Set new Initial PC
 
-	MOVE.L	#SV_ROM,A0	; Copy monitor code to monitor segment
-	MOVE.L	#MON_SEG,A1
-CPY_MON:
-	MOVE.L	(A0)+,(A1)+
-	CMPA.L	#(ROM_E-CSTART+SV_ROM),A0
-	BCS	CPY_MON
-	JMP	CSTART
+;	MOVE.L	#SV_ROM,A0	; Copy monitor code to monitor segment
+;	MOVE.L	#MON_SEG,A1
+;CPY_MON:
+;	MOVE.L	(A0)+,(A1)+
+;	CMPA.L	#(ROM_E-CSTART+SV_ROM),A0
+;	BCS	CPY_MON
+;	JMP	CSTART
 
-	DC.B	[SV_ROM-*]$FF
+;	DC.B	[SV_ROM-*]$FF
 
-	ORG	MON_SEG
+;	ORG	MON_SEG
 
 CSTART:
 	MOVE.L	#$00000001,D0	; [add] Set instruction cache enable
