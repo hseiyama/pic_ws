@@ -146,8 +146,8 @@ INIVECE:
 ENTRY:
 ;	MOVE.L	#CSTART,$00000004; Set new Initial PC
 
-;	MOVE.L	#SV_ROM,A0	; Copy monitor code to monitor segment
-;	MOVE.L	#MON_SEG,A1
+;	LEA	SV_ROM,A0	; Copy monitor code to monitor segment
+;	LEA	MON_SEG,A1
 ;CPY_MON:
 ;	MOVE.L	(A0)+,(A1)+
 ;	CMPA.L	#(ROM_E-CSTART+SV_ROM),A0
@@ -218,6 +218,21 @@ INIM0:
 
 	ENDIF
 
+	;; Initialize debug work area
+	MOVE.W	#$0000,D0
+	LEA	dbg_wtop,A0
+INIB0:
+	MOVE.W	D0,(A0)+
+	CMPA.L	#dbg_wend,A0
+	BCS	INIB0
+	;; init address & opcode
+	MOVE.L	#RAM_B,D0
+	MOVE.L	D0,bpt1_adr
+	MOVE.L	D0,bpt2_adr
+	MOVE.W	RAM_B,D0
+	MOVE.W	D0,bpt1_op
+	MOVE.W	D0,bpt2_op
+
 	;; Opening message
 	LEA	OPNMSG,A0
 	BSR	STROUT
@@ -282,7 +297,8 @@ WSTART:
 	ENDIF
 
 	CMP.B	#'B',D0
-	BEQ	BOOT
+;	BEQ	BOOT
+	BEQ	BRKPT
 
 	CMP.B	#'?',D0
 	BEQ	CMDHLP
@@ -433,6 +449,8 @@ GO:
 	BSR	RDHEX
 	TST.B	(A0)
 	BNE	ERR
+	BSR	start_bpt	; Sart break point
+
 	TST	D2
 	BEQ	G0
 
@@ -528,6 +546,8 @@ SM3:
 	BNE	SM4
 	;; '.' (Quit)
 	MOVE.L	A1,SADDR
+
+	BSR	save_bpt	; Save break point
 	BRA	WSTART
 SM4:
 	BSR	RDHEX
@@ -548,6 +568,7 @@ LOADH:
 	BSR	SKIPSP
 	TST.B	(A0)
 	BNE	ERR
+	BSR	clear_bpt	; Clear break point
 
 	TST	D2
 	BNE	LH0
@@ -944,7 +965,7 @@ MODE:
 	CMP.B	#'T',D0		; Trace
 	BNE	MD01
 	ADDQ	#1,A0
-	BSR	SKIPSP
+;	BSR	SKIPSP
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
@@ -969,7 +990,7 @@ MD03:
 	CMP.B	#'I',D0		; Interrupt
 	BNE	ERR
 	ADDQ	#1,A0
-	BSR	SKIPSP
+;	BSR	SKIPSP
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
@@ -1011,15 +1032,159 @@ F_bit_off:	DC.B	"................"
 	ENDIF
 
 ;;;
+;;; Break point command
+;;;
+
+BRKPT:
+	ADDQ	#1,A0
+	MOVE.B	(A0),D0
+	BSR	UPPER
+	TST.B	D0
+	BEQ	lst_bpt
+	CMP.B	#'T',D0
+	BEQ	BOOT		; Reset Boot
+	CMP.B	#'1',D0
+	BEQ	set_bpt1
+	CMP.B	#'2',D0
+	BEQ	set_bpt2
+	CMP.B	#'C',D0
+	BEQ	clr_bpt
+	BRA	ERR
+
+set_bpt1:
+	;; Set break point1
+	LEA	bpt1_adr,A1
+	LEA	bpt1_op,A2
+	LEA	bpt1_f,A3
+	BRA	set_bpt
+set_bpt2:
+	;; Set break point2
+	LEA	bpt2_adr,A1
+	LEA	bpt2_op,A2
+	LEA	bpt2_f,A3
+	BRA	set_bpt
+set_bpt:
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	MOVE.B	(A0),D0
+;	BSR	UPPER
+	CMP.B	#',',D0
+	BNE	ERR
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	BSR	RDHEX
+	TST	D2
+	BEQ	ERR
+	MOVE.L	D1,(A1)		; bpt(x)_adr
+	MOVE.L	D1,A0
+	MOVE.W	(A0),(A2)	; bpt(x)_op
+	MOVE.B	#1,(A3)		; bpt(x)_f
+	BRA	lst_bpt
+
+clr_bpt:
+	;; Clear break point
+	ADDQ	#1,A0
+	MOVE.B	(A0),D0
+;	BSR	UPPER
+	TST.B	D0
+	BEQ	clr_bpt_all
+	LEA	bpt1_f,A1	; Break point1
+	CMP.B	#'1',D0
+	BEQ	clr_bpt_0
+	LEA	bpt2_f,A1	; Break point2
+	CMP.B	#'2',D0
+	BNE	ERR
+clr_bpt_0:
+	MOVE.B	#0,(A1)
+	BRA	lst_bpt
+clr_bpt_all:
+	MOVE.B	#0,D0
+	MOVE.B	D0,bpt1_f
+	MOVE.B	D0,bpt2_f
+	BRA	lst_bpt
+
+lst_bpt:
+	;; List break point
+	TST.B	bpt1_f		; Break point1
+	BEQ	lst_bpt_0
+	LEA	bp_msg1,A0
+	BSR	STROUT
+	MOVE.L	bpt1_adr,D0
+	BSR	HEXOUT8
+	BSR	CRLF
+lst_bpt_0:
+	TST.B	bpt2_f		; Break point2
+	BEQ	lst_bpt_1
+	LEA	bp_msg2,A0
+	BSR	STROUT
+	MOVE.L	bpt2_adr,D0
+	BSR	HEXOUT8
+	BSR	CRLF
+lst_bpt_1:
+	BRA	WSTART
+
+start_bpt:
+	;; Sart break point(subroutine)
+	MOVE.L	A0,-(A7)	; Push
+	TST.B	bpt1_f		; Break point1
+	BEQ	start_bpt_0
+	MOVE.L	bpt1_adr,A0
+	MOVE.W	#$4AFC,(A0)
+start_bpt_0:
+	TST.B	bpt2_f		; Break point2
+	BEQ	start_bpt_1
+	MOVE.L	bpt2_adr,A0
+	MOVE.W	#$4AFC,(A0)
+start_bpt_1:
+	MOVE.L	(A7)+,A0	; Pop
+	RTS
+
+stop_bpt:
+	;; Stop break point(subroutine)
+	MOVE.L	A0,-(A7)	; Push
+	TST.B	bpt1_f		; Break point1
+	BEQ	stop_bpt_0
+	MOVE.L	bpt1_adr,A0
+	MOVE.W	bpt1_op,(A0)
+stop_bpt_0:
+	TST.B	bpt2_f		; Break point2
+	BEQ	stop_bpt_1
+	MOVE.L	bpt2_adr,A0
+	MOVE.W	bpt2_op,(A0)
+stop_bpt_1:
+	MOVE.L	(A7)+,A0	; Pop
+	RTS
+
+save_bpt:
+	;; Save break point(subroutine)
+	MOVE.L	A0,-(A7)	; Push
+	TST.B	bpt1_f		; Break point1
+	BEQ	save_bpt_0
+	MOVE.L	bpt1_adr,A0
+	MOVE.W	(A0),bpt1_op
+save_bpt_0:
+	TST.B	bpt2_f		; Break point2
+	BEQ	save_bpt_1
+	MOVE.L	bpt2_adr,A0
+	MOVE.W	(A0),bpt2_op
+save_bpt_1:
+	MOVE.L	(A7)+,A0	; Pop
+	RTS
+
+clear_bpt:
+	;; Clear break point(subroutine)
+	MOVE.B	#0,bpt1_f
+	MOVE.B	#0,bpt2_f
+	RTS
+
+bp_msg1:	DC.B	"BP(1):",$00
+bp_msg2:	DC.B	"BP(2):",$00
+
+;;;
 ;;; Reset Boot
 ;;;
 
 BOOT:
-	ADDQ	#1,A0
-	MOVE.B	(A0),D0
-	BSR	UPPER
-	CMP.B	#'T',D0
-	BNE	ERR
 	MOVE.L	$00000000,A7	; Reset: Initial SSP
 	MOVE.L	$00000004,A0	; Reset: Initial PC
 	JMP	(A0)
@@ -1526,6 +1691,8 @@ CH1:
 CH3:
 	ENDIF
 
+	BSR	stop_bpt	; Stop break point
+
 	MOVE.L	EXMSG,A0
 	BSR	STROUT
 	BSR	CRLF
@@ -1777,6 +1944,8 @@ DMYRTM:
 
 HLPMSG:
 	DC.B	"? :Command Help",CR,LF
+	DC.B	"B[(1|2),<adr>] :Set or List Break Point",CR,LF
+	DC.B	"BC[1|2] :Clear Break Point",CR,LF
 	DC.B	"BT :Reset Boot",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
 	DC.B	"G[<adr>] :Go",CR,LF
@@ -2238,5 +2407,20 @@ REG_E:
 F_bit:	DS.B	F_bitSize+1
 
 	ENDIF
+
+	ALIGN	2
+
+;; Break point work area
+dbg_wtop	EQU	*
+bpt1_f:		DS.B	1
+bpt1_op:	DS.W	1
+bpt1_adr:	DS.L	1
+bpt2_f:		DS.B	1
+bpt2_op:	DS.W	1
+bpt2_adr:	DS.L	1
+
+	ALIGN	2
+
+dbg_wend	EQU	*
 
 	END
