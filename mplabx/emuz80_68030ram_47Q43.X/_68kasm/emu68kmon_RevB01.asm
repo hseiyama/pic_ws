@@ -229,9 +229,11 @@ INIB0:
 	MOVE.L	#RAM_B,D0
 	MOVE.L	D0,bpt1_adr
 	MOVE.L	D0,bpt2_adr
+	MOVE.L	D0,tmpb_adr
 	MOVE.W	RAM_B,D0
 	MOVE.W	D0,bpt1_op
 	MOVE.W	D0,bpt2_op
+	MOVE.W	D0,tmpb_op
 
 	;; Opening message
 	LEA	OPNMSG,A0
@@ -447,16 +449,34 @@ GO:
 	ADDQ	#1,A0
 	BSR	SKIPSP
 	BSR	RDHEX
-	TST.B	(A0)
+	MOVE.L	D1,D3		; Value(start address)
+	MOVE.L	D2,D4		; Count(start address)
+	MOVE.B	#0,tmpb_f	; Clear go break point
+	MOVE.B	(A0),D0
+	TST.B	D0
+	BEQ	go_bpt
+	CMP.B	#',',D0
 	BNE	ERR
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	BSR	RDHEX
+	TST	D2
+	BEQ	ERR
+	;; Set go break point
+	MOVE.L	D1,tmpb_adr
+	MOVE.L	D1,A0
+	MOVE.W	(A0),tmpb_op
+	MOVE.B	#1,tmpb_f
+
+go_bpt:
 	BSR	start_bpt	; Sart break point
 
-	TST	D2
+	TST	D4		; Count(start address)
 	BEQ	G0
 
 	IF USE_REGCMD
 
-	MOVE.L	D1,REGPC
+	MOVE.L	D3,REGPC	; Value(start address)
 G0:
 	MOVE.L	REGSSP,D0
 	AND.L	#$FFFFFFFE,D0
@@ -493,7 +513,7 @@ G1:
 
 	ELSE
 
-	MOVE.L	D1,GADDR
+	MOVE.L	D3,GADDR	; Value(start address)
 G0:
 	MOVE.L	GADDR,A0
 	JMP	(A0)
@@ -1062,7 +1082,7 @@ set_bpt2:
 	LEA	bpt2_adr,A1
 	LEA	bpt2_op,A2
 	LEA	bpt2_f,A3
-	BRA	set_bpt
+;	BRA	set_bpt
 set_bpt:
 	ADDQ	#1,A0
 	BSR	SKIPSP
@@ -1136,6 +1156,11 @@ start_bpt_0:
 	MOVE.L	bpt2_adr,A0
 	MOVE.W	#$4AFC,(A0)
 start_bpt_1:
+	TST.B	tmpb_f		; Go break point
+	BEQ	start_bpt_2
+	MOVE.L	tmpb_adr,A0
+	MOVE.W	#$4AFC,(A0)
+start_bpt_2:
 	MOVE.L	(A7)+,A0	; Pop
 	RTS
 
@@ -1152,6 +1177,11 @@ stop_bpt_0:
 	MOVE.L	bpt2_adr,A0
 	MOVE.W	bpt2_op,(A0)
 stop_bpt_1:
+	TST.B	tmpb_f		; Go break point
+	BEQ	stop_bpt_2
+	MOVE.L	tmpb_adr,A0
+	MOVE.W	tmpb_op,(A0)
+stop_bpt_2:
 	MOVE.L	(A7)+,A0	; Pop
 	RTS
 
@@ -1948,7 +1978,7 @@ HLPMSG:
 	DC.B	"BC[1|2] :Clear Break Point",CR,LF
 	DC.B	"BT :Reset Boot",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
-	DC.B	"G[<adr>] :Go",CR,LF
+	DC.B	"G[<adr>][,<stop adr>] :Go and Stop",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"M[T(0-2)|S|M|I(0-7)] :Mode(SR System Byte)",CR,LF
 	DC.B	"P(I|S)<adr,adr> :Save HexFile(I:Intel,S:Motorola)",CR,LF
@@ -2418,6 +2448,10 @@ bpt1_adr:	DS.L	1
 bpt2_f:		DS.B	1
 bpt2_op:	DS.W	1
 bpt2_adr:	DS.L	1
+
+tmpb_f:		DS.B	1
+tmpb_op:	DS.W	1
+tmpb_adr:	DS.L	2
 
 	ALIGN	2
 
