@@ -299,7 +299,6 @@ WSTART:
 	ENDIF
 
 	CMP.B	#'B',D0
-;	BEQ	BOOT
 	BEQ	BRKPT
 
 	CMP.B	#'?',D0
@@ -985,7 +984,6 @@ MODE:
 	CMP.B	#'T',D0		; Trace
 	BNE	MD01
 	ADDQ	#1,A0
-;	BSR	SKIPSP
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
@@ -1010,7 +1008,6 @@ MD03:
 	CMP.B	#'I',D0		; Interrupt
 	BNE	ERR
 	ADDQ	#1,A0
-;	BSR	SKIPSP
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
@@ -1082,12 +1079,10 @@ set_bpt2:
 	LEA	bpt2_adr,A1
 	LEA	bpt2_op,A2
 	LEA	bpt2_f,A3
-;	BRA	set_bpt
 set_bpt:
 	ADDQ	#1,A0
 	BSR	SKIPSP
 	MOVE.B	(A0),D0
-;	BSR	UPPER
 	CMP.B	#',',D0
 	BNE	ERR
 	ADDQ	#1,A0
@@ -1105,7 +1100,6 @@ clr_bpt:
 	;; Clear break point
 	ADDQ	#1,A0
 	MOVE.B	(A0),D0
-;	BSR	UPPER
 	TST.B	D0
 	BEQ	clr_bpt_all
 	LEA	bpt1_f,A1	; Break point1
