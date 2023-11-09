@@ -2432,22 +2432,18 @@ F_bit:	DS.B	F_bitSize+1
 
 	ENDIF
 
-	ALIGN	2
-
 ;; Break point work area
 dbg_wtop	EQU	*
 bpt1_f:		DS.B	1
-bpt1_op:	DS.W	1
-bpt1_adr:	DS.L	1
 bpt2_f:		DS.B	1
-bpt2_op:	DS.W	1
-bpt2_adr:	DS.L	1
-
 tmpb_f:		DS.B	1
-tmpb_op:	DS.W	1
-tmpb_adr:	DS.L	2
-
 	ALIGN	2
+bpt1_op:	DS.W	1
+bpt2_op:	DS.W	1
+tmpb_op:	DS.W	1
+bpt1_adr:	DS.L	1
+bpt2_adr:	DS.L	1
+tmpb_adr:	DS.L	2
 
 dbg_wend	EQU	*
 
