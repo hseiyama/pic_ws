@@ -315,6 +315,10 @@ ERR:
 
 DUMP:
 	ADDQ	#1,A0
+	MOVE.B	(A0),D0
+	BSR	UPPER
+	CMP.B	#'I',D0
+	BEQ	DIASM		; Disassemble
 	BSR	SKIPSP
 	BSR	RDHEX		; 1st arg.
 	TST	D2
@@ -441,6 +445,196 @@ DPB3:
 	RTS
 
 ;;;
+;;; Disassemble
+;;;
+
+DIASM:
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	BSR	RDHEX
+	TST	D2
+	BEQ	DI0
+	MOVE.L	D1,A1		; Set instruction address(A1)
+	BRA	DI1
+DI0:
+	MOVE.L	REGPC,A1	; Set instruction address(A1)
+DI1:
+	MOVE.W	(A1),D1		; Set instruction(D1)
+	;; Search instruction table
+	LEA	inst_tbl,A0
+	MOVEQ	#0,D0
+DI2:
+	MOVE.W	2(A0,D0),D2	; Get [1st]Mask data
+	AND.W	D1,D2
+	CMP.W	(A0,D0),D2	; Compare [1st]Instruction data
+	BEQ	DI3
+	ADDI.L	#inst_tbl_sz,D0
+	BRA	DI2
+DI3:
+	MOVE.L	A0,A2
+	ADD.L	D0,A2		; Match instruction table address(A2)
+	;; Print address
+	MOVE.L	A1,D0
+	BSR	HEXOUT8
+	MOVE.B	#' ',D0
+	BSR	CONOUT
+	;; Print operation code
+	MOVE.L	D1,D0
+	BSR	HEXOUT4
+	MOVE.B	#' ',D0
+	BSR	CONOUT
+	;; Print instruction
+	MOVE.L	8(A2),A0
+	BSR	STROUT
+	BTST	#7,4(A2)	; Check [2nd]Additional Information
+	BNE	diasm_end
+
+diasm_size:
+	BTST	#7,5(A2)	; Check [2nd]Size infomation
+	BNE	diasm_end
+	MOVE.B	5(A2),D2	; Get [2nd]Size infomation
+	AND.W	#$000F,D2
+	SUB.W	#1,D2
+	MOVE.W	D1,D3
+	LSR.W	D2,D3
+	AND.W	#$0003,D3
+	CMP.B	#1,D3		; Check byte size
+	BEQ	diasm_size_0
+	CMP.B	#2,D3		; Check long size
+	BEQ	diasm_size_1
+	LEA	inst_szw,A0
+	BSR	STROUT
+	BRA	diasm_operand1
+diasm_size_0:
+	LEA	inst_szb,A0
+	BSR	STROUT
+	BRA	diasm_operand1
+diasm_size_1:
+	LEA	inst_szl,A0
+	BSR	STROUT
+
+diasm_operand1:
+	BTST	#7,6(A2)	; Check [2nd]Operand1 infomation
+	BNE	diasm_end
+	;; Get Address mode
+	MOVE.B	6(A2),D2	; Get [2nd]Operand1 infomation
+	AND.W	#$000F,D2
+	SUB.W	#5,D2
+	MOVE.W	D1,D3
+	LSR.W	D2,D3
+	AND.W	#$003F,D3	; Address mode
+	;; Search address mode table
+	LEA	admd_tbl,A0
+	MOVEQ	#0,D0
+diasm_operand1_0:
+	MOVE.B	1(A0,D0),D2	; Get [1st]Mask data
+	AND.B	D3,D2
+	CMP.B	(A0,D0),D2	; Compare [1st]Mode,register data
+	BEQ	diasm_operand1_1
+	ADDI.L	#admd_tbl_sz,D0
+	BRA	diasm_operand1_0
+diasm_operand1_1:
+	ADD.L	D0,A0
+	MOVE.B	#' ',D0
+	BSR	CONOUT
+	;; Print operand1
+	MOVE.L	4(A0),A0
+	BSR	STROUT
+
+diasm_operand2:
+	BTST	#7,7(A2)	; Check [2nd]Operand1 infomation
+	BNE	diasm_end
+	;; Get Address mode
+	MOVE.B	7(A2),D2	; Get [2nd]Operand1 infomation
+	AND.W	#$000F,D2
+	SUB.W	#5,D2
+	MOVE.W	D1,D3
+	LSR.W	D2,D3
+	AND.W	#$003F,D3	; Address mode
+	;; Search address mode table
+	LEA	admd_tbl,A0
+	MOVEQ	#0,D0
+diasm_operand2_0:
+	MOVE.B	3(A0,D0),D2	; Get [1st]Mask data
+	AND.B	D3,D2
+	CMP.B	2(A0,D0),D2	; Compare [1st]Mode,register data
+	BEQ	diasm_operand2_1
+	ADDI.L	#admd_tbl_sz,D0
+	BRA	diasm_operand2_0
+diasm_operand2_1:
+	ADD.L	D0,A0
+	MOVE.B	#',',D0
+	BSR	CONOUT
+	;; Print operand2
+	MOVE.L	4(A0),A0
+	BSR	STROUT
+
+diasm_end:
+	BSR	CRLF
+	BRA	WSTART
+
+inst_tbl_sz	equ	12
+admd_tbl_sz	equ	8
+
+inst_tbl:
+	;; Instruction table
+	;; 1st [31-16]:Instruction data
+	;;     [15-0]:Mask data
+	;; 2nd [31-24]:Additional Information
+	;;     [23-16]:Size infomation
+	;;     [15-8]:Operand1 infomation
+	;;     [7-0]:Operand2 infomation
+	;; 3rd [31-0]:Message address
+	dc.l	$1000F000,$000D050B,inst_move	; MOVE.B
+	dc.l	$2040F1C0,$000D050B,inst_movea	; MOVEA.L
+	dc.l	$2000F000,$000D050B,inst_move	; MOVE.L
+	dc.l	$3040F1C0,$000D050B,inst_movea	; MOVEA.W
+	dc.l	$3000F000,$000D050B,inst_move	; MOVE.W
+	dc.l	$00000000,$FFFFFFFF,inst_unknw	; End mark
+
+admd_tbl:
+	;; Adress mode table
+	;; 1st [31-24]:Mode,register data(for source)
+	;;     [23-16]:Mask data(for source)
+	;;     [15-8]:Register,mode data(for destination)
+	;;     [7-0]:Mask data(for destination)
+	dc.l	$00380007,admd_000		; "Dn"
+	dc.l	$08380107,admd_001		; "An"
+	dc.l	$10380207,admd_010		; "(An)"
+	dc.l	$18380307,admd_011		; "(An)+"
+	dc.l	$20380407,admd_100		; "-(An)"
+	dc.l	$28380507,admd_101		; "(d16,An)"
+	dc.l	$30380607,admd_110		; "(d8,An,Xn)"
+	dc.l	$383F073F,admd_111_000		; "(xxx).W"
+	dc.l	$393F0F3F,admd_111_001		; "(xxx).L"
+	dc.l	$3C3F273F,admd_111_100		; "#<data>"
+	dc.l	$3A3F173F,admd_111_010		; "(d16,PC)"
+	dc.l	$3B3F1F3F,admd_111_011		; "(d8,PC,Xn)"
+	dc.l	$00000000,admd_xxx_xxx		; End mark
+
+inst_move:	dc.b	"MOVE",$00
+inst_movea:	dc.b	"MOVEA",$00
+inst_unknw:	dc.b	"Unknown",$00
+
+inst_szb:	dc.b	".B",$00
+inst_szw:	dc.b	".W",$00
+inst_szl:	dc.b	".L",$00
+
+admd_000:	dc.b	"Dn",$00
+admd_001:	dc.b	"An",$00
+admd_010:	dc.b	"(An)",$00
+admd_011:	dc.b	"(An)+",$00
+admd_100:	dc.b	"-(An)",$00
+admd_101:	dc.b	"(d16,An)",$00
+admd_110:	dc.b	"(d8,An,Xn)",$00
+admd_111_000:	dc.b	"(xxx).W",$00
+admd_111_001:	dc.b	"(xxx).L",$00
+admd_111_100:	dc.b	"#<data>",$00
+admd_111_010:	dc.b	"(d16,PC)",$00
+admd_111_011:	dc.b	"(d8,PC,Xn)",$00
+admd_xxx_xxx:	dc.b	"Unknown",$00
+
+;;;
 ;;; GO address
 ;;;
 
@@ -565,8 +759,6 @@ SM3:
 	BNE	SM4
 	;; '.' (Quit)
 	MOVE.L	A1,SADDR
-
-	BSR	save_bpt	; Save break point
 	BRA	WSTART
 SM4:
 	BSR	RDHEX
@@ -574,6 +766,8 @@ SM4:
 	BEQ	ERR
 	MOVE.B	D1,(A1)+
 	MOVE.L	A1,SADDR
+
+	BSR	save_bpt	; Save break point
 	BRA	SM1
 
 ;;;
@@ -1972,6 +2166,7 @@ HLPMSG:
 	DC.B	"BC[1|2] :Clear Break Point",CR,LF
 	DC.B	"BT :Reset Boot",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
+	DC.B	"DI[<adr>] :Disassemble",CR,LF
 	DC.B	"G[<adr>][,<stop adr>] :Go and Stop",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"M[T(0-2)|S|M|I(0-7)] :Mode(SR System Byte)",CR,LF
@@ -2433,18 +2628,18 @@ F_bit:	DS.B	F_bitSize+1
 	ENDIF
 
 ;; Break point work area
-dbg_wtop	EQU	*
-bpt1_f:		DS.B	1
-bpt2_f:		DS.B	1
-tmpb_f:		DS.B	1
+dbg_wtop	equ	*
+bpt1_f:		ds.b	1
+bpt2_f:		ds.b	1
+tmpb_f:		ds.b	1
 	ALIGN	2
-bpt1_op:	DS.W	1
-bpt2_op:	DS.W	1
-tmpb_op:	DS.W	1
-bpt1_adr:	DS.L	1
-bpt2_adr:	DS.L	1
-tmpb_adr:	DS.L	2
+bpt1_op:	ds.w	1
+bpt2_op:	ds.w	1
+tmpb_op:	ds.w	1
+bpt1_adr:	ds.l	1
+bpt2_adr:	ds.l	1
+tmpb_adr:	ds.l	2
 
-dbg_wend	EQU	*
+dbg_wend	equ	*
 
 	END
