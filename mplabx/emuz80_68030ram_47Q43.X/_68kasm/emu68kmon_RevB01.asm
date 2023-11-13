@@ -460,6 +460,14 @@ DI0:
 	MOVE.L	REGPC,A1	; Set instruction address(A1)
 DI1:
 	MOVE.W	(A1),D1		; Set instruction(D1)
+	;; Print address
+	MOVE.L	A1,D0
+	BSR	HEXOUT8
+	;; Print operation code
+	MOVE.B	#' ',D0
+	BSR	CONOUT
+	MOVE.L	D1,D0
+	BSR	HEXOUT4
 	;; Search instruction table
 	LEA	inst_tbl,A0
 	MOVEQ	#0,D0
@@ -473,105 +481,128 @@ DI2:
 DI3:
 	MOVE.L	A0,A2
 	ADD.L	D0,A2		; Match instruction table address(A2)
-	;; Print address
-	MOVE.L	A1,D0
-	BSR	HEXOUT8
-	MOVE.B	#' ',D0
-	BSR	CONOUT
-	;; Print operation code
-	MOVE.L	D1,D0
-	BSR	HEXOUT4
-	MOVE.B	#' ',D0
-	BSR	CONOUT
 	;; Print instruction
-	MOVE.L	8(A2),A0
-	BSR	STROUT
-	BTST	#7,4(A2)	; Check [2nd]Additional Information
-	BNE	diasm_end
-
-diasm_size:
-	BTST	#7,5(A2)	; Check [2nd]Size infomation
-	BNE	diasm_end
-	MOVE.B	5(A2),D2	; Get [2nd]Size infomation
-	AND.W	#$000F,D2
-	SUB.W	#1,D2
-	MOVE.W	D1,D3
-	LSR.W	D2,D3
-	AND.W	#$0003,D3
-	CMP.B	#1,D3		; Check byte size
-	BEQ	diasm_size_0
-	CMP.B	#2,D3		; Check long size
-	BEQ	diasm_size_1
-	LEA	inst_szw,A0
-	BSR	STROUT
-	BRA	diasm_operand1
-diasm_size_0:
-	LEA	inst_szb,A0
-	BSR	STROUT
-	BRA	diasm_operand1
-diasm_size_1:
-	LEA	inst_szl,A0
-	BSR	STROUT
-
-diasm_operand1:
-	BTST	#7,6(A2)	; Check [2nd]Operand1 infomation
-	BNE	diasm_end
-	;; Get Address mode
-	MOVE.B	6(A2),D2	; Get [2nd]Operand1 infomation
-	AND.W	#$000F,D2
-	SUB.W	#5,D2
-	MOVE.W	D1,D3
-	LSR.W	D2,D3
-	AND.W	#$003F,D3	; Address mode
-	;; Search address mode table
-	LEA	admd_tbl,A0
-	MOVEQ	#0,D0
-diasm_operand1_0:
-	MOVE.B	1(A0,D0),D2	; Get [1st]Mask data
-	AND.B	D3,D2
-	CMP.B	(A0,D0),D2	; Compare [1st]Mode,register data
-	BEQ	diasm_operand1_1
-	ADDI.L	#admd_tbl_sz,D0
-	BRA	diasm_operand1_0
-diasm_operand1_1:
-	ADD.L	D0,A0
 	MOVE.B	#' ',D0
 	BSR	CONOUT
-	;; Print operand1
-	MOVE.L	4(A0),A0
+	MOVE.L	4(A2),A0	; Get [2nd]Instruction address
 	BSR	STROUT
-
-diasm_operand2:
-	BTST	#7,7(A2)	; Check [2nd]Operand1 infomation
-	BNE	diasm_end
-	;; Get Address mode
-	MOVE.B	7(A2),D2	; Get [2nd]Operand1 infomation
-	AND.W	#$000F,D2
-	SUB.W	#5,D2
-	MOVE.W	D1,D3
-	LSR.W	D2,D3
-	AND.W	#$003F,D3	; Address mode
-	;; Search address mode table
-	LEA	admd_tbl,A0
-	MOVEQ	#0,D0
-diasm_operand2_0:
-	MOVE.B	3(A0,D0),D2	; Get [1st]Mask data
-	AND.B	D3,D2
-	CMP.B	2(A0,D0),D2	; Compare [1st]Mode,register data
-	BEQ	diasm_operand2_1
-	ADDI.L	#admd_tbl_sz,D0
-	BRA	diasm_operand2_0
-diasm_operand2_1:
-	ADD.L	D0,A0
-	MOVE.B	#',',D0
-	BSR	CONOUT
-	;; Print operand2
-	MOVE.L	4(A0),A0
-	BSR	STROUT
-
-diasm_end:
+	;; Call instruction subroutine
+	MOVE.L	8(A2),A0	; Get [3rd]Subroutine address
+	JSR	(A0)
 	BSR	CRLF
 	BRA	WSTART
+
+disb_move:
+	;; Print size
+	MOVE.W	D1,D0
+	SWAP	D0
+	MOVE.W	#13,D0
+	BSR	dias_get_w3bit
+	BSR	dias_size1
+	;; Print operand1
+	MOVE.B	#' ',D0
+	BSR	CONOUT
+	MOVE.W	D1,D0
+	AND.W	#$003F,D0
+	BSR	dias_ea_src
+	;; Print operand2
+	MOVE.B	#',',D0
+	BSR	CONOUT
+	MOVE.W	D1,D0
+	SWAP	D0
+	MOVE.W	#11,D0
+	BSR	dias_get_w6bit
+	BSR	dias_ea_dst
+	RTS
+
+disb_unknw:
+	;; Print message
+	MOVE.B	#' ',D0
+	BSR	CONOUT
+	LEA	admd_xxx_xxx,A0
+	BSR	STROUT
+	RTS
+
+dias_get_w3bit
+	;; [D0] Word data(7-4bit),size(3-0bit)
+	MOVE.L	D1,-(A7)	; Push
+	MOVE.W	D0,D1
+	SUB.W	#1,D1
+	SWAP	D0
+	LSR.W	D1,D0
+	AND.W	#$0003,D0
+	MOVE.L	(A7)+,D1	; Pop
+	RTS
+
+dias_get_w6bit
+	;; [D0] Word data(7-4bit),size(3-0bit)
+	MOVE.L	D1,-(A7)	; Push
+	MOVE.W	D0,D1
+	SUB.W	#5,D1
+	SWAP	D0
+	LSR.W	D1,D0
+	AND.W	#$003F,D0
+	MOVE.L	(A7)+,D1	; Pop
+	RTS
+
+dias_size1:
+	;; [D0] Size
+	CMP.B	#1,D0		; Check byte size
+	BEQ	dias_size1_0
+	CMP.B	#3,D0		; Check word size
+	BEQ	dias_size1_1
+	CMP.B	#2,D0		; Check long size
+	BEQ	dias_size1_2
+	LEA	inst_sz_x,A0	; Unknown
+	BRA	dias_size1_3
+dias_size1_0:
+	LEA	inst_sz_b,A0
+	BRA	dias_size1_3
+dias_size1_1:
+	LEA	inst_sz_w,A0
+	BRA	dias_size1_3
+dias_size1_2:
+	LEA	inst_sz_l,A0
+dias_size1_3:
+	BSR	STROUT
+	RTS
+
+dias_ea_src:
+	;; [D0] Address mode
+	MOVE.L	A0,-(A7)	; Push
+	MOVE.L	D1,-(A7)	; Push
+	MOVE.L	D2,-(A7)	; Push
+	;; Search address mode table
+	LEA	admd_tbl,A0
+	MOVEQ	#0,D1
+dias_ea_src_0:
+	MOVE.B	1(A0,D1),D2	; Get [1st]Mask data
+	AND.B	D0,D2
+	CMP.B	(A0,D1),D2	; Compare [1st]Mode,register data
+	BEQ	dias_ea_src_1
+	ADDI.L	#admd_tbl_sz,D1
+	BRA	dias_ea_src_0
+dias_ea_src_1:
+	ADD.L	D1,A0
+	;; Print effective address
+	MOVE.L	4(A0),A0	; Get [2nd]Effective address(address)
+	BSR	STROUT
+	MOVE.L	(A7)+,D2	; Pop
+	MOVE.L	(A7)+,D1	; Pop
+	MOVE.L	(A7)+,A0	; Pop
+	RTS
+
+dias_ea_dst:
+	;; Exchange D0(5-3bit),D0(2-0bit)
+	MOVE.L	D1,-(A7)	; Push
+	MOVE.B	D0,D1
+	LSR.B	#3,D0
+	ANDI.B	#$07,D0
+	LSL.B	#3,D1
+	ANDI.B	#$38,D1
+	OR.B	D1,D0
+	MOVE.L	(A7)+,D1	; Pop
+	BRA	dias_ea_src
 
 inst_tbl_sz	equ	12
 admd_tbl_sz	equ	8
@@ -580,45 +611,43 @@ inst_tbl:
 	;; Instruction table
 	;; 1st [31-16]:Instruction data
 	;;     [15-0]:Mask data
-	;; 2nd [31-24]:Additional Information
-	;;     [23-16]:Size infomation
-	;;     [15-8]:Operand1 infomation
-	;;     [7-0]:Operand2 infomation
-	;; 3rd [31-0]:Message address
-	dc.l	$1000F000,$000D050B,inst_move	; MOVE.B
-	dc.l	$2040F1C0,$000D050B,inst_movea	; MOVEA.L
-	dc.l	$2000F000,$000D050B,inst_move	; MOVE.L
-	dc.l	$3040F1C0,$000D050B,inst_movea	; MOVEA.W
-	dc.l	$3000F000,$000D050B,inst_move	; MOVE.W
-	dc.l	$00000000,$FFFFFFFF,inst_unknw	; End mark
+	;; 2nd [31-0]:Instruction address
+	;; 3rd [31-0]:Subroutine address
+	dc.l	$1000F000,inst_move ,disb_move	; MOVE.B
+	dc.l	$2040F1C0,inst_movea,disb_move	; MOVEA.L
+	dc.l	$2000F000,inst_move ,disb_move	; MOVE.L
+	dc.l	$3040F1C0,inst_movea,disb_move	; MOVEA.W
+	dc.l	$3000F000,inst_move ,disb_move	; MOVE.W
+	dc.l	$00000000,inst_unknw,disb_unknw	; End mark
 
 admd_tbl:
 	;; Adress mode table
-	;; 1st [31-24]:Mode,register data(for source)
-	;;     [23-16]:Mask data(for source)
-	;;     [15-8]:Register,mode data(for destination)
-	;;     [7-0]:Mask data(for destination)
-	dc.l	$00380007,admd_000		; "Dn"
-	dc.l	$08380107,admd_001		; "An"
-	dc.l	$10380207,admd_010		; "(An)"
-	dc.l	$18380307,admd_011		; "(An)+"
-	dc.l	$20380407,admd_100		; "-(An)"
-	dc.l	$28380507,admd_101		; "(d16,An)"
-	dc.l	$30380607,admd_110		; "(d8,An,Xn)"
-	dc.l	$383F073F,admd_111_000		; "(xxx).W"
-	dc.l	$393F0F3F,admd_111_001		; "(xxx).L"
-	dc.l	$3C3F273F,admd_111_100		; "#<data>"
-	dc.l	$3A3F173F,admd_111_010		; "(d16,PC)"
-	dc.l	$3B3F1F3F,admd_111_011		; "(d8,PC,Xn)"
+	;; 1st [31-24]:Mode,register data
+	;;     [23-16]:Mask data
+	;;     [15-0]:No used
+	;; 2nd [31-0]:Effective address(address)
+	dc.l	$00380000,admd_000		; "Dn"
+	dc.l	$08380000,admd_001		; "An"
+	dc.l	$10380000,admd_010		; "(An)"
+	dc.l	$18380000,admd_011		; "(An)+"
+	dc.l	$20380000,admd_100		; "-(An)"
+	dc.l	$28380000,admd_101		; "(d16,An)"
+	dc.l	$30380000,admd_110		; "(d8,An,Xn)"
+	dc.l	$383F0000,admd_111_000		; "(xxx).W"
+	dc.l	$393F0000,admd_111_001		; "(xxx).L"
+	dc.l	$3C3F0000,admd_111_100		; "#<data>"
+	dc.l	$3A3F0000,admd_111_010		; "(d16,PC)"
+	dc.l	$3B3F0000,admd_111_011		; "(d8,PC,Xn)"
 	dc.l	$00000000,admd_xxx_xxx		; End mark
 
 inst_move:	dc.b	"MOVE",$00
 inst_movea:	dc.b	"MOVEA",$00
-inst_unknw:	dc.b	"Unknown",$00
+inst_unknw:	dc.b	"Unknown",$00		; Unknown
 
-inst_szb:	dc.b	".B",$00
-inst_szw:	dc.b	".W",$00
-inst_szl:	dc.b	".L",$00
+inst_sz_b:	dc.b	".B",$00
+inst_sz_w:	dc.b	".W",$00
+inst_sz_l:	dc.b	".L",$00
+inst_sz_x:	dc.b	".X",$00		; Unknown
 
 admd_000:	dc.b	"Dn",$00
 admd_001:	dc.b	"An",$00
@@ -632,7 +661,7 @@ admd_111_001:	dc.b	"(xxx).L",$00
 admd_111_100:	dc.b	"#<data>",$00
 admd_111_010:	dc.b	"(d16,PC)",$00
 admd_111_011:	dc.b	"(d8,PC,Xn)",$00
-admd_xxx_xxx:	dc.b	"Unknown",$00
+admd_xxx_xxx:	dc.b	"Unknown",$00		; Unknown
 
 ;;;
 ;;; GO address
