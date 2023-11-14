@@ -454,68 +454,91 @@ DIASM:
 	BSR	RDHEX
 	TST	D2
 	BEQ	DI0
-	MOVE.L	D1,A1		; Set instruction address(A1)
+	MOVE.L	D1,A1
 	BRA	DI1
 DI0:
-	MOVE.L	REGPC,A1	; Set instruction address(A1)
+	MOVE.L	REGPC,A1
 DI1:
-	MOVE.W	(A1),D1		; Set instruction(D1)
+	MOVE.L	A1,dasm_adr	; Set instruction address
+	MOVE.W	(A1),dasm_op	; Set instruction
 	;; Print address
-	MOVE.L	A1,D0
+	MOVE.L	dasm_adr,D0
 	BSR	HEXOUT8
 	;; Print operation code
 	MOVE.B	#' ',D0
 	BSR	CONOUT
-	MOVE.L	D1,D0
+	MOVE.W	dasm_op,D0
 	BSR	HEXOUT4
 	;; Search instruction table
 	LEA	inst_tbl,A0
 	MOVEQ	#0,D0
 DI2:
-	MOVE.W	2(A0,D0),D2	; Get [1st]Mask data
-	AND.W	D1,D2
-	CMP.W	(A0,D0),D2	; Compare [1st]Instruction data
+	MOVE.W	2(A0,D0),D1	; Get [1st]Mask data
+	AND.W	dasm_op,D1
+	CMP.W	(A0,D0),D1	; Compare [1st]Instruction data
 	BEQ	DI3
 	ADDI.L	#inst_tbl_sz,D0
 	BRA	DI2
 DI3:
-	MOVE.L	A0,A2
-	ADD.L	D0,A2		; Match instruction table address(A2)
+	MOVE.L	A0,A1
+	ADD.L	D0,A1		; Match instruction table address
 	;; Print instruction
 	MOVE.B	#' ',D0
 	BSR	CONOUT
-	MOVE.L	4(A2),A0	; Get [2nd]Instruction address
+	MOVE.L	4(A1),A0	; Get [2nd]Instruction address
 	BSR	STROUT
 	;; Call instruction subroutine
-	MOVE.L	8(A2),A0	; Get [3rd]Subroutine address
+	MOVE.L	8(A1),A0	; Get [3rd]Subroutine address
 	JSR	(A0)
 	BSR	CRLF
 	BRA	WSTART
 
-disb_move:
+dasb_imidt:
 	;; Print size
-	MOVE.W	D1,D0
+	MOVE.W	dasm_op,D0
 	SWAP	D0
-	MOVE.W	#13,D0
-	BSR	dias_get_w3bit
-	BSR	dias_size1
+	MOVE.W	#7,D0
+	BSR	dasm_get_w2bit
+	LEA	inst_sz_ord2,A0
+	BSR	dasm_size_2bit
 	;; Print operand1
 	MOVE.B	#' ',D0
 	BSR	CONOUT
-	MOVE.W	D1,D0
-	AND.W	#$003F,D0
-	BSR	dias_ea_src
+	LEA	admd_111_100,A0
+	BSR	STROUT
 	;; Print operand2
 	MOVE.B	#',',D0
 	BSR	CONOUT
-	MOVE.W	D1,D0
-	SWAP	D0
-	MOVE.W	#11,D0
-	BSR	dias_get_w6bit
-	BSR	dias_ea_dst
+	MOVE.W	dasm_op,D0
+	AND.W	#$003F,D0
+	BSR	dasm_eaddr
 	RTS
 
-disb_unknw:
+dasb_move:
+	;; Print size
+	MOVE.W	dasm_op,D0
+	SWAP	D0
+	MOVE.W	#13,D0
+	BSR	dasm_get_w2bit
+	LEA	inst_sz_ord1,A0
+	BSR	dasm_size_2bit
+	;; Print operand1
+	MOVE.B	#' ',D0
+	BSR	CONOUT
+	MOVE.W	dasm_op,D0
+	AND.W	#$003F,D0
+	BSR	dasm_eaddr
+	;; Print operand2
+	MOVE.B	#',',D0
+	BSR	CONOUT
+	MOVE.W	dasm_op,D0
+	SWAP	D0
+	MOVE.W	#11,D0
+	BSR	dasm_get_w6bit
+	BSR	dasm_ea_dst
+	RTS
+
+dasb_unknw:
 	;; Print message
 	MOVE.B	#' ',D0
 	BSR	CONOUT
@@ -523,7 +546,10 @@ disb_unknw:
 	BSR	STROUT
 	RTS
 
-dias_get_w3bit
+dasb_none:
+	RTS
+
+dasm_get_w2bit:
 	;; [D0] Word data(7-4bit),size(3-0bit)
 	MOVE.L	D1,-(A7)	; Push
 	MOVE.W	D0,D1
@@ -534,7 +560,7 @@ dias_get_w3bit
 	MOVE.L	(A7)+,D1	; Pop
 	RTS
 
-dias_get_w6bit
+dasm_get_w6bit:
 	;; [D0] Word data(7-4bit),size(3-0bit)
 	MOVE.L	D1,-(A7)	; Push
 	MOVE.W	D0,D1
@@ -545,29 +571,29 @@ dias_get_w6bit
 	MOVE.L	(A7)+,D1	; Pop
 	RTS
 
-dias_size1:
+dasm_size_2bit:
 	;; [D0] Size
-	CMP.B	#1,D0		; Check byte size
-	BEQ	dias_size1_0
-	CMP.B	#3,D0		; Check word size
-	BEQ	dias_size1_1
-	CMP.B	#2,D0		; Check long size
-	BEQ	dias_size1_2
+	CMP.B	(A0),D0		; Check byte size
+	BEQ	dasm_size1_0
+	CMP.B	1(A0),D0	; Check word size
+	BEQ	dasm_size1_1
+	CMP.B	2(A0),D0	; Check long size
+	BEQ	dasm_size1_2
 	LEA	inst_sz_x,A0	; Unknown
-	BRA	dias_size1_3
-dias_size1_0:
+	BRA	dasm_size1_3
+dasm_size1_0:
 	LEA	inst_sz_b,A0
-	BRA	dias_size1_3
-dias_size1_1:
+	BRA	dasm_size1_3
+dasm_size1_1:
 	LEA	inst_sz_w,A0
-	BRA	dias_size1_3
-dias_size1_2:
+	BRA	dasm_size1_3
+dasm_size1_2:
 	LEA	inst_sz_l,A0
-dias_size1_3:
+dasm_size1_3:
 	BSR	STROUT
 	RTS
 
-dias_ea_src:
+dasm_eaddr:
 	;; [D0] Address mode
 	MOVE.L	A0,-(A7)	; Push
 	MOVE.L	D1,-(A7)	; Push
@@ -575,14 +601,14 @@ dias_ea_src:
 	;; Search address mode table
 	LEA	admd_tbl,A0
 	MOVEQ	#0,D1
-dias_ea_src_0:
+dasm_eaddr_0:
 	MOVE.B	1(A0,D1),D2	; Get [1st]Mask data
 	AND.B	D0,D2
 	CMP.B	(A0,D1),D2	; Compare [1st]Mode,register data
-	BEQ	dias_ea_src_1
+	BEQ	dasm_eaddr_1
 	ADDI.L	#admd_tbl_sz,D1
-	BRA	dias_ea_src_0
-dias_ea_src_1:
+	BRA	dasm_eaddr_0
+dasm_eaddr_1:
 	ADD.L	D1,A0
 	;; Print effective address
 	MOVE.L	4(A0),A0	; Get [2nd]Effective address(address)
@@ -592,7 +618,7 @@ dias_ea_src_1:
 	MOVE.L	(A7)+,A0	; Pop
 	RTS
 
-dias_ea_dst:
+dasm_ea_dst:
 	;; Exchange D0(5-3bit),D0(2-0bit)
 	MOVE.L	D1,-(A7)	; Push
 	MOVE.B	D0,D1
@@ -602,7 +628,7 @@ dias_ea_dst:
 	ANDI.B	#$38,D1
 	OR.B	D1,D0
 	MOVE.L	(A7)+,D1	; Pop
-	BRA	dias_ea_src
+	BRA	dasm_eaddr
 
 inst_tbl_sz	equ	12
 admd_tbl_sz	equ	8
@@ -613,12 +639,15 @@ inst_tbl:
 	;;     [15-0]:Mask data
 	;; 2nd [31-0]:Instruction address
 	;; 3rd [31-0]:Subroutine address
-	dc.l	$1000F000,inst_move ,disb_move	; MOVE.B
-	dc.l	$2040F1C0,inst_movea,disb_move	; MOVEA.L
-	dc.l	$2000F000,inst_move ,disb_move	; MOVE.L
-	dc.l	$3040F1C0,inst_movea,disb_move	; MOVEA.W
-	dc.l	$3000F000,inst_move ,disb_move	; MOVE.W
-	dc.l	$00000000,inst_unknw,disb_unknw	; End mark
+	dc.l	$003CFFFF,inst_ori_ccr,dasb_none	; ORItoCCR
+	dc.l	$007CFFFF,inst_ori_sr ,dasb_none	; ORItoSR
+	dc.l	$0000FF00,inst_ori    ,dasb_imidt	; ORI
+	dc.l	$1000F000,inst_move   ,dasb_move	; MOVE.B
+	dc.l	$2040F1C0,inst_movea  ,dasb_move	; MOVEA.L
+	dc.l	$2000F000,inst_move   ,dasb_move	; MOVE.L
+	dc.l	$3040F1C0,inst_movea  ,dasb_move	; MOVEA.W
+	dc.l	$3000F000,inst_move   ,dasb_move	; MOVE.W
+	dc.l	$00000000,inst_unknw  ,dasb_unknw	; End mark
 
 admd_tbl:
 	;; Adress mode table
@@ -640,10 +669,16 @@ admd_tbl:
 	dc.l	$3B3F0000,admd_111_011		; "(d8,PC,Xn)"
 	dc.l	$00000000,admd_xxx_xxx		; End mark
 
+inst_ori_ccr:	dc.b	"ORI.B #<data>,CCR",$00
+inst_ori_sr:	dc.b	"ORI.W #<data>,SR",$00
+inst_ori:	dc.b	"ORI",$00
+
 inst_move:	dc.b	"MOVE",$00
 inst_movea:	dc.b	"MOVEA",$00
 inst_unknw:	dc.b	"Unknown",$00		; Unknown
 
+inst_sz_ord1:	dc.b	$01,$03,$02		; Size order1
+inst_sz_ord2:	dc.b	$00,$01,$02		; Size order2
 inst_sz_b:	dc.b	".B",$00
 inst_sz_w:	dc.b	".W",$00
 inst_sz_l:	dc.b	".L",$00
@@ -2670,5 +2705,9 @@ bpt2_adr:	ds.l	1
 tmpb_adr:	ds.l	2
 
 dbg_wend	equ	*
+
+;; Disassemble work area
+dasm_op:	ds.w	1
+dasm_adr:	ds.l	1
 
 	END
