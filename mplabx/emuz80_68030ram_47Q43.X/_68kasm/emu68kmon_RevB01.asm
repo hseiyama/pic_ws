@@ -461,12 +461,11 @@ DI0:
 DI1:
 	MOVE.L	A1,dasm_adr	; Set instruction address
 	MOVE.W	(A1),dasm_op	; Set instruction
-	;; Print address
+	;; Out address
 	MOVE.L	dasm_adr,D0
 	BSR	HEXOUT8
-	;; Print operation code
-	MOVE.B	#' ',D0
-	BSR	CONOUT
+	;; Out operation code
+	BSR	cout_space
 	MOVE.W	dasm_op,D0
 	BSR	HEXOUT4
 	;; Search instruction table
@@ -482,9 +481,8 @@ DI2:
 DI3:
 	MOVE.L	A0,A1
 	ADD.L	D0,A1		; Match instruction table address
-	;; Print instruction
-	MOVE.B	#' ',D0
-	BSR	CONOUT
+	;; Out instruction
+	BSR	cout_space
 	MOVE.L	4(A1),A0	; Get [2nd]Instruction address
 	BSR	STROUT
 	;; Call instruction subroutine
@@ -494,54 +492,33 @@ DI3:
 	BRA	WSTART
 
 dasb_imidt:
-	;; Print size
-	MOVE.W	dasm_op,D0
-	SWAP	D0
+	;; Out size
 	MOVE.W	#7,D0
-	BSR	dasm_get_w2bit
-	LEA	inst_sz_ord2,A0
-	BSR	dasm_size_2bit
-	;; Print operand1
-	MOVE.B	#' ',D0
-	BSR	CONOUT
+	BSR	dasm_out_size_2bit
+	;; Out operand1
+	BSR	cout_space
 	LEA	admd_111_100,A0
 	BSR	STROUT
-	;; Print operand2
-	MOVE.B	#',',D0
-	BSR	CONOUT
-	MOVE.W	dasm_op,D0
-	AND.W	#$003F,D0
-	BSR	dasm_eaddr
+	;; Out operand2
+	BSR	cout_comma
+	BSR	dasm_out_eaddr
 	RTS
 
 dasb_move:
-	;; Print size
-	MOVE.W	dasm_op,D0
-	SWAP	D0
+	;; Out size
 	MOVE.W	#13,D0
-	BSR	dasm_get_w2bit
-	LEA	inst_sz_ord1,A0
-	BSR	dasm_size_2bit
-	;; Print operand1
-	MOVE.B	#' ',D0
-	BSR	CONOUT
-	MOVE.W	dasm_op,D0
-	AND.W	#$003F,D0
-	BSR	dasm_eaddr
-	;; Print operand2
-	MOVE.B	#',',D0
-	BSR	CONOUT
-	MOVE.W	dasm_op,D0
-	SWAP	D0
-	MOVE.W	#11,D0
-	BSR	dasm_get_w6bit
-	BSR	dasm_ea_dst
+	BSR	dasm_out_size_2bit_mv
+	;; Out operand1
+	BSR	cout_space
+	BSR	dasm_out_eaddr
+	;; Out operand2
+	BSR	cout_comma
+	BSR	dasm_out_eaddr_mv
 	RTS
 
 dasb_unknw:
-	;; Print message
-	MOVE.B	#' ',D0
-	BSR	CONOUT
+	;; Out message
+	BSR	cout_space
 	LEA	admd_xxx_xxx,A0
 	BSR	STROUT
 	RTS
@@ -549,30 +526,50 @@ dasb_unknw:
 dasb_none:
 	RTS
 
-dasm_get_w2bit:
-	;; [D0] Word data(7-4bit),size(3-0bit)
-	MOVE.L	D1,-(A7)	; Push
-	MOVE.W	D0,D1
-	SUB.W	#1,D1
-	SWAP	D0
-	LSR.W	D1,D0
-	AND.W	#$0003,D0
-	MOVE.L	(A7)+,D1	; Pop
-	RTS
+dasm_out_size_2bit:
+	;; Out size
+	LEA	inst_get2_pm,A0
+	BSR	dasm_get_op
+	LEA	inst_sz_pm,A0
+	BRA	dasm_size_2bit	; RTS in subroutine
 
-dasm_get_w6bit:
-	;; [D0] Word data(7-4bit),size(3-0bit)
+dasm_out_size_2bit_mv:
+	;; Out size(move)
+	LEA	inst_get2_pm,A0
+	BSR	dasm_get_op
+	LEA	inst_sz_pm_mv,A0
+	BRA	dasm_size_2bit	; RTS in subroutine
+
+dasm_out_eaddr:
+	;; Out effective address
+	MOVE.W	dasm_op,D0
+	AND.W	#$003F,D0
+	BRA	dasm_eaddr	; RTS in subroutine
+
+dasm_out_eaddr_mv:
+	;; Out effective address(move)
+	MOVE.W	#11,D0
+	LEA	inst_get6_pm,A0
+	BSR	dasm_get_op
+	BRA	dasm_eaddr_mv	; RTS in subroutine
+
+dasm_get_op:
+	;; In [D0] Start bit position
+	;; In [A0] Parameter(offset,mask)
+	;; Get value from opecpde
 	MOVE.L	D1,-(A7)	; Push
 	MOVE.W	D0,D1
-	SUB.W	#5,D1
-	SWAP	D0
+	SUB.W	(A0),D1
+	MOVE.W	dasm_op,D0
 	LSR.W	D1,D0
-	AND.W	#$003F,D0
+	AND.W	2(A0),D0
 	MOVE.L	(A7)+,D1	; Pop
 	RTS
 
 dasm_size_2bit:
-	;; [D0] Size
+	;; In [D0] Size
+	;; In [A0] Parameter(size value)
+	;; Out size
 	CMP.B	(A0),D0		; Check byte size
 	BEQ	dasm_size1_0
 	CMP.B	1(A0),D0	; Check word size
@@ -594,7 +591,7 @@ dasm_size1_3:
 	RTS
 
 dasm_eaddr:
-	;; [D0] Address mode
+	;; In [D0] Address mode
 	MOVE.L	A0,-(A7)	; Push
 	MOVE.L	D1,-(A7)	; Push
 	MOVE.L	D2,-(A7)	; Push
@@ -610,7 +607,7 @@ dasm_eaddr_0:
 	BRA	dasm_eaddr_0
 dasm_eaddr_1:
 	ADD.L	D1,A0
-	;; Print effective address
+	;; Out effective address
 	MOVE.L	4(A0),A0	; Get [2nd]Effective address(address)
 	BSR	STROUT
 	MOVE.L	(A7)+,D2	; Pop
@@ -618,8 +615,9 @@ dasm_eaddr_1:
 	MOVE.L	(A7)+,A0	; Pop
 	RTS
 
-dasm_ea_dst:
-	;; Exchange D0(5-3bit),D0(2-0bit)
+dasm_eaddr_mv:
+	;; In/Out [D0] Address mode
+	;; Exchange mode <-> register
 	MOVE.L	D1,-(A7)	; Push
 	MOVE.B	D0,D1
 	LSR.B	#3,D0
@@ -628,7 +626,15 @@ dasm_ea_dst:
 	ANDI.B	#$38,D1
 	OR.B	D1,D0
 	MOVE.L	(A7)+,D1	; Pop
-	BRA	dasm_eaddr
+	BRA	dasm_eaddr	; RTS in subroutine
+
+cout_space:
+	MOVE.B	#' ',D0
+	BRA	CONOUT		; RTS in subroutine
+
+cout_comma:
+	MOVE.B	#',',D0
+	BRA	CONOUT		; RTS in subroutine
 
 inst_tbl_sz	equ	12
 admd_tbl_sz	equ	8
@@ -677,8 +683,11 @@ inst_move:	dc.b	"MOVE",$00
 inst_movea:	dc.b	"MOVEA",$00
 inst_unknw:	dc.b	"Unknown",$00		; Unknown
 
-inst_sz_ord1:	dc.b	$01,$03,$02		; Size order1
-inst_sz_ord2:	dc.b	$00,$01,$02		; Size order2
+inst_get2_pm:	dc.w	$0001,$0003		; get_op parameter(2bit)
+inst_get6_pm:	dc.w	$0005,$003F		; get_op parameter(6bit)
+
+inst_sz_pm:	dc.b	$00,$01,$02		; size_2bit parameter
+inst_sz_pm_mv:	dc.b	$01,$03,$02		; size_2bit parameter(move)
 inst_sz_b:	dc.b	".B",$00
 inst_sz_w:	dc.b	".W",$00
 inst_sz_l:	dc.b	".L",$00
