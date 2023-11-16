@@ -474,7 +474,7 @@ DI1:
 DI2:
 	MOVE.W	2(A0,D0),D1	; Get [1st]Mask data
 	AND.W	dasm_op,D1
-	CMP.W	(A0,D0),D1	; Compare [1st]Instruction data
+	CMP.W	0(A0,D0),D1	; Compare [1st]Instruction data
 	BEQ	DI3
 	ADDI.L	#inst_tbl_sz,D0
 	BRA	DI2
@@ -519,7 +519,7 @@ dasb_move:
 dasb_unknw:
 	;; Out message
 	BSR	cout_space
-	LEA	admd_xxx_xxx,A0
+	LEA	admd_111_1xx,A0
 	BSR	STROUT
 	RTS
 
@@ -571,22 +571,22 @@ dasm_size_2bit:
 	;; In [A0] Parameter(size value)
 	;; Out size
 	CMP.B	(A0),D0		; Check byte size
-	BEQ	dasm_size1_0
+	BEQ	dasm_size_2bit_0
 	CMP.B	1(A0),D0	; Check word size
-	BEQ	dasm_size1_1
+	BEQ	dasm_size_2bit_1
 	CMP.B	2(A0),D0	; Check long size
-	BEQ	dasm_size1_2
+	BEQ	dasm_size_2bit_2
 	LEA	inst_sz_x,A0	; Unknown
-	BRA	dasm_size1_3
-dasm_size1_0:
+	BRA	dasm_size_2bit_3
+dasm_size_2bit_0:
 	LEA	inst_sz_b,A0
-	BRA	dasm_size1_3
-dasm_size1_1:
+	BRA	dasm_size_2bit_3
+dasm_size_2bit_1:
 	LEA	inst_sz_w,A0
-	BRA	dasm_size1_3
-dasm_size1_2:
+	BRA	dasm_size_2bit_3
+dasm_size_2bit_2:
 	LEA	inst_sz_l,A0
-dasm_size1_3:
+dasm_size_2bit_3:
 	BSR	STROUT
 	RTS
 
@@ -601,7 +601,7 @@ dasm_eaddr:
 dasm_eaddr_0:
 	MOVE.B	1(A0,D1),D2	; Get [1st]Mask data
 	AND.B	D0,D2
-	CMP.B	(A0,D1),D2	; Compare [1st]Mode,register data
+	CMP.B	0(A0,D1),D2	; Compare [1st]Mode,register data
 	BEQ	dasm_eaddr_1
 	ADDI.L	#admd_tbl_sz,D1
 	BRA	dasm_eaddr_0
@@ -648,11 +648,115 @@ inst_tbl:
 	dc.l	$003CFFFF,inst_ori_ccr,dasb_none	; ORItoCCR
 	dc.l	$007CFFFF,inst_ori_sr ,dasb_none	; ORItoSR
 	dc.l	$0000FF00,inst_ori    ,dasb_imidt	; ORI
+
+	dc.l	$00C0F9C0,inst_unknw  ,dasb_unknw	; CMP2
+	dc.l	$00C0F9C0,inst_unknw  ,dasb_unknw	; CHK2
+	dc.l	$0100F100,inst_unknw  ,dasb_unknw	; Bit(Dynamic)
+	dc.l	$0008F038,inst_unknw  ,dasb_unknw	; MOVEP
+	dc.l	$0200FF00,inst_unknw  ,dasb_unknw	; ANDI
+	dc.l	$023CFFFF,inst_unknw  ,dasb_unknw	; ANDItoCCR
+	dc.l	$027CFFFF,inst_unknw  ,dasb_unknw	; ANDItoSR
+	dc.l	$0400FF00,inst_unknw  ,dasb_unknw	; SUBI
+	dc.l	$0600FF00,inst_unknw  ,dasb_unknw	; ADDI
+	dc.l	$08C0F9C0,inst_unknw  ,dasb_unknw	; CAS
+	dc.l	$08FCF9FF,inst_unknw  ,dasb_unknw	; CAS2
+	dc.l	$0800FF00,inst_unknw  ,dasb_unknw	; Bit(Static)
+	dc.l	$0A00FF00,inst_unknw  ,dasb_unknw	; EORI
+	dc.l	$0A3CFFFF,inst_unknw  ,dasb_unknw	; EORItoCCR
+	dc.l	$0A7CFFFF,inst_unknw  ,dasb_unknw	; EORItoSR
+	dc.l	$0C00FF00,inst_unknw  ,dasb_unknw	; CMPI
+	dc.l	$0E00FF00,inst_unknw  ,dasb_unknw	; MOVES
+
 	dc.l	$1000F000,inst_move   ,dasb_move	; MOVE.B
 	dc.l	$2040F1C0,inst_movea  ,dasb_move	; MOVEA.L
 	dc.l	$2000F000,inst_move   ,dasb_move	; MOVE.L
 	dc.l	$3040F1C0,inst_movea  ,dasb_move	; MOVEA.W
 	dc.l	$3000F000,inst_move   ,dasb_move	; MOVE.W
+
+	dc.l	$4000FF00,inst_unknw  ,dasb_unknw	; NEGX
+	dc.l	$40C0FFC0,inst_unknw  ,dasb_unknw	; MOVEfromSR
+	dc.l	$4000F040,inst_unknw  ,dasb_unknw	; CHK
+	dc.l	$41C0F1C0,inst_unknw  ,dasb_unknw	; LEA
+	dc.l	$4200FF00,inst_unknw  ,dasb_unknw	; CLR
+	dc.l	$42C0FFC0,inst_unknw  ,dasb_unknw	; MOVEfromCCR
+	dc.l	$4400FF00,inst_unknw  ,dasb_unknw	; NEG
+	dc.l	$44C0FFC0,inst_unknw  ,dasb_unknw	; MOVEtoCCR
+	dc.l	$4600FF00,inst_unknw  ,dasb_unknw	; NOT
+	dc.l	$46C0FFC0,inst_unknw  ,dasb_unknw	; MOVEtoSR
+	dc.l	$4800FFC0,inst_unknw  ,dasb_unknw	; NBCD
+	dc.l	$4808FFF8,inst_unknw  ,dasb_unknw	; LINK.L
+	dc.l	$4840FFF8,inst_unknw  ,dasb_unknw	; SWAP
+	dc.l	$4840FFC0,inst_unknw  ,dasb_unknw	; PEA
+	dc.l	$4800FE38,inst_unknw  ,dasb_unknw	; EXT/EXTB
+	dc.l	$4880FB80,inst_unknw  ,dasb_unknw	; MOVEM Registers to EA
+	dc.l	$4A00FF00,inst_unknw  ,dasb_unknw	; TST
+	dc.l	$4AC0FFC0,inst_unknw  ,dasb_unknw	; TAS
+	dc.l	$4AFCFFFF,inst_unknw  ,dasb_unknw	; ILLEGAL
+	dc.l	$4C00FFC0,inst_unknw  ,dasb_unknw	; MULS/MULU.L
+	dc.l	$4C40FFC0,inst_unknw  ,dasb_unknw	; DIVS/DIVU.L DIVUL/DIVSL
+	dc.l	$4880FB80,inst_unknw  ,dasb_unknw	; MOVEM EA to Registers
+	dc.l	$4E40FFF0,inst_unknw  ,dasb_unknw	; TRAP
+	dc.l	$4E50FFF8,inst_unknw  ,dasb_unknw	; LINK.W
+	dc.l	$4E60FFF8,inst_unknw  ,dasb_unknw	; UNLK
+	dc.l	$4E60FFF8,inst_unknw  ,dasb_unknw	; MOVEtoUSP
+	dc.l	$4E68FFF8,inst_unknw  ,dasb_unknw	; MOVEfromUSP
+	dc.l	$4E70FFFF,inst_unknw  ,dasb_unknw	; RESET
+	dc.l	$4E71FFFF,inst_unknw  ,dasb_unknw	; NOP
+	dc.l	$4E73FFFF,inst_unknw  ,dasb_unknw	; RTE
+	dc.l	$4E74FFFF,inst_unknw  ,dasb_unknw	; RTD
+	dc.l	$4E75FFFF,inst_unknw  ,dasb_unknw	; RTS
+	dc.l	$4E76FFFF,inst_unknw  ,dasb_unknw	; TRAPV
+	dc.l	$4E77FFFF,inst_unknw  ,dasb_unknw	; RTR
+	dc.l	$4E7AFFFE,inst_unknw  ,dasb_unknw	; MOVEC
+	dc.l	$4E80FFC0,inst_unknw  ,dasb_unknw	; JSR
+	dc.l	$4EC0FFC0,inst_unknw  ,dasb_unknw	; JMP
+	dc.l	$5000F100,inst_unknw  ,dasb_unknw	; ADDQ
+	dc.l	$50C0F0C0,inst_unknw  ,dasb_unknw	; Scc
+	dc.l	$50C8F0F8,inst_unknw  ,dasb_unknw	; DBcc
+	dc.l	$50F8F0F8,inst_unknw  ,dasb_unknw	; TRAPcc
+	dc.l	$5100F100,inst_unknw  ,dasb_unknw	; SUBQ
+	dc.l	$6000F000,inst_unknw  ,dasb_unknw	; Bcc
+	dc.l	$6000FF00,inst_unknw  ,dasb_unknw	; BRA
+	dc.l	$6100FF00,inst_unknw  ,dasb_unknw	; BSR
+	dc.l	$7000F100,inst_unknw  ,dasb_unknw	; MOVEQ
+	dc.l	$8000F000,inst_unknw  ,dasb_unknw	; OR
+	dc.l	$80C0F0C0,inst_unknw  ,dasb_unknw	; DIVS/DIVU.W
+	dc.l	$8100F1F0,inst_unknw  ,dasb_unknw	; SBCD
+	dc.l	$8140F1F0,inst_unknw  ,dasb_unknw	; PACK
+	dc.l	$8180F1F0,inst_unknw  ,dasb_unknw	; UNPK
+	dc.l	$9000F000,inst_unknw  ,dasb_unknw	; SUB
+	dc.l	$9000F000,inst_unknw  ,dasb_unknw	; SUBA
+	dc.l	$9100F130,inst_unknw  ,dasb_unknw	; SUBX
+	dc.l	$B000F000,inst_unknw  ,dasb_unknw	; CMP
+	dc.l	$B000F000,inst_unknw  ,dasb_unknw	; CMPA
+	dc.l	$B000F000,inst_unknw  ,dasb_unknw	; EOR
+	dc.l	$B108F138,inst_unknw  ,dasb_unknw	; CMPM
+	dc.l	$C000F000,inst_unknw  ,dasb_unknw	; AND
+	dc.l	$C0C0F0C0,inst_unknw  ,dasb_unknw	; MULS/MULU.W
+	dc.l	$C100F1F0,inst_unknw  ,dasb_unknw	; ABCD
+	dc.l	$C140F1F8,inst_unknw  ,dasb_unknw	; EXG Data Registers
+	dc.l	$C148F1F8,inst_unknw  ,dasb_unknw	; EXG Address Registers
+	dc.l	$C188F1F8,inst_unknw  ,dasb_unknw	; EXG Data Register and Address Register
+	dc.l	$D000F000,inst_unknw  ,dasb_unknw	; ADD
+	dc.l	$D000F000,inst_unknw  ,dasb_unknw	; ADDA
+	dc.l	$D100F130,inst_unknw  ,dasb_unknw	; ADDX
+	dc.l	$E000F000,inst_unknw  ,dasb_unknw	; Shift/Lotate Register
+	dc.l	$E0C0F8C0,inst_unknw  ,dasb_unknw	; Shift/Lotate Memory
+	dc.l	$E8C0F8C0,inst_unknw  ,dasb_unknw	; Bit Field
+	dc.l	$F000FFC0,inst_unknw  ,dasb_unknw	; PMOVE TT Registers
+	dc.l	$F000FFC0,inst_unknw  ,dasb_unknw	; PLOAD
+	dc.l	$F000FFC0,inst_unknw  ,dasb_unknw	; PFLUSH
+	dc.l	$F000FFC0,inst_unknw  ,dasb_unknw	; PMOVE TC,SRP,and CRP Registers
+	dc.l	$F000FFC0,inst_unknw  ,dasb_unknw	; PMOVE MMUSR Register
+	dc.l	$F000FFC0,inst_unknw  ,dasb_unknw	; PTEST
+	dc.l	$F000F1C0,inst_unknw  ,dasb_unknw	; cpGEN
+	dc.l	$F040F1C0,inst_unknw  ,dasb_unknw	; cpScc
+	dc.l	$F048F1F8,inst_unknw  ,dasb_unknw	; cpDBcc
+	dc.l	$F078F1F8,inst_unknw  ,dasb_unknw	; cpTRAPcc
+	dc.l	$F080F180,inst_unknw  ,dasb_unknw	; cpBcc
+	dc.l	$F100F1C0,inst_unknw  ,dasb_unknw	; cpSAVE
+	dc.l	$F140F1C0,inst_unknw  ,dasb_unknw	; cpRESTORE
+
 	dc.l	$00000000,inst_unknw  ,dasb_unknw	; End mark
 
 admd_tbl:
@@ -673,7 +777,7 @@ admd_tbl:
 	dc.l	$3C3F0000,admd_111_100		; "#<data>"
 	dc.l	$3A3F0000,admd_111_010		; "(d16,PC)"
 	dc.l	$3B3F0000,admd_111_011		; "(d8,PC,Xn)"
-	dc.l	$00000000,admd_xxx_xxx		; End mark
+	dc.l	$00000000,admd_111_1xx		; End mark
 
 inst_ori_ccr:	dc.b	"ORI.B #<data>,CCR",$00
 inst_ori_sr:	dc.b	"ORI.W #<data>,SR",$00
@@ -705,7 +809,7 @@ admd_111_001:	dc.b	"(xxx).L",$00
 admd_111_100:	dc.b	"#<data>",$00
 admd_111_010:	dc.b	"(d16,PC)",$00
 admd_111_011:	dc.b	"(d8,PC,Xn)",$00
-admd_xxx_xxx:	dc.b	"Unknown",$00		; Unknown
+admd_111_1xx:	dc.b	"Unknown",$00		; Unknown
 
 ;;;
 ;;; GO address
