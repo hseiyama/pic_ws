@@ -590,6 +590,80 @@ dasb_logan
 	BSR	STROUT
 	RTS
 
+dasb_quick:
+	;; Out size
+	MOVE.W	#7,D0
+	BSR	dasm_out_size_2bit
+	;; Out operand1
+	BSR	cout_space
+	LEA	admd_111_100,A0	; "#<data>"
+	BSR	STROUT
+	;; Out operand2
+	BSR	cout_comma
+	BSR	dasm_out_eaddr
+	RTS
+
+dasb_mvfcr:
+	;; Out size
+	LEA	inst_sz_w,A0	; ".W"
+	BSR	STROUT
+	;; Out operand1
+	BSR	cout_space
+	LEA	oprnd_ccr,A0	; "CCR"
+	BSR	STROUT
+	;; Out operand2
+	BSR	cout_comma
+	BSR	dasm_out_eaddr
+	RTS
+
+dasb_mvtcr:
+	;; Out size
+	LEA	inst_sz_w,A0	; ".W"
+	BSR	STROUT
+	;; Out operand1
+	BSR	cout_space
+	BSR	dasm_out_eaddr
+	;; Out operand2
+	BSR	cout_comma
+	LEA	oprnd_ccr,A0	; "CCR"
+	BSR	STROUT
+	RTS
+
+dasb_mvfsr:
+	;; Out size
+	LEA	inst_sz_w,A0	; ".W"
+	BSR	STROUT
+	;; Out operand1
+	BSR	cout_space
+	LEA	oprnd_sr,A0	; "SR"
+	BSR	STROUT
+	;; Out operand2
+	BSR	cout_comma
+	BSR	dasm_out_eaddr
+	RTS
+
+dasb_mvtsr:
+	;; Out size
+	LEA	inst_sz_w,A0	; ".W"
+	BSR	STROUT
+	;; Out operand1
+	BSR	cout_space
+	BSR	dasm_out_eaddr
+	;; Out operand2
+	BSR	cout_comma
+	LEA	oprnd_sr,A0	; "SR"
+	BSR	STROUT
+	RTS
+
+dasb_branc:
+	;; Out size
+	BSR	dasm_out_size_displace
+	;; Out operand1
+	BSR	cout_space
+	LEA	oprnd_label,A0	; "<label>"
+	BSR	STROUT
+	RTS
+
 dasb_unknw:
 	;; Out message
 	BSR	cout_space
@@ -623,6 +697,25 @@ dasm_out_size_2bit_mv:
 	BSR	dasm_get_op
 	LEA	inst_sz_pm_mv,A0
 	BRA	dasm_size_2bit	; RTS in subroutine
+
+dasm_out_size_displace:
+	;; Out size
+	MOVE.W	dasm_op,D0
+	AND.W	#$00FF,D0
+	CMP.B	#$FF,D0		; Check long size
+	BEQ	dasm_out_size_displace_0
+	CMP.B	#$00,D0		; Check word size
+	BEQ	dasm_out_size_displace_1
+	LEA	inst_sz_b,A0	; Match byte size
+	BRA	dasm_out_size_displace_2
+dasm_out_size_displace_0:
+	LEA	inst_sz_l,A0
+	BRA	dasm_out_size_displace_2
+dasm_out_size_displace_1:
+	LEA	inst_sz_w,A0
+dasm_out_size_displace_2:
+	BSR	STROUT
+	RTS
 
 dasm_out_eaddr:
 	;; Out effective address
@@ -761,19 +854,19 @@ inst_tbl:
 	dc.l	$2000F000,inst_move    ,dasb_move	; MOVE Long
 	dc.l	$3040F1C0,inst_movea   ,dasb_move	; MOVEA Word
 	dc.l	$3000F000,inst_move    ,dasb_move	; MOVE Word
-	dc.l	$40C0FFC0,inst_unknw   ,dasb_unknw	; MOVE from SR
+	dc.l	$40C0FFC0,inst_move    ,dasb_mvfsr	; MOVE from SR
 	dc.l	$4000FF00,inst_negx    ,dasb_oprd1	; NEGX
 	dc.l	$4000F040,inst_unknw   ,dasb_unknw	; CHK
 	dc.l	$41C0F1C0,inst_unknw   ,dasb_unknw	; LEA
-	dc.l	$42C0FFC0,inst_unknw   ,dasb_unknw	; MOVE from CCR
+	dc.l	$42C0FFC0,inst_move    ,dasb_mvfcr	; MOVE from CCR
 	dc.l	$4200FF00,inst_clr     ,dasb_oprd1	; CLR
-	dc.l	$44C0FFC0,inst_unknw   ,dasb_unknw	; MOVE to CCR
+	dc.l	$44C0FFC0,inst_move    ,dasb_mvtcr	; MOVE to CCR
 	dc.l	$4400FF00,inst_neg     ,dasb_oprd1	; NEG
-	dc.l	$46C0FFC0,inst_unknw   ,dasb_unknw	; MOVE to SR
+	dc.l	$46C0FFC0,inst_move    ,dasb_mvtsr	; MOVE to SR
 	dc.l	$4600FF00,inst_not     ,dasb_oprd1	; NOT
 	dc.l	$4800FFC0,inst_nbcd    ,dasb_eaddr	; NBCD
 ;	dc.l	$4808FFF8,inst_unknw   ,dasb_unknw	; LINK Long
-	dc.l	$4840FFF8,inst_unknw   ,dasb_unknw	; SWAP
+	dc.l	$4840FFF8,inst_swap    ,dasb_none	; SWAP
 ;	dc.l	$4848FFF8,inst_unknw   ,dasb_unknw	; BKPT
 	dc.l	$4840FFC0,inst_pea     ,dasb_eaddr	; PEA
 	dc.l	$4800FE38,inst_unknw   ,dasb_unknw	; EXT/EXTB
@@ -784,11 +877,11 @@ inst_tbl:
 ;	dc.l	$4C00FFC0,inst_unknw   ,dasb_unknw	; MULS/MULU Long
 ;	dc.l	$4C40FFC0,inst_unknw   ,dasb_unknw	; DIVS/DIVU Long,DIVUL/DIVSL
 	dc.l	$4880FB80,inst_unknw   ,dasb_unknw	; MOVEM EA to Registers
-	dc.l	$4E40FFF0,inst_unknw   ,dasb_unknw	; TRAP
-	dc.l	$4E50FFF8,inst_unknw   ,dasb_unknw	; LINK Word
-	dc.l	$4E60FFF8,inst_unknw   ,dasb_unknw	; UNLK
-	dc.l	$4E60FFF8,inst_unknw   ,dasb_unknw	; MOVE to USP
-	dc.l	$4E68FFF8,inst_unknw   ,dasb_unknw	; MOVE from USP
+	dc.l	$4E40FFF0,inst_trap    ,dasb_none	; TRAP
+	dc.l	$4E50FFF8,inst_link    ,dasb_non1w	; LINK Word
+	dc.l	$4E60FFF8,inst_ulink   ,dasb_none	; UNLK
+	dc.l	$4E60FFF8,inst_mv_t_usp,dasb_none	; MOVE to USP
+	dc.l	$4E68FFF8,inst_mv_f_usp,dasb_none	; MOVE from USP
 	dc.l	$4E70FFFF,inst_reset   ,dasb_none	; RESET
 	dc.l	$4E71FFFF,inst_nop     ,dasb_none	; NOP
 	dc.l	$4E73FFFF,inst_rte     ,dasb_none	; RTE
@@ -799,15 +892,30 @@ inst_tbl:
 	dc.l	$4E7AFFFE,inst_unknw   ,dasb_unknw	; MOVEC
 	dc.l	$4E80FFC0,inst_jsr     ,dasb_eaddr	; JSR
 	dc.l	$4EC0FFC0,inst_jmp     ,dasb_eaddr	; JMP
-	dc.l	$5000F100,inst_unknw   ,dasb_unknw	; ADDQ
+	dc.l	$5000F100,inst_addq    ,dasb_quick	; ADDQ
 	dc.l	$50C0F0C0,inst_unknw   ,dasb_unknw	; Scc
 	dc.l	$50C8F0F8,inst_unknw   ,dasb_unknw	; DBcc
 ;	dc.l	$50F8F0F8,inst_unknw   ,dasb_unknw	; TRAPcc
-	dc.l	$5100F100,inst_unknw   ,dasb_unknw	; SUBQ
-	dc.l	$6000F000,inst_unknw   ,dasb_unknw	; Bcc
-	dc.l	$6000FF00,inst_unknw   ,dasb_unknw	; BRA
-	dc.l	$6100FF00,inst_unknw   ,dasb_unknw	; BSR
-	dc.l	$7000F100,inst_unknw   ,dasb_unknw	; MOVEQ
+	dc.l	$5100F100,inst_subq    ,dasb_quick	; SUBQ
+
+	dc.l	$6400FF00,inst_bcc     ,dasb_branc	; BCC
+	dc.l	$6500FF00,inst_bcs     ,dasb_branc	; BCS
+	dc.l	$6700FF00,inst_beq     ,dasb_branc	; BEQ
+	dc.l	$6C00FF00,inst_bge     ,dasb_branc	; BGE
+	dc.l	$6E00FF00,inst_bgt     ,dasb_branc	; BGT
+	dc.l	$6200FF00,inst_bhi     ,dasb_branc	; BHI
+	dc.l	$6F00FF00,inst_ble     ,dasb_branc	; BLE
+	dc.l	$6300FF00,inst_bls     ,dasb_branc	; BLS
+	dc.l	$6D00FF00,inst_blt     ,dasb_branc	; BLT
+	dc.l	$6B00FF00,inst_bmi     ,dasb_branc	; BMI
+	dc.l	$6600FF00,inst_bne     ,dasb_branc	; BNE
+	dc.l	$6A00FF00,inst_bpl     ,dasb_branc	; BPL
+	dc.l	$6800FF00,inst_bvc     ,dasb_branc	; BVC
+	dc.l	$6900FF00,inst_bvs     ,dasb_branc	; BVS
+
+	dc.l	$6000FF00,inst_bra     ,dasb_branc	; BRA
+	dc.l	$6100FF00,inst_bsr     ,dasb_branc	; BSR
+	dc.l	$7000F100,inst_moveq   ,dasb_none	; MOVEQ
 	dc.l	$80C0F0C0,inst_unknw   ,dasb_unknw	; DIVS/DIVU Word
 	dc.l	$8100F1F0,inst_unknw   ,dasb_unknw	; SBCD
 ;	dc.l	$8140F1F0,inst_unknw   ,dasb_unknw	; PACK
@@ -896,10 +1004,16 @@ inst_clr:	dc.b	"CLR",$00
 inst_neg:	dc.b	"NEG",$00
 inst_not:	dc.b	"NOT",$00
 inst_nbcd:	dc.b	"NBCD",$00
+inst_swap:	dc.b	"SWAP.W Dn",$00
 inst_pea:	dc.b	"PEA",$00
 inst_tas:	dc.b	"TAS",$00
 inst_tst:	dc.b	"TST",$00
 inst_illegal:	dc.b	"ILLEGAL",$00
+inst_trap:	dc.b	"TRAP #<vector>",$00
+inst_link:	dc.b	"LINK.W An,#<dsiplacement>",$00
+inst_ulink:	dc.b	"ULINK An",$00
+inst_mv_t_usp:	dc.b	"MOVE.L An,USP",$00
+inst_mv_f_usp:	dc.b	"MOVE.L USP,An",$00
 inst_reset:	dc.b	"RESET",$00
 inst_nop:	dc.b	"NOP",$00
 inst_rte:	dc.b	"RTE",$00
@@ -908,6 +1022,27 @@ inst_trapv:	dc.b	"TRAPV",$00
 inst_rtr:	dc.b	"RTR",$00
 inst_jsr:	dc.b	"JSR",$00
 inst_jmp:	dc.b	"JMP",$00
+inst_addq:	dc.b	"ADDQ",$00
+inst_subq:	dc.b	"SUBQ",$00
+
+inst_bcc:	dc.b	"BCC",$00
+inst_bcs:	dc.b	"BCS",$00
+inst_beq:	dc.b	"BEQ",$00
+inst_bge:	dc.b	"BGE",$00
+inst_bgt:	dc.b	"BGT",$00
+inst_bhi:	dc.b	"BHI",$00
+inst_ble:	dc.b	"BLE",$00
+inst_bls:	dc.b	"BLS",$00
+inst_blt:	dc.b	"BLT",$00
+inst_bmi:	dc.b	"BMI",$00
+inst_bne:	dc.b	"BNE",$00
+inst_bpl:	dc.b	"BPL",$00
+inst_bvc:	dc.b	"BVC",$00
+inst_bvs:	dc.b	"BVS",$00
+
+inst_bra:	dc.b	"BRA",$00
+inst_bsr:	dc.b	"BSR",$00
+inst_moveq:	dc.b	"MOVEQ.L #<data>,Dn",$00
 inst_or:	dc.b	"OR",$00
 inst_suba:	dc.b	"SUBA",$00
 inst_sub:	dc.b	"SUB",$00
@@ -946,6 +1081,10 @@ admd_111_100:	dc.b	"#<data>",$00
 admd_111_010:	dc.b	"d16(PC)",$00
 admd_111_011:	dc.b	"d8(PC,Xn)",$00
 admd_111_1xx:	dc.b	"Unknown",$00		; Unknown
+
+oprnd_ccr	dc.b	"CCR",$00
+oprnd_sr	dc.b	"SR",$00
+oprnd_label	dc.b	"<label>",$00
 
 ;;;
 ;;; GO address
