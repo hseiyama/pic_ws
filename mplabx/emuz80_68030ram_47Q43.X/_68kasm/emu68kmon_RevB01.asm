@@ -453,13 +453,39 @@ DIASM:
 	BSR	SKIPSP
 	BSR	RDHEX
 	TST	D2
-	BEQ	DI0
-	MOVE.L	D1,A1
-	BRA	DI1
-DI0:
-	MOVE.L	REGPC,A1
-DI1:
-	MOVE.L	A1,dasm_adr	; Set instruction address
+	BEQ	DI01
+	MOVE.L	D1,dasm_adr	; Set instruction address
+	BRA	DI02
+DI01:
+	MOVE.L	REGPC,dasm_adr	; Set instruction address
+DI02:
+	MOVE.B	(A0),D0
+	TST.B	D0
+	BEQ	DI03
+	BSR	SKIPSP
+	MOVE.B	(A0),D0
+	CMP.B	#',',D0
+	BNE	ERR
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	MOVE.B	(A0),D0
+	BSR	UPPER
+	CMP.B	#'S',D0
+	BNE	ERR
+	ADDQ	#1,A0
+	BSR	RDDEC
+	TST	D2
+	BEQ	ERR
+	TST	D1		; Check "S0" is inhibit
+	BEQ	ERR
+	MOVE.W	D1,dasm_step	; Set disassemble step
+	BRA	DI10
+DI03:
+	MOVE.W	#1,dasm_step	; Set disassemble step
+DI10:
+	MOVE.W	#0,dasm_cdsz	; Initialize code size
+	MOVE.W	#0,dasm_opsz	; Initialize operate size
+	MOVEA.L	dasm_adr,A1
 	MOVE.W	(A1),dasm_op	; Set instruction
 	;; Out address
 	MOVE.L	dasm_adr,D0
@@ -471,24 +497,31 @@ DI1:
 	;; Search instruction table
 	LEA	inst_tbl,A0
 	MOVEQ	#0,D0
-DI2:
+DI11:
 	MOVE.W	2(A0,D0.W),D1	; Get [1st]Mask data
 	AND.W	dasm_op,D1
 	CMP.W	0(A0,D0.W),D1	; Compare [1st]Instruction data
-	BEQ	DI3
+	BEQ	DI12
 	ADDI.L	#inst_tbl_sz,D0
-	BRA	DI2
-DI3:
+	BRA	DI11
+DI12:
 	MOVE.L	A0,A1
 	ADD.L	D0,A1		; Match instruction table address
 	;; Out instruction
 	BSR	cout_space
 	MOVE.L	4(A1),A0	; Get [2nd]Instruction address
 	BSR	STROUT
+	ADDQ.W	#2,dasm_cdsz	; Add code size
 	;; Call instruction subroutine
 	MOVE.L	8(A1),A0	; Get [3rd]Subroutine address
 	JSR	(A0)
 	BSR	CRLF
+	;; Next instruction
+	MOVEA.L	dasm_adr,A1
+	ADDA.W	dasm_cdsz,A1
+	MOVE.L	A1,dasm_adr	; Set next instruction address
+	SUB.W	#1,dasm_step
+	BNE	DI10
 	BRA	WSTART
 
 dasb_imidt:
@@ -497,8 +530,7 @@ dasb_imidt:
 	BSR	dasm_out_size_2bit
 	;; Out operand1
 	BSR	cout_space
-	LEA	admd_111_100,A0
-	BSR	STROUT
+	BSR	dasm_out_imdata
 	;; Out operand2
 	BSR	cout_comma
 	BSR	dasm_out_eaddr
@@ -544,8 +576,7 @@ dasb_bitdy:
 dasb_bitst:
 	;; Out operand1
 	BSR	cout_space
-	LEA	admd_111_100,A0	; "#<data>"
-	BSR	STROUT
+	BSR	dasm_out_imdata
 	;; Out operand2
 	BSR	cout_comma
 	BSR	dasm_out_eaddr
@@ -670,7 +701,6 @@ dasb_extnd:
 	BSR	dasm_out_size_2bit
 	;; Out operand
 	BSR	cout_space
-;	BTST	#3,dasm_op	; 懸念あり
 	MOVE.W	dasm_op,D0
 	BTST	#3,D0
 	BNE	dasb_extnd_0
@@ -710,7 +740,6 @@ dasb_movem:
 	;; Out size
 	MOVE.W	#6,D0
 	BSR	dasm_out_size_1bit
-;	BTST	#10,dasm_op	; 警告あり
 	MOVE.W	dasm_op,D0
 	BTST	#10,D0
 	BNE	dasb_movem_0
@@ -791,6 +820,7 @@ dasb_unknw:
 	RTS
 
 dasb_non1w:
+	ADDQ.W	#2,dasm_cdsz	; Add code size
 	RTS
 
 dasb_none:
@@ -849,6 +879,10 @@ dasm_out_eaddr_mv:
 	BSR	dasm_get_op
 	BRA	dasm_eaddr_mv	; RTS in subroutine
 
+dasm_out_imdata:
+	MOVEI.W	#$003C,D0	; "#<data>"
+	BRA	dasm_eaddr	; RTS in subroutine
+
 dasm_get_op:
 	;; In [D0] Start bit position
 	;; In [A0] Parameter(offset adjust,mask)
@@ -875,12 +909,15 @@ dasm_size_2bit:
 	LEA	inst_sz_x,A0	; Unknown
 	BRA	dasm_size_2bit_3
 dasm_size_2bit_0:
+	MOVE.W	#4,dasm_opsz
 	LEA	inst_sz_l,A0
 	BRA	dasm_size_2bit_3
 dasm_size_2bit_1:
+	MOVE.W	#2,dasm_opsz
 	LEA	inst_sz_w,A0
 	BRA	dasm_size_2bit_3
 dasm_size_2bit_2:
+	MOVE.W	#2,dasm_opsz
 	LEA	inst_sz_b,A0
 dasm_size_2bit_3:
 	BSR	STROUT
@@ -903,6 +940,13 @@ dasm_eaddr_0:
 	BRA	dasm_eaddr_0
 dasm_eaddr_1:
 	ADD.L	D1,A0
+	MOVE.W	2(A0),D2	; Get [1st]Operand size
+	ADD.W	D2,dasm_cdsz	; Add code size
+	CMPI.L	#admd_111_100,4(A0); Check "#<data>"
+	BNE	dasm_eaddr_2
+	MOVE.W	dasm_opsz,D2
+	ADD.W	D2,dasm_cdsz	; Add code size
+dasm_eaddr_2:
 	;; Out effective address
 	MOVE.L	4(A0),A0	; Get [2nd]Effective address(address)
 	BSR	STROUT
@@ -1034,9 +1078,9 @@ inst_tbl:
 	dc.l	$48C0FFF8,inst_extl    ,dasb_none	; EXT Long
 ;	dc.l	$49C0FFF8,inst_unknw   ,dasb_unknw	; EXTB
 	dc.l	$4880FB80,inst_movem   ,dasb_movem	; MOVEM Registers to EA
+	dc.l	$4AFCFFFF,inst_illegal ,dasb_none	; ILLEGAL
 	dc.l	$4AC0FFC0,inst_tas     ,dasb_eaddr	; TAS
 	dc.l	$4A00FF00,inst_tst     ,dasb_oprd1	; TST
-	dc.l	$4AFCFFFF,inst_illegal ,dasb_none	; ILLEGAL
 ;	dc.l	$4C00FFC0,inst_unknw   ,dasb_unknw	; MULS/MULU Long
 ;	dc.l	$4C40FFC0,inst_unknw   ,dasb_unknw	; DIVS/DIVU Long,DIVUL/DIVSL
 	dc.l	$4880FB80,inst_movem   ,dasb_movem	; MOVEM EA to Registers
@@ -1124,18 +1168,18 @@ inst_tbl:
 	dc.l	$B0C0F0C0,inst_cmpa    ,dasb_logan	; CMPA
 	dc.l	$B000F100,inst_cmp     ,dasb_logdn	; CMP(toDn)
 	dc.l	$B100F100,inst_eor     ,dasb_logea	; EOR(toEA)
+	dc.l	$C100F1F0,inst_abcd    ,dasb_extnd	; ABCD
+	dc.l	$C140F1F8,inst_exgd    ,dasb_none	; EXG Data Registers
+	dc.l	$C148F1F8,inst_exga    ,dasb_none	; EXG Address Registers
+	dc.l	$C188F1F8,inst_exgda   ,dasb_none	; EXG Data Register and Address Register
 	dc.l	$C0C0F1C0,inst_mulu    ,dasb_muldv	; MULU Word
 	dc.l	$C1C0F1C0,inst_muls    ,dasb_muldv	; MULS Word
 	dc.l	$C000F100,inst_and     ,dasb_logdn	; AND(toDn)
 	dc.l	$C100F100,inst_and     ,dasb_logea	; AND(toEA)
-	dc.l	$C100F1F8,inst_abcd    ,dasb_extnd	; ABCD
-	dc.l	$C140F1F8,inst_exgd    ,dasb_none	; EXG Data Registers
-	dc.l	$C148F1F8,inst_exga    ,dasb_none	; EXG Address Registers
-	dc.l	$C188F1F8,inst_exgda   ,dasb_none	; EXG Data Register and Address Register
+	dc.l	$D100F130,inst_addx    ,dasb_extnd	; ADDX
 	dc.l	$D0C0F0C0,inst_adda    ,dasb_logan	; ADDA
 	dc.l	$D000F100,inst_add     ,dasb_logdn	; ADD(toDn)
 	dc.l	$D100F100,inst_add     ,dasb_logea	; ADD(toEA)
-	dc.l	$D100F130,inst_addx    ,dasb_extnd	; ADDX
 	dc.l	$E0C0FFC0,inst_asr     ,dasb_weadr	; ASR Memory
 	dc.l	$E1C0FFC0,inst_asl     ,dasb_weadr	; ASL Memory
 	dc.l	$E2C0FFC0,inst_lsr     ,dasb_weadr	; LSR Memory
@@ -1172,21 +1216,20 @@ admd_tbl:
 	;; Adress mode table
 	;; 1st [31-24]:Mode,register data
 	;;     [23-16]:Mask data
-	;;     [15-8]:Operand size(byte)
-	;;     [7-0]:No used
+	;;     [15-0]:Operand size
 	;; 2nd [31-0]:Effective address(address)
 	dc.l	$00380000,admd_000		; "Dn"
 	dc.l	$08380000,admd_001		; "An"
 	dc.l	$10380000,admd_010		; "(An)"
 	dc.l	$18380000,admd_011		; "(An)+"
 	dc.l	$20380000,admd_100		; "-(An)"
-	dc.l	$28380200,admd_101		; "d16(An)"
-	dc.l	$30380200,admd_110		; "d8(An,Xn)"
-	dc.l	$383F0200,admd_111_000		; "(xxx).W"
-	dc.l	$393F0400,admd_111_001		; "(xxx).L"
+	dc.l	$28380002,admd_101		; "d16(An)"
+	dc.l	$30380002,admd_110		; "d8(An,Xn)"
+	dc.l	$383F0002,admd_111_000		; "(xxx).W"
+	dc.l	$393F0004,admd_111_001		; "(xxx).L"
 	dc.l	$3C3F0000,admd_111_100		; "#<data>"
-	dc.l	$3A3F0200,admd_111_010		; "d16(PC)"
-	dc.l	$3B3F0200,admd_111_011		; "d8(PC,Xn)"
+	dc.l	$3A3F0002,admd_111_010		; "d16(PC)"
+	dc.l	$3B3F0002,admd_111_011		; "d8(PC,Xn)"
 	dc.l	$00000000,admd_111_1xx		; End mark
 
 ctrg_tbl:
@@ -1194,14 +1237,15 @@ ctrg_tbl:
 	;; 1st [31-16]:Control register code
 	;;     [15-0]:Mask data
 	;; 2nd [31-0]:Control register address
-	dc.l	$00000FFE,ctrg_sfc		; "SFC"
-	dc.l	$00010FFE,ctrg_dfc		; "DFC"
-	dc.l	$00020FFE,ctrg_cacr		; "CACR"
-	dc.l	$08000FFE,ctrg_usp		; "USP"
-	dc.l	$08010FFE,ctrg_vbr		; "VBR"
-	dc.l	$08020FFE,ctrg_caar		; "CAAR"
-	dc.l	$08030FFE,ctrg_msp		; "MSP"
-	dc.l	$08040FFE,ctrg_isp		; "ISP"
+	dc.l	$00000FFF,ctrg_sfc		; "SFC"
+	dc.l	$00010FFF,ctrg_dfc		; "DFC"
+	dc.l	$00020FFF,ctrg_cacr		; "CACR"
+	dc.l	$08000FFF,ctrg_usp		; "USP"
+	dc.l	$08010FFF,ctrg_vbr		; "VBR"
+	dc.l	$08020FFF,ctrg_caar		; "CAAR"
+	dc.l	$08030FFF,ctrg_msp		; "MSP"
+	dc.l	$08040FFF,ctrg_isp		; "ISP"
+	dc.l	$00000000,ctrg_unkw		; End mark
 
 inst_ori_ccr:	dc.b	"ORI.B #<data>,CCR",$00
 inst_ori_sr:	dc.b	"ORI.W #<data>,SR",$00
@@ -1382,6 +1426,7 @@ ctrg_vbr:	dc.b	"VBR",$00
 ctrg_caar:	dc.b	"CAAR",$00
 ctrg_msp:	dc.b	"MSP",$00
 ctrg_isp:	dc.b	"ISP",$00
+ctrg_unkw:	dc.b	"Unknown",$00		; Unknown
 
 ;;;
 ;;; GO address
@@ -2312,6 +2357,27 @@ RH1:
 RHE:
 	RTS
 
+RDDEC:
+	CLR	D2		; Count
+	CLR.L	D1		; Value
+RDC0:
+	MOVE.B	(A0),D0
+	BSR	UPPER
+	CMP.B	#'0',D0
+	BCS	RDCE
+	CMP.B	#'9'+1,D0
+	BCC	RDCE
+	SUB.B	#'0',D0
+	EXT.W	D0		; Byte -> Word
+	EXT.L	D0		; Word -> Long
+	MULU.L	#10,D1
+	ADD.L	D0,D1
+	ADDQ	#1,A0
+	ADDQ	#1,D2
+	BRA	RDC0
+RDCE:
+	RTS
+
 ;;;
 ;;; Exception Handler
 ;;;
@@ -2916,7 +2982,7 @@ HLPMSG:
 	DC.B	"BC[1|2] :Clear Break Point",CR,LF
 	DC.B	"BT :Reset Boot",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
-	DC.B	"DI[<adr>] :Disassemble",CR,LF
+	DC.B	"DI[<adr>][,s<steps>] :Mini Disassemble",CR,LF
 	DC.B	"G[<adr>][,<stop adr>] :Go and Stop",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"M[T(0-2)|S|M|I(0-7)] :Mode(SR System Byte)",CR,LF
@@ -3395,5 +3461,8 @@ dbg_wend	equ	*
 ;; Disassemble work area
 dasm_op:	ds.w	1
 dasm_adr:	ds.l	1
+dasm_step:	ds.w	1
+dasm_cdsz:	ds.w	1
+dasm_opsz:	ds.w	1
 
 	END
