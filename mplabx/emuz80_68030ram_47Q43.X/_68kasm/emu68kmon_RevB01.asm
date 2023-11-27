@@ -790,29 +790,31 @@ dasb_sfrtr_1:
 	RTS
 
 dasb_movec:
-	MOVE.L	dasm_adr,A0
-	MOVE.W	2(A0),D0
-	MOVE.W	dasm_op,D1
-	BTST	#0,D1
+	;; Out size
+	LEA	inst_sz_l,A0	; ".L"
+	BSR	STROUT
+	;; Operand
+	MOVE.W	dasm_op,D0
+	BTST	#0,D0
 	BNE	dasb_movec_0
 	;; Out operand1
 	BSR	cout_space
-	BSR	dasm_ctreg	; Control register
+	BSR	dasm_out_ctrlreg
 	;; Out operand2
 	BSR	cout_comma
-	BSR	dasm_adfld	; A/D Field
+	BSR	dasm_out_adfield
 	BRA	dasb_movec_1
 dasb_movec_0:
 	;; Out operand1
 	BSR	cout_space
-	BSR	dasm_adfld	; A/D Field
+	BSR	dasm_out_adfield
 	;; Out operand2
 	BSR	cout_comma
-	BSR	dasm_ctreg	; Control register
+	BSR	dasm_out_ctrlreg
 dasb_movec_1:
 	RTS
 
-dasb_unknw:
+dasb_unknown:
 	;; Out message
 	BSR	cout_space
 	LEA	admd_111_1xx,A0	; "Unknown"
@@ -882,6 +884,16 @@ dasm_out_eaddr_mv:
 dasm_out_imdata:
 	MOVEI.W	#$003C,D0	; "#<data>"
 	BRA	dasm_eaddr	; RTS in subroutine
+
+dasm_out_ctrlreg:
+	MOVE.L	dasm_adr,A0
+	MOVE.W	2(A0),D0
+	BRA	dasm_ctrlreg	; RTS in subroutine
+
+dasm_out_adfield:
+	MOVE.L	dasm_adr,A0
+	MOVE.W	2(A0),D0
+	BRA	dasm_adfield	; RTS in subroutine
 
 dasm_get_op:
 	;; In [D0] Start bit position
@@ -968,7 +980,7 @@ dasm_eaddr_mv:
 	MOVE.L	(A7)+,D1	; Pop
 	BRA	dasm_eaddr	; RTS in subroutine
 
-dasm_ctreg:
+dasm_ctrlreg:
 	;; In [D0] Operand1
 	MOVE.L	A0,-(A7)	; Push
 	MOVE.L	D1,-(A7)	; Push
@@ -976,33 +988,34 @@ dasm_ctreg:
 	;; Search control register table
 	LEA	ctrg_tbl,A0
 	MOVEQ	#0,D1
-dasm_ctreg_0:
+dasm_ctrlreg_0:
 	MOVE.W	2(A0,D1.W),D2	; Get [1st]Mask data
 	AND.W	D0,D2
-	CMP.B	0(A0,D1.W),D2	; Compare [1st]Control register code
-	BEQ	dasm_ctreg_1
+	CMP.W	0(A0,D1.W),D2	; Compare [1st]Control register code
+	BEQ	dasm_ctrlreg_1
 	ADDI.L	#ctrg_tbl_sz,D1
-	BRA	dasm_ctreg_0
-dasm_ctreg_1:
+	BRA	dasm_ctrlreg_0
+dasm_ctrlreg_1:
 	ADD.L	D1,A0
 	;; Out effective address
 	MOVE.L	4(A0),A0	; Get [2nd]Control register address
 	BSR	STROUT
+	ADDQ.W	#2,dasm_cdsz	; Add code size
 	MOVE.L	(A7)+,D2	; Pop
 	MOVE.L	(A7)+,D1	; Pop
 	MOVE.L	(A7)+,A0	; Pop
 	RTS
 
-dasm_adfld:
+dasm_adfield:
 	;; In [D0] Operand1
 	MOVE.L	A0,-(A7)	; Push
 	BTST	#15,D0
-	BNE	dasm_adfld_0
+	BNE	dasm_adfield_0
 	LEA	admd_000,A0	; "Dn"
-	BRA	dasm_adfld_1
-dasm_adfld_0:
+	BRA	dasm_adfield_1
+dasm_adfield_0:
 	LEA	admd_001,A0	; "An"
-dasm_adfld_1:
+dasm_adfield_1:
 	BSR	STROUT
 	MOVE.L	(A7)+,A0	; Pop
 	RTS
@@ -1028,8 +1041,8 @@ inst_tbl:
 	dc.l	$003CFFFF,inst_ori_ccr ,dasb_non1w	; ORI to CCR
 	dc.l	$007CFFFF,inst_ori_sr  ,dasb_non1w	; ORI to SR
 	dc.l	$0000FF00,inst_ori     ,dasb_imidt	; ORI
-;	dc.l	$00C0F9C0,inst_unknw   ,dasb_unknw	; CMP2
-;	dc.l	$00C0F9C0,inst_unknw   ,dasb_unknw	; CHK2
+;	dc.l	$00C0F9C0,inst_unknown ,dasb_unknown	; CMP2
+;	dc.l	$00C0F9C0,inst_unknown ,dasb_unknown	; CHK2
 	dc.l	$0100F1C0,inst_btst    ,dasb_bitdy	; BTST(Dynamic)
 	dc.l	$0180F1C0,inst_bclr    ,dasb_bitdy	; BCLR(Dynamic)
 	dc.l	$0140F1C0,inst_bchg    ,dasb_bitdy	; BCHG(Dynamic)
@@ -1043,8 +1056,8 @@ inst_tbl:
 	dc.l	$0200FF00,inst_andi    ,dasb_imidt	; ANDI
 	dc.l	$0400FF00,inst_subi    ,dasb_imidt	; SUBI
 	dc.l	$0600FF00,inst_addi    ,dasb_imidt	; ADDI
-;	dc.l	$08C0F9C0,inst_unknw   ,dasb_unknw	; CAS
-;	dc.l	$08FCF9FF,inst_unknw   ,dasb_unknw	; CAS2
+;	dc.l	$08C0F9C0,inst_unknown ,dasb_unknown	; CAS
+;	dc.l	$08FCF9FF,inst_unknown ,dasb_unknown	; CAS2
 	dc.l	$0800FF00,inst_btst    ,dasb_bitst	; BTST(Static)
 	dc.l	$0880FF00,inst_bclr    ,dasb_bitst	; BCLR(Static)
 	dc.l	$0840FF00,inst_bchg    ,dasb_bitst	; BCHG(Static)
@@ -1053,7 +1066,7 @@ inst_tbl:
 	dc.l	$0A7CFFFF,inst_eori_sr ,dasb_non1w	; EORI to SR
 	dc.l	$0A00FF00,inst_eori    ,dasb_imidt	; EORI
 	dc.l	$0C00FF00,inst_cmpi    ,dasb_imidt	; CMPI
-;	dc.l	$0E00FF00,inst_unknw   ,dasb_unknw	; MOVES
+;	dc.l	$0E00FF00,inst_unknown ,dasb_unknown	; MOVES
 	dc.l	$1000F000,inst_move    ,dasb_move	; MOVE Byte
 	dc.l	$2040F1C0,inst_movea   ,dasb_move	; MOVEA Long
 	dc.l	$2000F000,inst_move    ,dasb_move	; MOVE Long
@@ -1061,8 +1074,6 @@ inst_tbl:
 	dc.l	$3000F000,inst_move    ,dasb_move	; MOVE Word
 	dc.l	$40C0FFC0,inst_move    ,dasb_mvfsr	; MOVE from SR
 	dc.l	$4000FF00,inst_negx    ,dasb_oprd1	; NEGX
-	dc.l	$4000F040,inst_chk     ,dasb_logdn	; CHK
-	dc.l	$41C0F1C0,inst_lea     ,dasb_logan	; LEA
 	dc.l	$42C0FFC0,inst_move    ,dasb_mvfcr	; MOVE from CCR
 	dc.l	$4200FF00,inst_clr     ,dasb_oprd1	; CLR
 	dc.l	$44C0FFC0,inst_move    ,dasb_mvtcr	; MOVE to CCR
@@ -1070,35 +1081,37 @@ inst_tbl:
 	dc.l	$46C0FFC0,inst_move    ,dasb_mvtsr	; MOVE to SR
 	dc.l	$4600FF00,inst_not     ,dasb_oprd1	; NOT
 	dc.l	$4800FFC0,inst_nbcd    ,dasb_eaddr	; NBCD
-;	dc.l	$4808FFF8,inst_unknw   ,dasb_unknw	; LINK Long
+;	dc.l	$4808FFF8,inst_unknown ,dasb_unknown	; LINK Long
 	dc.l	$4840FFF8,inst_swap    ,dasb_none	; SWAP
-;	dc.l	$4848FFF8,inst_unknw   ,dasb_unknw	; BKPT
+;	dc.l	$4848FFF8,inst_unknown ,dasb_unknown	; BKPT
 	dc.l	$4840FFC0,inst_pea     ,dasb_eaddr	; PEA
 	dc.l	$4880FFF8,inst_extw    ,dasb_none	; EXT Word
 	dc.l	$48C0FFF8,inst_extl    ,dasb_none	; EXT Long
-;	dc.l	$49C0FFF8,inst_unknw   ,dasb_unknw	; EXTB
+;	dc.l	$49C0FFF8,inst_unknown ,dasb_unknown	; EXTB
 	dc.l	$4880FB80,inst_movem   ,dasb_movem	; MOVEM Registers to EA
 	dc.l	$4AFCFFFF,inst_illegal ,dasb_none	; ILLEGAL
 	dc.l	$4AC0FFC0,inst_tas     ,dasb_eaddr	; TAS
 	dc.l	$4A00FF00,inst_tst     ,dasb_oprd1	; TST
-;	dc.l	$4C00FFC0,inst_unknw   ,dasb_unknw	; MULS/MULU Long
-;	dc.l	$4C40FFC0,inst_unknw   ,dasb_unknw	; DIVS/DIVU Long,DIVUL/DIVSL
+;	dc.l	$4C00FFC0,inst_unknown ,dasb_unknown	; MULS/MULU Long
+;	dc.l	$4C40FFC0,inst_unknown ,dasb_unknown	; DIVS/DIVU Long,DIVUL/DIVSL
 	dc.l	$4880FB80,inst_movem   ,dasb_movem	; MOVEM EA to Registers
 	dc.l	$4E40FFF0,inst_trap    ,dasb_none	; TRAP
 	dc.l	$4E50FFF8,inst_link    ,dasb_non1w	; LINK Word
 	dc.l	$4E60FFF8,inst_ulink   ,dasb_none	; UNLK
-	dc.l	$4E60FFF8,inst_mv_t_usp,dasb_none	; MOVE to USP
-	dc.l	$4E68FFF8,inst_mv_f_usp,dasb_none	; MOVE from USP
+	dc.l	$4E60FFF8,inst_mvto_usp,dasb_none	; MOVE to USP
+	dc.l	$4E68FFF8,inst_mvfm_usp,dasb_none	; MOVE from USP
 	dc.l	$4E70FFFF,inst_reset   ,dasb_none	; RESET
 	dc.l	$4E71FFFF,inst_nop     ,dasb_none	; NOP
 	dc.l	$4E73FFFF,inst_rte     ,dasb_none	; RTE
-;	dc.l	$4E74FFFF,inst_unknw   ,dasb_unknw	; RTD
+;	dc.l	$4E74FFFF,inst_unknown ,dasb_unknown	; RTD
 	dc.l	$4E75FFFF,inst_rts     ,dasb_none	; RTS
 	dc.l	$4E76FFFF,inst_trapv   ,dasb_none	; TRAPV
 	dc.l	$4E77FFFF,inst_rtr     ,dasb_none	; RTR
 	dc.l	$4E7AFFFE,inst_movec   ,dasb_movec	; MOVEC
 	dc.l	$4E80FFC0,inst_jsr     ,dasb_eaddr	; JSR
 	dc.l	$4EC0FFC0,inst_jmp     ,dasb_eaddr	; JMP
+	dc.l	$41C0F1C0,inst_lea     ,dasb_logan	; LEA
+	dc.l	$4000F040,inst_chk     ,dasb_logdn	; CHK
 	dc.l	$5000F100,inst_addq    ,dasb_quick	; ADDQ
 	dc.l	$54C0FFC0,inst_scc     ,dasb_eaddr	; SCC
 	dc.l	$55C0FFC0,inst_scs     ,dasb_eaddr	; SCS
@@ -1132,7 +1145,7 @@ inst_tbl:
 	dc.l	$50C8FFF8,inst_dbt     ,dasb_debra	; DBT
 	dc.l	$58C8FFF8,inst_dbvc    ,dasb_debra	; DBVC
 	dc.l	$59C8FFF8,inst_dbvs    ,dasb_debra	; DBVS
-;	dc.l	$50F8F0F8,inst_unknw   ,dasb_unknw	; TRAPcc
+;	dc.l	$50F8F0F8,inst_unknown ,dasb_unknown	; TRAPcc
 	dc.l	$5100F100,inst_subq    ,dasb_quick	; SUBQ
 	dc.l	$6400FF00,inst_bcc     ,dasb_branc	; BCC
 	dc.l	$6500FF00,inst_bcs     ,dasb_branc	; BCS
@@ -1154,8 +1167,8 @@ inst_tbl:
 	dc.l	$80C0F1C0,inst_divu    ,dasb_muldv	; DIVU Word
 	dc.l	$81C0F1C0,inst_divs    ,dasb_muldv	; DIVS Word
 	dc.l	$8100F1F0,inst_sbcd    ,dasb_extnd	; SBCD
-;	dc.l	$8140F1F0,inst_unknw   ,dasb_unknw	; PACK
-;	dc.l	$8180F1F0,inst_unknw   ,dasb_unknw	; UNPK
+;	dc.l	$8140F1F0,inst_unknown ,dasb_unknown	; PACK
+;	dc.l	$8180F1F0,inst_unknown ,dasb_unknown	; UNPK
 	dc.l	$8000F000,inst_or      ,dasb_logdn	; OR(toDn)
 	dc.l	$8100F100,inst_or      ,dasb_logea	; OR(toEA)
 	dc.l	$90C0F0C0,inst_suba    ,dasb_logan	; SUBA
@@ -1196,21 +1209,21 @@ inst_tbl:
 	dc.l	$E110F118,inst_roxl    ,dasb_sfrtr	; ROXL Register
 	dc.l	$E018F118,inst_ror     ,dasb_sfrtr	; ROR Register
 	dc.l	$E118F118,inst_rol     ,dasb_sfrtr	; ROL Register
-;	dc.l	$E8C0F8C0,inst_unknw   ,dasb_unknw	; Bit Field
-;	dc.l	$F000FFC0,inst_unknw   ,dasb_unknw	; PMOVE TT Registers
-;	dc.l	$F000FFC0,inst_unknw   ,dasb_unknw	; PLOAD
-;	dc.l	$F000FFC0,inst_unknw   ,dasb_unknw	; PFLUSH
-;	dc.l	$F000FFC0,inst_unknw   ,dasb_unknw	; PMOVE TC,SRP,and CRP Registers
-;	dc.l	$F000FFC0,inst_unknw   ,dasb_unknw	; PMOVE MMUSR Register
-;	dc.l	$F000FFC0,inst_unknw   ,dasb_unknw	; PTEST
-;	dc.l	$F000F1C0,inst_unknw   ,dasb_unknw	; cpGEN
-;	dc.l	$F040F1C0,inst_unknw   ,dasb_unknw	; cpScc
-;	dc.l	$F048F1F8,inst_unknw   ,dasb_unknw	; cpDBcc
-;	dc.l	$F078F1F8,inst_unknw   ,dasb_unknw	; cpTRAPcc
-;	dc.l	$F080F180,inst_unknw   ,dasb_unknw	; cpBcc
-;	dc.l	$F100F1C0,inst_unknw   ,dasb_unknw	; cpSAVE
-;	dc.l	$F140F1C0,inst_unknw   ,dasb_unknw	; cpRESTORE
-	dc.l	$00000000,inst_unknw   ,dasb_unknw	; End mark
+;	dc.l	$E8C0F8C0,inst_unknown ,dasb_unknown	; Bit Field
+;	dc.l	$F000FFC0,inst_unknown ,dasb_unknown	; PMOVE TT Registers
+;	dc.l	$F000FFC0,inst_unknown ,dasb_unknown	; PLOAD
+;	dc.l	$F000FFC0,inst_unknown ,dasb_unknown	; PFLUSH
+;	dc.l	$F000FFC0,inst_unknown ,dasb_unknown	; PMOVE TC,SRP,and CRP Registers
+;	dc.l	$F000FFC0,inst_unknown ,dasb_unknown	; PMOVE MMUSR Register
+;	dc.l	$F000FFC0,inst_unknown ,dasb_unknown	; PTEST
+;	dc.l	$F000F1C0,inst_unknown ,dasb_unknown	; cpGEN
+;	dc.l	$F040F1C0,inst_unknown ,dasb_unknown	; cpScc
+;	dc.l	$F048F1F8,inst_unknown ,dasb_unknown	; cpDBcc
+;	dc.l	$F078F1F8,inst_unknown ,dasb_unknown	; cpTRAPcc
+;	dc.l	$F080F180,inst_unknown ,dasb_unknown	; cpBcc
+;	dc.l	$F100F1C0,inst_unknown ,dasb_unknown	; cpSAVE
+;	dc.l	$F140F1C0,inst_unknown ,dasb_unknown	; cpRESTORE
+	dc.l	$00000000,inst_unknown ,dasb_unknown	; End mark
 
 admd_tbl:
 	;; Adress mode table
@@ -1247,74 +1260,46 @@ ctrg_tbl:
 	dc.l	$08040FFF,ctrg_isp		; "ISP"
 	dc.l	$00000000,ctrg_unkw		; End mark
 
-inst_ori_ccr:	dc.b	"ORI.B #<data>,CCR",$00
-inst_ori_sr:	dc.b	"ORI.W #<data>,SR",$00
-inst_ori:	dc.b	"ORI",$00
-inst_btst:	dc.b	"BTST",$00
-inst_bclr:	dc.b	"BCLR",$00
-inst_bchg:	dc.b	"BCHG",$00
-inst_bset:	dc.b	"BSET",$00
-inst_mvpwmr:	dc.b	"MOVEP.W d(An),Dn",$00
-inst_mvplmr:	dc.b	"MOVEP.L d(An),Dn",$00
-inst_mvpwrm:	dc.b	"MOVEP.W Dn,d(An)",$00
-inst_mvplrm:	dc.b	"MOVEP.L Dn,d(An)",$00
+inst_abcd:	dc.b	"ABCD",$00
+inst_add:	dc.b	"ADD",$00
+inst_adda:	dc.b	"ADDA",$00
+inst_addi:	dc.b	"ADDI",$00
+inst_addq:	dc.b	"ADDQ",$00
+inst_addx:	dc.b	"ADDX",$00
+inst_and:	dc.b	"AND",$00
+inst_andi:	dc.b	"ANDI",$00
 inst_andi_ccr:	dc.b	"ANDI.B #<data>,CCR",$00
 inst_andi_sr:	dc.b	"ANDI.W #<data>,SR",$00
-inst_andi:	dc.b	"ANDI",$00
-inst_subi:	dc.b	"SUBI",$00
-inst_addi:	dc.b	"ADDI",$00
-inst_eori_ccr:	dc.b	"EORI.B #<data>,CCR",$00
-inst_eori_sr:	dc.b	"EORI.W #<data>,SR",$00
-inst_eori:	dc.b	"EORI",$00
-inst_cmpi:	dc.b	"CMPI",$00
-inst_move:	dc.b	"MOVE",$00
-inst_movea:	dc.b	"MOVEA",$00
-inst_negx:	dc.b	"NEGX",$00
+inst_asl:	dc.b	"ASL",$00
+inst_asr:	dc.b	"ASR",$00
+inst_bcc:	dc.b	"BCC",$00
+inst_bcs:	dc.b	"BCS",$00
+inst_beq:	dc.b	"BEQ",$00
+inst_bge:	dc.b	"BGE",$00
+inst_bgt:	dc.b	"BGT",$00
+inst_bhi:	dc.b	"BHI",$00
+inst_ble:	dc.b	"BLE",$00
+inst_bls:	dc.b	"BLS",$00
+inst_blt:	dc.b	"BLT",$00
+inst_bmi:	dc.b	"BMI",$00
+inst_bne:	dc.b	"BNE",$00
+inst_bpl:	dc.b	"BPL",$00
+inst_bvc:	dc.b	"BVC",$00
+inst_bvs:	dc.b	"BVS",$00
+inst_bchg:	dc.b	"BCHG",$00
+inst_bclr:	dc.b	"BCLR",$00
+inst_bra:	dc.b	"BRA",$00
+inst_bset:	dc.b	"BSET",$00
+inst_bsr:	dc.b	"BSR",$00
+inst_btst:	dc.b	"BTST",$00
 inst_chk:	dc.b	"CHK",$00
-inst_lea:	dc.b	"LEA",$00
 inst_clr:	dc.b	"CLR",$00
-inst_neg:	dc.b	"NEG",$00
-inst_not:	dc.b	"NOT",$00
-inst_nbcd:	dc.b	"NBCD",$00
-inst_swap:	dc.b	"SWAP.W Dn",$00
-inst_pea:	dc.b	"PEA",$00
-inst_extw:	dc.b	"EXT.W Dn",$00
-inst_extl:	dc.b	"EXT.L Dn",$00
-inst_movem:	dc.b	"MOVEM",$00
-inst_tas:	dc.b	"TAS",$00
-inst_tst:	dc.b	"TST",$00
-inst_illegal:	dc.b	"ILLEGAL",$00
-inst_trap:	dc.b	"TRAP #<vector>",$00
-inst_link:	dc.b	"LINK.W An,#<dsiplacement>",$00
-inst_ulink:	dc.b	"ULINK An",$00
-inst_mv_t_usp:	dc.b	"MOVE.L An,USP",$00
-inst_mv_f_usp:	dc.b	"MOVE.L USP,An",$00
-inst_reset:	dc.b	"RESET",$00
-inst_nop:	dc.b	"NOP",$00
-inst_rte:	dc.b	"RTE",$00
-inst_rts:	dc.b	"RTS",$00
-inst_trapv:	dc.b	"TRAPV",$00
-inst_rtr:	dc.b	"RTR",$00
-inst_movec:	dc.b	"MOVEC",$00
-inst_jsr:	dc.b	"JSR",$00
-inst_jmp:	dc.b	"JMP",$00
-inst_addq:	dc.b	"ADDQ",$00
-inst_scc:	dc.b	"SCC",$00
-inst_scs:	dc.b	"SCS",$00
-inst_seq:	dc.b	"SEQ",$00
-inst_sf:	dc.b	"SF",$00
-inst_sge:	dc.b	"SGE",$00
-inst_sgt:	dc.b	"SGT",$00
-inst_shi:	dc.b	"SHI",$00
-inst_sle:	dc.b	"SLE",$00
-inst_sls:	dc.b	"SLS",$00
-inst_slt:	dc.b	"SLT",$00
-inst_smi:	dc.b	"SMI",$00
-inst_sne:	dc.b	"SNE",$00
-inst_spl:	dc.b	"SPL",$00
-inst_st:	dc.b	"ST",$00
-inst_svc:	dc.b	"SVC",$00
-inst_svs:	dc.b	"SVS",$00
+inst_cmp:	dc.b	"CMP",$00
+inst_cmpa:	dc.b	"CMPA",$00
+inst_cmpi:	dc.b	"CMPI",$00
+inst_cmpmb:	dc.b	"CMPM.B (An)+,(An)+",$00
+inst_cmpmw:	dc.b	"CMPM.W (An)+,(An)+",$00
+inst_cmpml:	dc.b	"CMPM.L (An)+,(An)+",$00
 inst_dbcc:	dc.b	"DBCC",$00
 inst_dbcs:	dc.b	"DBCS",$00
 inst_dbeq:	dc.b	"DBEQ",$00
@@ -1331,56 +1316,84 @@ inst_dbpl:	dc.b	"DBPL",$00
 inst_dbt:	dc.b	"DBT",$00
 inst_dbvc:	dc.b	"DBVC",$00
 inst_dbvs:	dc.b	"DBVS",$00
-inst_subq:	dc.b	"SUBQ",$00
-inst_bcc:	dc.b	"BCC",$00
-inst_bcs:	dc.b	"BCS",$00
-inst_beq:	dc.b	"BEQ",$00
-inst_bge:	dc.b	"BGE",$00
-inst_bgt:	dc.b	"BGT",$00
-inst_bhi:	dc.b	"BHI",$00
-inst_ble:	dc.b	"BLE",$00
-inst_bls:	dc.b	"BLS",$00
-inst_blt:	dc.b	"BLT",$00
-inst_bmi:	dc.b	"BMI",$00
-inst_bne:	dc.b	"BNE",$00
-inst_bpl:	dc.b	"BPL",$00
-inst_bvc:	dc.b	"BVC",$00
-inst_bvs:	dc.b	"BVS",$00
-inst_bra:	dc.b	"BRA",$00
-inst_bsr:	dc.b	"BSR",$00
-inst_moveq:	dc.b	"MOVEQ.L #<data>,Dn",$00
-inst_divu:	dc.b	"DIVU",$00
 inst_divs:	dc.b	"DIVS",$00
-inst_sbcd:	dc.b	"SBCD",$00
-inst_or:	dc.b	"OR",$00
-inst_suba:	dc.b	"SUBA",$00
-inst_sub:	dc.b	"SUB",$00
-inst_subx:	dc.b	"SUBX",$00
-inst_cmpmb:	dc.b	"CMPM.B (An)+,(An)+",$00
-inst_cmpmw:	dc.b	"CMPM.W (An)+,(An)+",$00
-inst_cmpml:	dc.b	"CMPM.L (An)+,(An)+",$00
-inst_cmpa:	dc.b	"CMPA",$00
-inst_cmp:	dc.b	"CMP",$00
+inst_divu:	dc.b	"DIVU",$00
 inst_eor:	dc.b	"EOR",$00
-inst_mulu:	dc.b	"MULU",$00
-inst_muls:	dc.b	"MULS",$00
-inst_and:	dc.b	"AND",$00
-inst_abcd:	dc.b	"ABCD",$00
+inst_eori:	dc.b	"EORI",$00
+inst_eori_ccr:	dc.b	"EORI.B #<data>,CCR",$00
+inst_eori_sr:	dc.b	"EORI.W #<data>,SR",$00
 inst_exgd:	dc.b	"EXG.L Dn,Dn",$00
 inst_exga:	dc.b	"EXG.L An,An",$00
 inst_exgda:	dc.b	"EXG.L Dn,An",$00
-inst_adda:	dc.b	"ADDA",$00
-inst_add:	dc.b	"ADD",$00
-inst_addx:	dc.b	"ADDX",$00
-inst_asr:	dc.b	"ASR",$00
-inst_asl:	dc.b	"ASL",$00
-inst_lsr:	dc.b	"LSR",$00
+inst_extw:	dc.b	"EXT.W Dn",$00
+inst_extl:	dc.b	"EXT.L Dn",$00
+inst_illegal:	dc.b	"ILLEGAL",$00
+inst_jmp:	dc.b	"JMP",$00
+inst_jsr:	dc.b	"JSR",$00
+inst_lea:	dc.b	"LEA",$00
+inst_link:	dc.b	"LINK.W An,#<dsiplacement>",$00
 inst_lsl:	dc.b	"LSL",$00
-inst_roxr:	dc.b	"ROXR",$00
-inst_roxl:	dc.b	"ROXL",$00
-inst_ror:	dc.b	"ROR",$00
+inst_lsr:	dc.b	"LSR",$00
+inst_move:	dc.b	"MOVE",$00
+inst_mvfm_usp:	dc.b	"MOVE.L USP,An",$00
+inst_mvto_usp:	dc.b	"MOVE.L An,USP",$00
+inst_movea:	dc.b	"MOVEA",$00
+inst_movec:	dc.b	"MOVEC",$00
+inst_movem:	dc.b	"MOVEM",$00
+inst_mvpwrm:	dc.b	"MOVEP.W Dn,d(An)",$00
+inst_mvpwmr:	dc.b	"MOVEP.W d(An),Dn",$00
+inst_mvplrm:	dc.b	"MOVEP.L Dn,d(An)",$00
+inst_mvplmr:	dc.b	"MOVEP.L d(An),Dn",$00
+inst_moveq:	dc.b	"MOVEQ.L #<data>,Dn",$00
+inst_muls:	dc.b	"MULS",$00
+inst_mulu:	dc.b	"MULU",$00
+inst_nbcd:	dc.b	"NBCD",$00
+inst_neg:	dc.b	"NEG",$00
+inst_negx:	dc.b	"NEGX",$00
+inst_nop:	dc.b	"NOP",$00
+inst_not:	dc.b	"NOT",$00
+inst_or:	dc.b	"OR",$00
+inst_ori:	dc.b	"ORI",$00
+inst_ori_ccr:	dc.b	"ORI.B #<data>,CCR",$00
+inst_ori_sr:	dc.b	"ORI.W #<data>,SR",$00
+inst_pea:	dc.b	"PEA",$00
+inst_reset:	dc.b	"RESET",$00
 inst_rol:	dc.b	"ROL",$00
-inst_unknw:	dc.b	"Unknown",$00		; Unknown
+inst_ror:	dc.b	"ROR",$00
+inst_roxl:	dc.b	"ROXL",$00
+inst_roxr:	dc.b	"ROXR",$00
+inst_rte:	dc.b	"RTE",$00
+inst_rtr:	dc.b	"RTR",$00
+inst_rts:	dc.b	"RTS",$00
+inst_sbcd:	dc.b	"SBCD",$00
+inst_scc:	dc.b	"SCC",$00
+inst_scs:	dc.b	"SCS",$00
+inst_seq:	dc.b	"SEQ",$00
+inst_sf:	dc.b	"SF",$00
+inst_sge:	dc.b	"SGE",$00
+inst_sgt:	dc.b	"SGT",$00
+inst_shi:	dc.b	"SHI",$00
+inst_sle:	dc.b	"SLE",$00
+inst_sls:	dc.b	"SLS",$00
+inst_slt:	dc.b	"SLT",$00
+inst_smi:	dc.b	"SMI",$00
+inst_sne:	dc.b	"SNE",$00
+inst_spl:	dc.b	"SPL",$00
+inst_st:	dc.b	"ST",$00
+inst_svc:	dc.b	"SVC",$00
+inst_svs:	dc.b	"SVS",$00
+inst_sub:	dc.b	"SUB",$00
+inst_suba:	dc.b	"SUBA",$00
+inst_subi:	dc.b	"SUBI",$00
+inst_subq:	dc.b	"SUBQ",$00
+inst_subx:	dc.b	"SUBX",$00
+inst_swap:	dc.b	"SWAP.W Dn",$00
+inst_tas:	dc.b	"TAS",$00
+inst_trap:	dc.b	"TRAP #<vector>",$00
+inst_trapv:	dc.b	"TRAPV",$00
+inst_tst:	dc.b	"TST",$00
+inst_ulink:	dc.b	"ULINK An",$00
+inst_unknown:	dc.b	"Unknown",$00		; Unknown
 
 ;; get_op parameter(offset adjust,mask)
 inst_get1_pm:	dc.w	$0000,$0001		; get_op parameter(1bit)
