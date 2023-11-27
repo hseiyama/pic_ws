@@ -712,7 +712,10 @@ dasb_extnd_1:
 	BSR	STROUT
 	RTS
 
-dasb_debra:
+dasb_decbranc:
+	;; Out size
+	LEA	inst_sz_w,A0	; ".W"
+	BSR	STROUT
 	;; Out operand1
 	BSR	cout_space
 	LEA	admd_000,A0	; "Dn"
@@ -721,6 +724,7 @@ dasb_debra:
 	BSR	cout_comma
 	LEA	oprnd_label,A0	; "<label>"
 	BSR	STROUT
+	ADD.W	D2,dasm_cdsz	; Add code size
 	RTS
 
 dasb_muldv:
@@ -1112,7 +1116,23 @@ inst_tbl:
 	dc.l	$4EC0FFC0,inst_jmp     ,dasb_eaddr	; JMP
 	dc.l	$41C0F1C0,inst_lea     ,dasb_logan	; LEA
 	dc.l	$4000F040,inst_chk     ,dasb_logdn	; CHK
-	dc.l	$5000F100,inst_addq    ,dasb_quick	; ADDQ
+	dc.l	$54C8FFF8,inst_dbcc    ,dasb_decbranc	; DBCC
+	dc.l	$55C8FFF8,inst_dbcs    ,dasb_decbranc	; DBCS
+	dc.l	$57C8FFF8,inst_dbeq    ,dasb_decbranc	; DBEQ
+	dc.l	$51C8FFF8,inst_dbf     ,dasb_decbranc	; DBF
+	dc.l	$5CC8FFF8,inst_dbge    ,dasb_decbranc	; DBGE
+	dc.l	$5EC8FFF8,inst_dbgt    ,dasb_decbranc	; DBGT
+	dc.l	$52C8FFF8,inst_dbhi    ,dasb_decbranc	; DBHI
+	dc.l	$5FC8FFF8,inst_dble    ,dasb_decbranc	; DBLE
+	dc.l	$53C8FFF8,inst_dbls    ,dasb_decbranc	; DBLS
+	dc.l	$5DC8FFF8,inst_dblt    ,dasb_decbranc	; DBLT
+	dc.l	$5BC8FFF8,inst_dbmi    ,dasb_decbranc	; DBMI
+	dc.l	$56C8FFF8,inst_dbne    ,dasb_decbranc	; DBNE
+	dc.l	$5AC8FFF8,inst_dbpl    ,dasb_decbranc	; DBPL
+	dc.l	$50C8FFF8,inst_dbt     ,dasb_decbranc	; DBT
+	dc.l	$58C8FFF8,inst_dbvc    ,dasb_decbranc	; DBVC
+	dc.l	$59C8FFF8,inst_dbvs    ,dasb_decbranc	; DBVS
+;	dc.l	$50F8F0F8,inst_unknown ,dasb_unknown	; TRAPcc
 	dc.l	$54C0FFC0,inst_scc     ,dasb_eaddr	; SCC
 	dc.l	$55C0FFC0,inst_scs     ,dasb_eaddr	; SCS
 	dc.l	$57C0FFC0,inst_seq     ,dasb_eaddr	; SEQ
@@ -1129,23 +1149,7 @@ inst_tbl:
 	dc.l	$50C0FFC0,inst_st      ,dasb_eaddr	; ST
 	dc.l	$58C0FFC0,inst_svc     ,dasb_eaddr	; SVC
 	dc.l	$59C0FFC0,inst_svs     ,dasb_eaddr	; SVS
-	dc.l	$54C8FFF8,inst_dbcc    ,dasb_debra	; DBCC
-	dc.l	$55C8FFF8,inst_dbcs    ,dasb_debra	; DBCS
-	dc.l	$57C8FFF8,inst_dbeq    ,dasb_debra	; DBEQ
-	dc.l	$51C8FFF8,inst_dbf     ,dasb_debra	; DBF
-	dc.l	$5CC8FFF8,inst_dbge    ,dasb_debra	; DBGE
-	dc.l	$5EC8FFF8,inst_dbgt    ,dasb_debra	; DBGT
-	dc.l	$52C8FFF8,inst_dbhi    ,dasb_debra	; DBHI
-	dc.l	$5FC8FFF8,inst_dble    ,dasb_debra	; DBLE
-	dc.l	$53C8FFF8,inst_dbls    ,dasb_debra	; DBLS
-	dc.l	$5DC8FFF8,inst_dblt    ,dasb_debra	; DBLT
-	dc.l	$5BC8FFF8,inst_dbmi    ,dasb_debra	; DBMI
-	dc.l	$56C8FFF8,inst_dbne    ,dasb_debra	; DBNE
-	dc.l	$5AC8FFF8,inst_dbpl    ,dasb_debra	; DBPL
-	dc.l	$50C8FFF8,inst_dbt     ,dasb_debra	; DBT
-	dc.l	$58C8FFF8,inst_dbvc    ,dasb_debra	; DBVC
-	dc.l	$59C8FFF8,inst_dbvs    ,dasb_debra	; DBVS
-;	dc.l	$50F8F0F8,inst_unknown ,dasb_unknown	; TRAPcc
+	dc.l	$5000F100,inst_addq    ,dasb_quick	; ADDQ
 	dc.l	$5100F100,inst_subq    ,dasb_quick	; SUBQ
 	dc.l	$6400FF00,inst_bcc     ,dasb_branc	; BCC
 	dc.l	$6500FF00,inst_bcs     ,dasb_branc	; BCS
