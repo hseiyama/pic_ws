@@ -576,6 +576,7 @@ dasb_bitdy:
 dasb_bitst:
 	;; Out operand1
 	BSR	cout_space
+	MOVE.W	#2,dasm_opsz	; (???)Set operation size
 	BSR	dasm_out_imdata
 	;; Out operand2
 	BSR	cout_comma
@@ -712,7 +713,7 @@ dasb_extnd_1:
 	BSR	STROUT
 	RTS
 
-dasb_decbranc:
+dasb_DecBra:
 	;; Out size
 	LEA	inst_sz_w,A0	; ".W"
 	BSR	STROUT
@@ -724,7 +725,7 @@ dasb_decbranc:
 	BSR	cout_comma
 	LEA	oprnd_label,A0	; "<label>"
 	BSR	STROUT
-	ADD.W	D2,dasm_cdsz	; Add code size
+	ADDQ.W	#2,dasm_cdsz	; Add code size
 	RTS
 
 dasb_muldv:
@@ -864,9 +865,11 @@ dasm_out_size_displace:
 	LEA	inst_sz_b,A0	; Match byte size
 	BRA	dasm_out_size_displace_2
 dasm_out_size_displace_0:
+	ADDQ.W	#4,dasm_cdsz	; Add code size
 	LEA	inst_sz_l,A0
 	BRA	dasm_out_size_displace_2
 dasm_out_size_displace_1:
+	ADDQ.W	#2,dasm_cdsz	; Add code size
 	LEA	inst_sz_w,A0
 dasm_out_size_displace_2:
 	BSR	STROUT
@@ -1062,10 +1065,10 @@ inst_tbl:
 	dc.l	$0600FF00,inst_addi    ,dasb_imidt	; ADDI
 ;	dc.l	$08C0F9C0,inst_unknown ,dasb_unknown	; CAS
 ;	dc.l	$08FCF9FF,inst_unknown ,dasb_unknown	; CAS2
-	dc.l	$0800FF00,inst_btst    ,dasb_bitst	; BTST(Static)
-	dc.l	$0880FF00,inst_bclr    ,dasb_bitst	; BCLR(Static)
-	dc.l	$0840FF00,inst_bchg    ,dasb_bitst	; BCHG(Static)
-	dc.l	$08C0FF00,inst_bset    ,dasb_bitst	; BSET(Static)
+	dc.l	$0800FFC0,inst_btst    ,dasb_bitst	; BTST(Static)
+	dc.l	$0880FFC0,inst_bclr    ,dasb_bitst	; BCLR(Static)
+	dc.l	$0840FFC0,inst_bchg    ,dasb_bitst	; BCHG(Static)
+	dc.l	$08C0FFC0,inst_bset    ,dasb_bitst	; BSET(Static)
 	dc.l	$0A3CFFFF,inst_eori_ccr,dasb_non1w	; EORI to CCR
 	dc.l	$0A7CFFFF,inst_eori_sr ,dasb_non1w	; EORI to SR
 	dc.l	$0A00FF00,inst_eori    ,dasb_imidt	; EORI
@@ -1116,22 +1119,22 @@ inst_tbl:
 	dc.l	$4EC0FFC0,inst_jmp     ,dasb_eaddr	; JMP
 	dc.l	$41C0F1C0,inst_lea     ,dasb_logan	; LEA
 	dc.l	$4000F040,inst_chk     ,dasb_logdn	; CHK
-	dc.l	$54C8FFF8,inst_dbcc    ,dasb_decbranc	; DBCC
-	dc.l	$55C8FFF8,inst_dbcs    ,dasb_decbranc	; DBCS
-	dc.l	$57C8FFF8,inst_dbeq    ,dasb_decbranc	; DBEQ
-	dc.l	$51C8FFF8,inst_dbf     ,dasb_decbranc	; DBF
-	dc.l	$5CC8FFF8,inst_dbge    ,dasb_decbranc	; DBGE
-	dc.l	$5EC8FFF8,inst_dbgt    ,dasb_decbranc	; DBGT
-	dc.l	$52C8FFF8,inst_dbhi    ,dasb_decbranc	; DBHI
-	dc.l	$5FC8FFF8,inst_dble    ,dasb_decbranc	; DBLE
-	dc.l	$53C8FFF8,inst_dbls    ,dasb_decbranc	; DBLS
-	dc.l	$5DC8FFF8,inst_dblt    ,dasb_decbranc	; DBLT
-	dc.l	$5BC8FFF8,inst_dbmi    ,dasb_decbranc	; DBMI
-	dc.l	$56C8FFF8,inst_dbne    ,dasb_decbranc	; DBNE
-	dc.l	$5AC8FFF8,inst_dbpl    ,dasb_decbranc	; DBPL
-	dc.l	$50C8FFF8,inst_dbt     ,dasb_decbranc	; DBT
-	dc.l	$58C8FFF8,inst_dbvc    ,dasb_decbranc	; DBVC
-	dc.l	$59C8FFF8,inst_dbvs    ,dasb_decbranc	; DBVS
+	dc.l	$54C8FFF8,inst_dbcc    ,dasb_DecBra	; DBCC
+	dc.l	$55C8FFF8,inst_dbcs    ,dasb_DecBra	; DBCS
+	dc.l	$57C8FFF8,inst_dbeq    ,dasb_DecBra	; DBEQ
+	dc.l	$51C8FFF8,inst_dbf     ,dasb_DecBra	; DBF
+	dc.l	$5CC8FFF8,inst_dbge    ,dasb_DecBra	; DBGE
+	dc.l	$5EC8FFF8,inst_dbgt    ,dasb_DecBra	; DBGT
+	dc.l	$52C8FFF8,inst_dbhi    ,dasb_DecBra	; DBHI
+	dc.l	$5FC8FFF8,inst_dble    ,dasb_DecBra	; DBLE
+	dc.l	$53C8FFF8,inst_dbls    ,dasb_DecBra	; DBLS
+	dc.l	$5DC8FFF8,inst_dblt    ,dasb_DecBra	; DBLT
+	dc.l	$5BC8FFF8,inst_dbmi    ,dasb_DecBra	; DBMI
+	dc.l	$56C8FFF8,inst_dbne    ,dasb_DecBra	; DBNE
+	dc.l	$5AC8FFF8,inst_dbpl    ,dasb_DecBra	; DBPL
+	dc.l	$50C8FFF8,inst_dbt     ,dasb_DecBra	; DBT
+	dc.l	$58C8FFF8,inst_dbvc    ,dasb_DecBra	; DBVC
+	dc.l	$59C8FFF8,inst_dbvs    ,dasb_DecBra	; DBVS
 ;	dc.l	$50F8F0F8,inst_unknown ,dasb_unknown	; TRAPcc
 	dc.l	$54C0FFC0,inst_scc     ,dasb_eaddr	; SCC
 	dc.l	$55C0FFC0,inst_scs     ,dasb_eaddr	; SCS
