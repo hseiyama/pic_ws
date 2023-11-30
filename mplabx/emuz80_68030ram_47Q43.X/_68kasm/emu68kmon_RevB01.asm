@@ -541,7 +541,7 @@ dasb_Immediat:
 dasb_Move:
 	;; Out size
 	MOVE.W	#13,D0
-	BSR	dasm_out_size_2bit_mv
+	BSR	dasm_out_size_2bit_move
 	;; Out operand1
 	BSR	cout_space
 	BSR	dasm_out_eaddr
@@ -550,7 +550,7 @@ dasb_Move:
 	BSR	dasm_out_eaddr_mv
 	RTS
 
-dasb_Operand1:
+dasb_EfctAddr:
 	;; Out size
 	MOVE.W	#7,D0
 	BSR	dasm_out_size_2bit
@@ -559,7 +559,7 @@ dasb_Operand1:
 	BSR	dasm_out_eaddr
 	RTS
 
-dasb_eaddr:
+dasb_EAddrNoS:
 	;; Out operand1
 	BSR	cout_space
 	BSR	dasm_out_eaddr
@@ -618,7 +618,7 @@ dasb_SetCondi:
 	BSR	dasm_out_eaddr
 	RTS
 
-dasb_logdn:
+dasb_EaToDn:
 	;; Out size
 	MOVE.W	#7,D0
 	BSR	dasm_out_size_2bit
@@ -631,7 +631,7 @@ dasb_logdn:
 	BSR	STROUT
 	RTS
 
-dasb_logea:
+dasb_DnToEa:
 	;; Out size
 	MOVE.W	#7,D0
 	BSR	dasm_out_size_2bit
@@ -644,7 +644,7 @@ dasb_logea:
 	BSR	dasm_out_eaddr
 	RTS
 
-dasb_logan
+dasb_EaToAn
 	;; Out size
 	MOVE.W	#8,D0
 	BSR	dasm_out_size_1bit
@@ -657,7 +657,7 @@ dasb_logan
 	BSR	STROUT
 	RTS
 
-dasb_quick:
+dasb_Quick:
 	;; Out size
 	MOVE.W	#7,D0
 	BSR	dasm_out_size_2bit
@@ -670,7 +670,7 @@ dasb_quick:
 	BSR	dasm_out_eaddr
 	RTS
 
-dasb_mvfcr:
+dasb_MovefCcr:
 	;; Out size
 	LEA	inst_sz_w,A0	; ".W"
 	BSR	STROUT
@@ -683,10 +683,11 @@ dasb_mvfcr:
 	BSR	dasm_out_eaddr
 	RTS
 
-dasb_mvtcr:
+dasb_MovetCcr:
 	;; Out size
 	LEA	inst_sz_w,A0	; ".W"
 	BSR	STROUT
+	MOVE.W	#2,dasm_opsz
 	;; Out operand1
 	BSR	cout_space
 	BSR	dasm_out_eaddr
@@ -696,7 +697,7 @@ dasb_mvtcr:
 	BSR	STROUT
 	RTS
 
-dasb_mvfsr:
+dasb_MovefSr:
 	;; Out size
 	LEA	inst_sz_w,A0	; ".W"
 	BSR	STROUT
@@ -709,10 +710,11 @@ dasb_mvfsr:
 	BSR	dasm_out_eaddr
 	RTS
 
-dasb_mvtsr:
+dasb_MovetSr:
 	;; Out size
 	LEA	inst_sz_w,A0	; ".W"
 	BSR	STROUT
+	MOVE.W	#2,dasm_opsz
 	;; Out operand1
 	BSR	cout_space
 	BSR	dasm_out_eaddr
@@ -722,7 +724,7 @@ dasb_mvtsr:
 	BSR	STROUT
 	RTS
 
-dasb_extnd:
+dasb_Extended:
 	;; Out size
 	MOVE.W	#7,D0
 	BSR	dasm_out_size_2bit
@@ -730,19 +732,20 @@ dasb_extnd:
 	BSR	cout_space
 	MOVE.W	dasm_op,D0
 	BTST	#3,D0
-	BNE	dasb_extnd_0
+	BNE	dasb_Extended_0
 	LEA	oprnd_dtrg,A0	; "Dn,Dn"
-	BRA	dasb_extnd_1
-dasb_extnd_0:
+	BRA	dasb_Extended_1
+dasb_Extended_0:
 	LEA	oprnd_pdam,A0	; "-(An),-(An)"
-dasb_extnd_1:
+dasb_Extended_1:
 	BSR	STROUT
 	RTS
 
-dasb_muldv:
+dasb_MulDiv:
 	;; Out size
 	LEA	inst_sz_w,A0	; ".W"
 	BSR	STROUT
+	MOVE.W	#2,dasm_opsz
 	;; Out operand1
 	BSR	cout_space
 	BSR	dasm_out_eaddr
@@ -752,13 +755,13 @@ dasb_muldv:
 	BSR	STROUT
 	RTS
 
-dasb_movem:
+dasb_Movem:
 	;; Out size
 	MOVE.W	#6,D0
 	BSR	dasm_out_size_1bit
 	MOVE.W	dasm_op,D0
 	BTST	#10,D0
-	BNE	dasb_movem_0
+	BNE	dasb_Movem_0
 	;; Out operand1
 	BSR	cout_space
 	LEA	oprnd_rglst,A0	; "Dn-Dn/An-An"
@@ -766,8 +769,8 @@ dasb_movem:
 	;; Out operand2
 	BSR	cout_comma
 	BSR	dasm_out_eaddr
-	BRA	dasb_movem_1
-dasb_movem_0:
+	BRA	dasb_Movem_1
+dasb_Movem_0:
 	;; Out operand1
 	BSR	cout_space
 	BSR	dasm_out_eaddr
@@ -775,10 +778,10 @@ dasb_movem_0:
 	BSR	cout_comma
 	LEA	oprnd_rglst,A0	; "Dn-Dn/An-An"
 	BSR	STROUT
-dasb_movem_1:
+dasb_Movem_1:
 	RTS
 
-dasb_weadr:
+dasb_ShiftMem:
 	;; Out size
 	LEA	inst_sz_w,A0	; ".W"
 	BSR	STROUT
@@ -788,7 +791,7 @@ dasb_weadr:
 	BSR	STROUT
 	RTS
 
-dasb_sfrtr:
+dasb_ShiftReg:
 	;; Out size
 	MOVE.W	#7,D0
 	BSR	dasm_out_size_2bit
@@ -796,12 +799,12 @@ dasb_sfrtr:
 	BSR	cout_space
 	MOVE.W	dasm_op,D0
 	BTST	#5,D0
-	BNE	dasb_sfrtr_0
+	BNE	dasb_ShiftReg_0
 	LEA	oprnd_imdtr,A0	; "#<data>,Dn"
-	BRA	dasb_sfrtr_1
-dasb_sfrtr_0:
+	BRA	dasb_ShiftReg_1
+dasb_ShiftReg_0:
 	LEA	oprnd_dtrg,A0	; "Dn,Dn"
-dasb_sfrtr_1:
+dasb_ShiftReg_1:
 	BSR	STROUT
 	RTS
 
@@ -828,6 +831,19 @@ dasb_Movec_0:
 	BSR	cout_comma
 	BSR	dasm_out_ctrlreg
 dasb_Movec_1:
+	RTS
+
+dasb_EaToDnCh:
+	;; Out size
+	MOVE.W	#8,D0
+	BSR	dasm_out_size_2bit_chk
+	;; Out operand1
+	BSR	cout_space
+	BSR	dasm_out_eaddr
+	;; Out operand2
+	BSR	cout_comma
+	LEA	admd_000,A0	; "Dn"
+	BSR	STROUT
 	RTS
 
 dasb_Unknown:
@@ -860,11 +876,18 @@ dasm_out_size_2bit:
 	LEA	inst_sz_pm,A0
 	BRA	dasm_size_2bit	; RTS in subroutine
 
-dasm_out_size_2bit_mv:
+dasm_out_size_2bit_move:
 	;; Out size(move)
 	LEA	inst_get2_pm,A0
 	BSR	dasm_get_op
 	LEA	inst_sz_pm_mv,A0
+	BRA	dasm_size_2bit	; RTS in subroutine
+
+dasm_out_size_2bit_chk:
+	;; Out size(move)
+	LEA	inst_get2_pm,A0
+	BSR	dasm_get_op
+	LEA	inst_sz_pm_ch,A0
 	BRA	dasm_size_2bit	; RTS in subroutine
 
 dasm_out_size_displace:
@@ -1102,29 +1125,29 @@ inst_tbl:
 	dc.l	$2000F000,inst_move    ,dasb_Move	; MOVE Long
 	dc.l	$3040F1C0,inst_movea   ,dasb_Move	; MOVEA Word
 	dc.l	$3000F000,inst_move    ,dasb_Move	; MOVE Word
-	dc.l	$40C0FFC0,inst_move    ,dasb_mvfsr	; MOVE from SR
-	dc.l	$4000FF00,inst_negx    ,dasb_Operand1	; NEGX
-	dc.l	$42C0FFC0,inst_move    ,dasb_mvfcr	; MOVE from CCR
-	dc.l	$4200FF00,inst_clr     ,dasb_Operand1	; CLR
-	dc.l	$44C0FFC0,inst_move    ,dasb_mvtcr	; MOVE to CCR
-	dc.l	$4400FF00,inst_neg     ,dasb_Operand1	; NEG
-	dc.l	$46C0FFC0,inst_move    ,dasb_mvtsr	; MOVE to SR
-	dc.l	$4600FF00,inst_not     ,dasb_Operand1	; NOT
-	dc.l	$4800FFC0,inst_nbcd    ,dasb_eaddr	; NBCD
+	dc.l	$40C0FFC0,inst_move    ,dasb_MovefSr	; MOVE from SR
+	dc.l	$4000FF00,inst_negx    ,dasb_EfctAddr	; NEGX
+	dc.l	$42C0FFC0,inst_move    ,dasb_MovefCcr	; MOVE from CCR
+	dc.l	$4200FF00,inst_clr     ,dasb_EfctAddr	; CLR
+	dc.l	$44C0FFC0,inst_move    ,dasb_MovetCcr	; MOVE to CCR
+	dc.l	$4400FF00,inst_neg     ,dasb_EfctAddr	; NEG
+	dc.l	$46C0FFC0,inst_move    ,dasb_MovetSr	; MOVE to SR
+	dc.l	$4600FF00,inst_not     ,dasb_EfctAddr	; NOT
+	dc.l	$4800FFC0,inst_nbcdb   ,dasb_EAddrNoS	; NBCD
 ;	dc.l	$4808FFF8,inst_unknown ,dasb_Unknown	; LINK Long
 	dc.l	$4840FFF8,inst_swap    ,dasb_None	; SWAP
 ;	dc.l	$4848FFF8,inst_unknown ,dasb_Unknown	; BKPT
-	dc.l	$4840FFC0,inst_pea     ,dasb_eaddr	; PEA
+	dc.l	$4840FFC0,inst_peal    ,dasb_EAddrNoS	; PEA
 	dc.l	$4880FFF8,inst_extw    ,dasb_None	; EXT Word
 	dc.l	$48C0FFF8,inst_extl    ,dasb_None	; EXT Long
 ;	dc.l	$49C0FFF8,inst_unknown ,dasb_Unknown	; EXTB
-	dc.l	$4880FB80,inst_movem   ,dasb_movem	; MOVEM Registers to EA
+	dc.l	$4880FB80,inst_movem   ,dasb_Movem	; MOVEM Registers to EA
 	dc.l	$4AFCFFFF,inst_illegal ,dasb_None	; ILLEGAL
-	dc.l	$4AC0FFC0,inst_tas     ,dasb_eaddr	; TAS
-	dc.l	$4A00FF00,inst_tst     ,dasb_Operand1	; TST
+	dc.l	$4AC0FFC0,inst_tasb    ,dasb_EAddrNoS	; TAS
+	dc.l	$4A00FF00,inst_tst     ,dasb_EfctAddr	; TST
 ;	dc.l	$4C00FFC0,inst_unknown ,dasb_Unknown	; MULS/MULU Long
 ;	dc.l	$4C40FFC0,inst_unknown ,dasb_Unknown	; DIVS/DIVU Long,DIVUL/DIVSL
-	dc.l	$4880FB80,inst_movem   ,dasb_movem	; MOVEM EA to Registers
+	dc.l	$4880FB80,inst_movem   ,dasb_Movem	; MOVEM EA to Registers
 	dc.l	$4E40FFF0,inst_trap    ,dasb_None	; TRAP
 	dc.l	$4E50FFF8,inst_link    ,dasb_None1W	; LINK Word
 	dc.l	$4E60FFF8,inst_ulink   ,dasb_None	; UNLK
@@ -1138,10 +1161,10 @@ inst_tbl:
 	dc.l	$4E76FFFF,inst_trapv   ,dasb_None	; TRAPV
 	dc.l	$4E77FFFF,inst_rtr     ,dasb_None	; RTR
 	dc.l	$4E7AFFFE,inst_movec   ,dasb_Movec	; MOVEC
-	dc.l	$4E80FFC0,inst_jsr     ,dasb_eaddr	; JSR
-	dc.l	$4EC0FFC0,inst_jmp     ,dasb_eaddr	; JMP
-	dc.l	$41C0F1C0,inst_lea     ,dasb_logan	; LEA
-	dc.l	$4000F040,inst_chk     ,dasb_logdn	; CHK
+	dc.l	$4E80FFC0,inst_jsr     ,dasb_EAddrNoS	; JSR
+	dc.l	$4EC0FFC0,inst_jmp     ,dasb_EAddrNoS	; JMP
+	dc.l	$41C0F1C0,inst_lea     ,dasb_EaToAn	; LEA
+	dc.l	$4000F040,inst_chk     ,dasb_EaToDnCh	; CHK
 	dc.l	$54C8FFF8,inst_dbcc    ,dasb_DecBranc	; DBCC
 	dc.l	$55C8FFF8,inst_dbcs    ,dasb_DecBranc	; DBCS
 	dc.l	$57C8FFF8,inst_dbeq    ,dasb_DecBranc	; DBEQ
@@ -1175,8 +1198,8 @@ inst_tbl:
 	dc.l	$50C0FFC0,inst_st      ,dasb_SetCondi	; ST
 	dc.l	$58C0FFC0,inst_svc     ,dasb_SetCondi	; SVC
 	dc.l	$59C0FFC0,inst_svs     ,dasb_SetCondi	; SVS
-	dc.l	$5000F100,inst_addq    ,dasb_quick	; ADDQ
-	dc.l	$5100F100,inst_subq    ,dasb_quick	; SUBQ
+	dc.l	$5000F100,inst_addq    ,dasb_Quick	; ADDQ
+	dc.l	$5100F100,inst_subq    ,dasb_Quick	; SUBQ
 	dc.l	$6400FF00,inst_bcc     ,dasb_Branch	; BCC
 	dc.l	$6500FF00,inst_bcs     ,dasb_Branch	; BCS
 	dc.l	$6700FF00,inst_beq     ,dasb_Branch	; BEQ
@@ -1194,51 +1217,51 @@ inst_tbl:
 	dc.l	$6000FF00,inst_bra     ,dasb_Branch	; BRA
 	dc.l	$6100FF00,inst_bsr     ,dasb_Branch	; BSR
 	dc.l	$7000F100,inst_moveq   ,dasb_None	; MOVEQ
-	dc.l	$80C0F1C0,inst_divu    ,dasb_muldv	; DIVU Word
-	dc.l	$81C0F1C0,inst_divs    ,dasb_muldv	; DIVS Word
-	dc.l	$8100F1F0,inst_sbcd    ,dasb_extnd	; SBCD
+	dc.l	$80C0F1C0,inst_divu    ,dasb_MulDiv	; DIVU Word
+	dc.l	$81C0F1C0,inst_divs    ,dasb_MulDiv	; DIVS Word
+	dc.l	$8100F1F0,inst_sbcd    ,dasb_Extended	; SBCD
 ;	dc.l	$8140F1F0,inst_unknown ,dasb_Unknown	; PACK
 ;	dc.l	$8180F1F0,inst_unknown ,dasb_Unknown	; UNPK
-	dc.l	$8000F000,inst_or      ,dasb_logdn	; OR(toDn)
-	dc.l	$8100F100,inst_or      ,dasb_logea	; OR(toEA)
-	dc.l	$90C0F0C0,inst_suba    ,dasb_logan	; SUBA
-	dc.l	$9000F100,inst_sub     ,dasb_logdn	; SUB(toDn)
-	dc.l	$9100F100,inst_sub     ,dasb_logea	; SUB(toEA)
-	dc.l	$9100F130,inst_subx    ,dasb_extnd	; SUBX
+	dc.l	$8000F000,inst_or      ,dasb_EaToDn	; OR(toDn)
+	dc.l	$8100F100,inst_or      ,dasb_DnToEa	; OR(toEA)
+	dc.l	$90C0F0C0,inst_suba    ,dasb_EaToAn	; SUBA
+	dc.l	$9000F100,inst_sub     ,dasb_EaToDn	; SUB(toDn)
+	dc.l	$9100F100,inst_sub     ,dasb_DnToEa	; SUB(toEA)
+	dc.l	$9100F130,inst_subx    ,dasb_Extended	; SUBX
 	dc.l	$B108F1F8,inst_cmpmb   ,dasb_None	; CMPM Byte
 	dc.l	$B148F1F8,inst_cmpmw   ,dasb_None	; CMPM Word
 	dc.l	$B188F1F8,inst_cmpml   ,dasb_None	; CMPM Long
-	dc.l	$B0C0F0C0,inst_cmpa    ,dasb_logan	; CMPA
-	dc.l	$B000F100,inst_cmp     ,dasb_logdn	; CMP(toDn)
-	dc.l	$B100F100,inst_eor     ,dasb_logea	; EOR(toEA)
-	dc.l	$C100F1F0,inst_abcd    ,dasb_extnd	; ABCD
+	dc.l	$B0C0F0C0,inst_cmpa    ,dasb_EaToAn	; CMPA
+	dc.l	$B000F100,inst_cmp     ,dasb_EaToDn	; CMP(toDn)
+	dc.l	$B100F100,inst_eor     ,dasb_DnToEa	; EOR(toEA)
+	dc.l	$C100F1F0,inst_abcd    ,dasb_Extended	; ABCD
 	dc.l	$C140F1F8,inst_exgd    ,dasb_None	; EXG Data Registers
 	dc.l	$C148F1F8,inst_exga    ,dasb_None	; EXG Address Registers
 	dc.l	$C188F1F8,inst_exgda   ,dasb_None	; EXG Data Register and Address Register
-	dc.l	$C0C0F1C0,inst_mulu    ,dasb_muldv	; MULU Word
-	dc.l	$C1C0F1C0,inst_muls    ,dasb_muldv	; MULS Word
-	dc.l	$C000F100,inst_and     ,dasb_logdn	; AND(toDn)
-	dc.l	$C100F100,inst_and     ,dasb_logea	; AND(toEA)
-	dc.l	$D100F130,inst_addx    ,dasb_extnd	; ADDX
-	dc.l	$D0C0F0C0,inst_adda    ,dasb_logan	; ADDA
-	dc.l	$D000F100,inst_add     ,dasb_logdn	; ADD(toDn)
-	dc.l	$D100F100,inst_add     ,dasb_logea	; ADD(toEA)
-	dc.l	$E0C0FFC0,inst_asr     ,dasb_weadr	; ASR Memory
-	dc.l	$E1C0FFC0,inst_asl     ,dasb_weadr	; ASL Memory
-	dc.l	$E2C0FFC0,inst_lsr     ,dasb_weadr	; LSR Memory
-	dc.l	$E3C0FFC0,inst_lsl     ,dasb_weadr	; LSL Memory
-	dc.l	$E4C0FFC0,inst_roxr    ,dasb_weadr	; ROXR Memory
-	dc.l	$E5C0FFC0,inst_roxl    ,dasb_weadr	; ROXL Memory
-	dc.l	$E6C0FFC0,inst_ror     ,dasb_weadr	; ROR Memory
-	dc.l	$E7C0FFC0,inst_rol     ,dasb_weadr	; ROL Memory
-	dc.l	$E000F118,inst_asr     ,dasb_sfrtr	; ASR Register
-	dc.l	$E100F118,inst_asl     ,dasb_sfrtr	; ASL Register
-	dc.l	$E008F118,inst_lsr     ,dasb_sfrtr	; LSR Register
-	dc.l	$E108F118,inst_lsl     ,dasb_sfrtr	; LSL Register
-	dc.l	$E010F118,inst_roxr    ,dasb_sfrtr	; ROXR Register
-	dc.l	$E110F118,inst_roxl    ,dasb_sfrtr	; ROXL Register
-	dc.l	$E018F118,inst_ror     ,dasb_sfrtr	; ROR Register
-	dc.l	$E118F118,inst_rol     ,dasb_sfrtr	; ROL Register
+	dc.l	$C0C0F1C0,inst_mulu    ,dasb_MulDiv	; MULU Word
+	dc.l	$C1C0F1C0,inst_muls    ,dasb_MulDiv	; MULS Word
+	dc.l	$C000F100,inst_and     ,dasb_EaToDn	; AND(toDn)
+	dc.l	$C100F100,inst_and     ,dasb_DnToEa	; AND(toEA)
+	dc.l	$D100F130,inst_addx    ,dasb_Extended	; ADDX
+	dc.l	$D0C0F0C0,inst_adda    ,dasb_EaToAn	; ADDA
+	dc.l	$D000F100,inst_add     ,dasb_EaToDn	; ADD(toDn)
+	dc.l	$D100F100,inst_add     ,dasb_DnToEa	; ADD(toEA)
+	dc.l	$E0C0FFC0,inst_asr     ,dasb_ShiftMem	; ASR Memory
+	dc.l	$E1C0FFC0,inst_asl     ,dasb_ShiftMem	; ASL Memory
+	dc.l	$E2C0FFC0,inst_lsr     ,dasb_ShiftMem	; LSR Memory
+	dc.l	$E3C0FFC0,inst_lsl     ,dasb_ShiftMem	; LSL Memory
+	dc.l	$E4C0FFC0,inst_roxr    ,dasb_ShiftMem	; ROXR Memory
+	dc.l	$E5C0FFC0,inst_roxl    ,dasb_ShiftMem	; ROXL Memory
+	dc.l	$E6C0FFC0,inst_ror     ,dasb_ShiftMem	; ROR Memory
+	dc.l	$E7C0FFC0,inst_rol     ,dasb_ShiftMem	; ROL Memory
+	dc.l	$E000F118,inst_asr     ,dasb_ShiftReg	; ASR Register
+	dc.l	$E100F118,inst_asl     ,dasb_ShiftReg	; ASL Register
+	dc.l	$E008F118,inst_lsr     ,dasb_ShiftReg	; LSR Register
+	dc.l	$E108F118,inst_lsl     ,dasb_ShiftReg	; LSL Register
+	dc.l	$E010F118,inst_roxr    ,dasb_ShiftReg	; ROXR Register
+	dc.l	$E110F118,inst_roxl    ,dasb_ShiftReg	; ROXL Register
+	dc.l	$E018F118,inst_ror     ,dasb_ShiftReg	; ROR Register
+	dc.l	$E118F118,inst_rol     ,dasb_ShiftReg	; ROL Register
 ;	dc.l	$E8C0F8C0,inst_unknown ,dasb_Unknown	; Bit Field
 ;	dc.l	$F000FFC0,inst_unknown ,dasb_Unknown	; PMOVE TT Registers
 ;	dc.l	$F000FFC0,inst_unknown ,dasb_Unknown	; PLOAD
@@ -1381,7 +1404,7 @@ inst_mvplmr:	dc.b	"MOVEP.L d(An),Dn",$00
 inst_moveq:	dc.b	"MOVEQ.L #<data>,Dn",$00
 inst_muls:	dc.b	"MULS",$00
 inst_mulu:	dc.b	"MULU",$00
-inst_nbcd:	dc.b	"NBCD",$00
+inst_nbcdb:	dc.b	"NBCD.B",$00
 inst_neg:	dc.b	"NEG",$00
 inst_negx:	dc.b	"NEGX",$00
 inst_nop:	dc.b	"NOP",$00
@@ -1390,7 +1413,7 @@ inst_or:	dc.b	"OR",$00
 inst_ori:	dc.b	"ORI",$00
 inst_ori_ccr:	dc.b	"ORI.B #<data>,CCR",$00
 inst_ori_sr:	dc.b	"ORI.W #<data>,SR",$00
-inst_pea:	dc.b	"PEA",$00
+inst_peal:	dc.b	"PEA.L",$00
 inst_reset:	dc.b	"RESET",$00
 inst_rol:	dc.b	"ROL",$00
 inst_ror:	dc.b	"ROR",$00
@@ -1422,7 +1445,7 @@ inst_subi:	dc.b	"SUBI",$00
 inst_subq:	dc.b	"SUBQ",$00
 inst_subx:	dc.b	"SUBX",$00
 inst_swap:	dc.b	"SWAP.W Dn",$00
-inst_tas:	dc.b	"TAS",$00
+inst_tasb:	dc.b	"TAS.B",$00
 inst_trap:	dc.b	"TRAP #<vector>",$00
 inst_trapv:	dc.b	"TRAPV",$00
 inst_tst:	dc.b	"TST",$00
@@ -1438,6 +1461,7 @@ inst_get6_pm:	dc.w	$0005,$003F		; get_op parameter(6bit)
 inst_sz_pm_1b:	dc.b	$01,$00,$00		; size_2bit parameter(1bit)
 inst_sz_pm:	dc.b	$02,$01,$00		; size_2bit parameter
 inst_sz_pm_mv:	dc.b	$02,$03,$01		; size_2bit parameter(move)
+inst_sz_pm_ch:	dc.b	$02,$03,$03		; size_2bit parameter(chk)
 inst_sz_b:	dc.b	".B",$00
 inst_sz_w:	dc.b	".W",$00
 inst_sz_l:	dc.b	".L",$00
