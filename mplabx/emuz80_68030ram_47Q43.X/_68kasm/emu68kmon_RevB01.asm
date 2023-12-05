@@ -172,6 +172,7 @@ CSTART:
 	MOVE.L	D0,DSADDR
 	MOVE.L	D0,GADDR
 	MOVE.L	D0,SADDR
+	MOVE.L	D0,dasm_adr
 	MOVE.B	#'S',HEXMOD
 	MOVE.B	#MPU_SPEC,PSPEC
 
@@ -455,13 +456,10 @@ DIASM:
 	TST	D2
 	BEQ	DI01
 	MOVE.L	D1,dasm_adr	; Set instruction address
-	BRA	DI02
 DI01:
-	MOVE.L	REGPC,dasm_adr	; Set instruction address
-DI02:
 	MOVE.B	(A0),D0
 	TST.B	D0
-	BEQ	DI03
+	BEQ	DI02
 	BSR	SKIPSP
 	MOVE.B	(A0),D0
 	CMP.B	#',',D0
@@ -471,7 +469,7 @@ DI02:
 	MOVE.B	(A0),D0
 	BSR	UPPER
 	CMP.B	#'S',D0
-	BNE	ERR
+	BNE	DI03
 	ADDQ	#1,A0
 	BSR	RDDEC
 	TST	D2
@@ -479,10 +477,31 @@ DI02:
 	TST	D1		; Check "S0" is inhibit
 	BEQ	ERR
 	MOVE.W	D1,dasm_step	; Set disassemble step
-	BRA	DI10
+	MOVE.L	#0,dasm_eadr	; Set end address
+	BRA	DI04
+DI02:
+	MOVE.W	#5,dasm_step	; Set disassemble step
+	MOVE.L	#0,dasm_eadr	; Set end address
+	BRA	DI04
 DI03:
-	MOVE.W	#1,dasm_step	; Set disassemble step
-DI10:
+	BSR	RDHEX
+	TST	D2
+	BEQ	ERR
+	MOVE.L	D1,dasm_eadr	; Set end address
+	MOVE.W	#0,dasm_step	; Set disassemble step(apply end address)
+DI04:
+	BSR	dasm_display
+	BRA	WSTART
+
+dasm_display:
+	;; In [dasm_adr] Instruction address
+	;; In [dasm_step] Disassemble step(if 0 then apply end address)
+	;; In [dasm_eadr] End address
+	MOVE.L	D0,-(A7)	; Push
+	MOVE.L	D1,-(A7)	; Push
+	MOVE.L	A0,-(A7)	; Push
+	MOVE.L	A1,-(A7)	; Push
+dasm_display_0:
 	MOVE.W	#0,dasm_cdsz	; Initialize code size
 	MOVE.W	#0,dasm_opsz	; Initialize operate size
 	MOVEA.L	dasm_adr,A1
@@ -497,14 +516,14 @@ DI10:
 	;; Search instruction table
 	LEA	inst_tbl,A0
 	MOVEQ	#0,D0
-DI11:
+dasm_display_1:
 	MOVE.W	2(A0,D0.W),D1	; Get [1st]Mask data
 	AND.W	dasm_op,D1
 	CMP.W	0(A0,D0.W),D1	; Compare [1st]Instruction data
-	BEQ	DI12
+	BEQ	dasm_display_2
 	ADDI.L	#inst_tbl_sz,D0
-	BRA	DI11
-DI12:
+	BRA	dasm_display_1
+dasm_display_2:
 	MOVE.L	A0,A1
 	ADD.L	D0,A1		; Match instruction table address
 	;; Out instruction
@@ -520,9 +539,28 @@ DI12:
 	MOVEA.L	dasm_adr,A1
 	ADDA.W	dasm_cdsz,A1
 	MOVE.L	A1,dasm_adr	; Set next instruction address
+	;; Check input any key
+	BSR	CONST
+	TST.B	D0
+	BNE	dasm_display_4
+	;; Check stop condition type
+	TST.W	dasm_step	; If 0 then apply end address
+	BNE	dasm_display_3
+	;; Check end address
+	MOVEA.L	dasm_eadr,A0
+	CMPA.L	dasm_adr,A0
+	BCC	dasm_display_0
+	BRA	dasm_display_4
+dasm_display_3:
+	;; Check disassemble step
 	SUB.W	#1,dasm_step
-	BNE	DI10
-	BRA	WSTART
+	BNE	dasm_display_0
+dasm_display_4:
+	MOVE.L	(A7)+,A1	; Pop
+	MOVE.L	(A7)+,A0	; Pop
+	MOVE.L	(A7)+,D1	; Pop
+	MOVE.L	(A7)+,D0	; Pop
+	RTS
 
 ;; Subroutine layer
 
@@ -1188,7 +1226,7 @@ inst_tbl:
 	dc.l	$4E75FFFF,inst_rts     ,dasb_None	; RTS
 	dc.l	$4E76FFFF,inst_trapv   ,dasb_None	; TRAPV
 	dc.l	$4E77FFFF,inst_rtr     ,dasb_None	; RTR
-	dc.l	$4E7AFFFE,inst_movec   ,dasb_Movec	; MOVEC
+	dc.l	$4E7AFFFE,inst_movec   ,dasb_Movec	; MOVEC(for MC68030)
 	dc.l	$4E80FFC0,inst_jsr     ,dasb_EAddrNoS	; JSR
 	dc.l	$4EC0FFC0,inst_jmp     ,dasb_EAddrNoS	; JMP
 	dc.l	$41C0F1C0,inst_lea     ,dasb_EaToAn	; LEA
@@ -1196,7 +1234,7 @@ inst_tbl:
 	dc.l	$54C8FFF8,inst_dbcc    ,dasb_DecBranc	; DBCC
 	dc.l	$55C8FFF8,inst_dbcs    ,dasb_DecBranc	; DBCS
 	dc.l	$57C8FFF8,inst_dbeq    ,dasb_DecBranc	; DBEQ
-	dc.l	$51C8FFF8,inst_dbf     ,dasb_DecBranc	; DBF
+	dc.l	$51C8FFF8,inst_dbf     ,dasb_DecBranc	; DBF(DBRA)
 	dc.l	$5CC8FFF8,inst_dbge    ,dasb_DecBranc	; DBGE
 	dc.l	$5EC8FFF8,inst_dbgt    ,dasb_DecBranc	; DBGT
 	dc.l	$52C8FFF8,inst_dbhi    ,dasb_DecBranc	; DBHI
@@ -3082,7 +3120,7 @@ HLPMSG:
 	DC.B	"BC[1|2] :Clear Break Point",CR,LF
 	DC.B	"BT :Reset Boot",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
-	DC.B	"DI[<adr>][,s<steps>] :Mini Disassemble",CR,LF
+	DC.B	"DI[<adr>][,s<steps>|<adr>] :Mini Disassemble",CR,LF
 	DC.B	"G[<adr>][,<stop adr>] :Go and Stop",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"M[T(0-2)|S|M|I(0-7)] :Mode(SR System Byte)",CR,LF
@@ -3559,9 +3597,10 @@ tmpb_adr:	ds.l	2
 dbg_wend	equ	*
 
 ;; Disassemble work area
-dasm_op:	ds.w	1
 dasm_adr:	ds.l	1
-dasm_step:	ds.w	1
+dasm_eadr:	ds.l	1
+dasm_op:	ds.w	1
+dasm_step:	ds.w	1	; if 0 then apply dasm_eadr
 dasm_cdsz:	ds.w	1
 dasm_opsz:	ds.w	1
 
