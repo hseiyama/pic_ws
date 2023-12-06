@@ -490,10 +490,16 @@ DI03:
 	MOVE.L	D1,dasm_eadr	; Set end address
 	MOVE.W	#0,dasm_step	; Set disassemble step(apply end address)
 DI04:
-	BSR	dasm_display
+	BSR	dasm_dump
 	BRA	WSTART
 
-dasm_display:
+dasm_call:
+	MOVE.L	REGPC,dasm_adr	; Set instruction address
+	MOVE.W	#1,dasm_step	; Set disassemble step
+	MOVE.L	#0,dasm_eadr	; Set end address
+	BRA	dasm_dump	; RTS in subroutine
+
+dasm_dump:
 	;; In [dasm_adr] Instruction address
 	;; In [dasm_step] Disassemble step(if 0 then apply end address)
 	;; In [dasm_eadr] End address
@@ -501,7 +507,7 @@ dasm_display:
 	MOVE.L	D1,-(A7)	; Push
 	MOVE.L	A0,-(A7)	; Push
 	MOVE.L	A1,-(A7)	; Push
-dasm_display_0:
+dasm_dump_0:
 	MOVE.W	#0,dasm_cdsz	; Initialize code size
 	MOVE.W	#0,dasm_opsz	; Initialize operate size
 	MOVEA.L	dasm_adr,A1
@@ -516,14 +522,14 @@ dasm_display_0:
 	;; Search instruction table
 	LEA	inst_tbl,A0
 	MOVEQ	#0,D0
-dasm_display_1:
+dasm_dump_1:
 	MOVE.W	2(A0,D0.W),D1	; Get [1st]Mask data
 	AND.W	dasm_op,D1
 	CMP.W	0(A0,D0.W),D1	; Compare [1st]Instruction data
-	BEQ	dasm_display_2
+	BEQ	dasm_dump_2
 	ADDI.L	#inst_tbl_sz,D0
-	BRA	dasm_display_1
-dasm_display_2:
+	BRA	dasm_dump_1
+dasm_dump_2:
 	MOVE.L	A0,A1
 	ADD.L	D0,A1		; Match instruction table address
 	;; Out instruction
@@ -542,20 +548,20 @@ dasm_display_2:
 	;; Check input any key
 	BSR	CONST
 	TST.B	D0
-	BNE	dasm_display_4
+	BNE	dasm_dump_4
 	;; Check stop condition type
 	TST.W	dasm_step	; If 0 then apply end address
-	BNE	dasm_display_3
+	BNE	dasm_dump_3
 	;; Check end address
 	MOVEA.L	dasm_eadr,A0
 	CMPA.L	dasm_adr,A0
-	BCC	dasm_display_0
-	BRA	dasm_display_4
-dasm_display_3:
+	BCC	dasm_dump_0
+	BRA	dasm_dump_4
+dasm_dump_3:
 	;; Check disassemble step
 	SUB.W	#1,dasm_step
-	BNE	dasm_display_0
-dasm_display_4:
+	BNE	dasm_dump_0
+dasm_dump_4:
 	MOVE.L	(A7)+,A1	; Pop
 	MOVE.L	(A7)+,A0	; Pop
 	MOVE.L	(A7)+,D1	; Pop
@@ -2088,9 +2094,16 @@ RD1:
 	BSR	HEXOUT4
 	BRA	RD0
 RD2:
+	CMP	#3,D1
+	BNE	RD3
 	;; LONG size
 	MOVE.L	(A0),D0
 	BSR	HEXOUT8
+	BRA	RD0
+RD3:
+	;; Subroutine
+	JSR	(A0)
+	BSR	STROUT
 	BRA	RD0
 
 	ENDIF
@@ -2144,30 +2157,45 @@ MD03:
 	OR.W	D1,REGSR
 MD10:
 	;; Show SR register
-	MOVE.W	REGSR,D0
-	MOVE.B	#SR_bitSize,D1
-	LEA	SR_bit,A0
-	LEA	SR_bit_on,A1
-	LEA	SR_bit_off,A2
-MD11:
-	LSL.W	#1,D0
-	BCS	MD12
-	MOVE.B	(A2)+,(A0)+	; bit_off
-	ADD.L	#1,A1
-	BRA	MD13
-MD12:
-	MOVE.B	(A1)+,(A0)+	; bit_on
-	ADD.L	#1,A2
-MD13:
-	SUB.B	#1,D1
-	TST.B	D1
-	BNE	MD11
+	BSR	mode_update
 	LEA	SR_read,A0
 	BSR	STROUT
 	LEA	SR_bit,A0
 	BSR	STROUT
 	BSR	CRLF
 	BRA	WSTART
+
+mode_update:
+	;; out [A0] SR_bit address
+	MOVE.L	D0,-(A7)	; Push
+	MOVE.L	D1,-(A7)	; Push
+	MOVE.L	A1,-(A7)	; Push
+	MOVE.L	A2,-(A7)	; Push
+	;; Update SR_bit
+	MOVE.W	REGSR,D0
+	MOVE.B	#SR_bitSize,D1
+	LEA	SR_bit,A0
+	LEA	SR_bit_on,A1
+	LEA	SR_bit_off,A2
+mode_update_0:
+	LSL.W	#1,D0
+	BCS	mode_update_1
+	MOVE.B	(A2)+,(A0)+	; bit_off
+	ADD.L	#1,A1
+	BRA	mode_update_2
+mode_update_1:
+	MOVE.B	(A1)+,(A0)+	; bit_on
+	ADD.L	#1,A2
+mode_update_2:
+	SUB.B	#1,D1
+	TST.B	D1
+	BNE	mode_update_0
+	LEA	SR_bit,A0
+	MOVE.L	(A7)+,A2	; Pop
+	MOVE.L	(A7)+,A1	; Pop
+	MOVE.L	(A7)+,D1	; Pop
+	MOVE.L	(A7)+,D0	; Pop
+	RTS
 
 SR_read:	dc.b	"SR=",$00
 SR_bit_on:	dc.b	"TTSM.III...XNZVC"
@@ -2874,6 +2902,7 @@ CH3:
 	BSR	G0DUMP
 CH4:
 	BSR	RDUMP
+	BSR	dasm_call	; Disassemble call
 	ELSE
 	IFDEF DEBUG
 	MOVE.L	A7,D0
@@ -3257,8 +3286,10 @@ RDTAB:	DC.W	$0003		; LONG
 	DC.L	RDSPC,  REGPC
 	DC.W	$0003
 	DC.L	RDSSSP, REGSSP
-	DC.W	$0002		; WORD
-	DC.L	RDSSR,  REGSR
+;	DC.W	$0002		; WORD
+;	DC.L	RDSSR,  REGSR
+	DC.W	$0004		; Subroutine
+	DC.L	RDSSR,  mode_update
 
 	DC.W	$8003		; LONG + (END flag for MC68000/8)
 	DC.L	RDSVBR, REGVBR
