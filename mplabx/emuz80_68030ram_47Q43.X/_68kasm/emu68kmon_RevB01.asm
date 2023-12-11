@@ -203,19 +203,39 @@ INI2:
 INIR0:
 	CLR.B	(A0)+
 	DBF	D0,INIR0
-	MOVE.L	#STACK,REGSSP
+;	MOVE.L	#STACK,REGSSP
+	MOVE.L	#STACK,D0
+	MOVEC	D0,MSP
+	MOVE.L	D0,REGISP
+	MOVE.L	D0,REGMSP
 	MOVE.L	GADDR,REGPC
 	MOVE.L	#USTACK,REGA7
+	MOVEC	VBR,D0
+	MOVE.L	D0,REGVBR
+	MOVEC	SFC,D0
+	MOVE.B	D0,REGSFC
+	MOVEC	SFC,D0
+	MOVE.B	D0,REGDFC
+	MOVEC	CACR,D0
+	MOVE.L	D0,REGCACR
+	MOVEC	CAAR,D0
+	MOVE.L	D0,REGCAAR
+	PMMU	ON
+	PMOVE	CRP,REGCRPH
+	PMOVE	SRP,REGSRPH
+	PMOVE	TC,REGTC
+	PMOVE	TT0,REGTT0
+	PMOVE	TT1,REGTT1
+	PMOVE	MMUSR,REGMMUSR
+	PMMU	OFF
+	MOVE.W	#$A000,reg_level
 
 	;; Initialize mode area
-	MOVE.B	#SR_bitSize,D0
 	LEA	SR_bit,A0
+	MOVE	#SR_bitSize,D0
 INIM0:
-	MOVE.B	#'.',(A0)+
-	SUB.B	#1,D0
-	TST.B	D0
-	BNE	INIM0
-	MOVE.B	#$00,(A0)
+	CLR.B	(A0)+
+	DBF	D0,INIM0
 
 	ENDIF
 
@@ -480,7 +500,7 @@ DI01:
 	MOVE.L	#0,dasm_eadr	; Set end address
 	BRA	DI04
 DI02:
-	MOVE.W	#5,dasm_step	; Set disassemble step
+	MOVE.W	#10,dasm_step	; Set disassemble step
 	MOVE.L	#0,dasm_eadr	; Set end address
 	BRA	DI04
 DI03:
@@ -489,6 +509,8 @@ DI03:
 	BEQ	ERR
 	MOVE.L	D1,dasm_eadr	; Set end address
 	MOVE.W	#0,dasm_step	; Set disassemble step(apply end address)
+	CMP.L	dasm_adr,D1	; Check dasm_adr > dasm_eadr ? finish
+	BCS	WSTART
 DI04:
 	BSR	dasm_dump
 	BRA	WSTART
@@ -1609,9 +1631,25 @@ go_bpt:
 
 	MOVE.L	D3,REGPC	; Value(start address)
 G0:
-	MOVE.L	REGSSP,D0
+	MOVE.W	REGSR,D0
+	BTST	#12,D0		; Check SR(M)
+	BNE	G01
+	;; SR(M=Interrupt)
+	ANDI	#$EFFF,SR
+	BRA	G02
+G01:
+	;; SR(M=Master)
+	ORI	#$1000,SR
+G02:
+;	MOVE.L	REGSSP,D0
+;	AND.L	#$FFFFFFFE,D0
+;	MOVE.L	D0,A7
+	MOVE.L	REGISP,D0
 	AND.L	#$FFFFFFFE,D0
-	MOVE.L	D0,A7
+	MOVEC	D0,ISP
+	MOVE.L	REGMSP,D0
+	AND.L	#$FFFFFFFE,D0
+	MOVEC	D0,MSP
 
 	TST.B	PSPEC
 	BEQ	G1
@@ -1622,17 +1660,57 @@ G0:
 
 	MOVE	#$0000,-(A7)	; Format / Dummy (Vector Offset)
 
+	CMPI.W	#$8000,reg_level; Check register level0
+	BEQ	reg_level_check_end
 	MOVE.L	REGVBR,D0
 	AND.L	#$FFFFFFFE,D0
 	MOVEC	D0,VBR		; Be careful!
 	MOVE.B	REGSFC,D0
+	ANDI.B	#$07,D0
 	MOVEC	D0,SFC
 	MOVE.B	REGDFC,D0
+	ANDI.B	#$07,D0
 	MOVEC	D0,DFC
 
 	RESTORE
+
+	;; MC68030 only
+	SAVE
+	CPU	68030
+
+	CMPI.W	#$9000,reg_level; Check register level1
+	BEQ	reg_level_check_end
+	MOVE.L	REGCAAR,D0
+	MOVEC	D0,CAAR
+	MOVE.L	REGCACR,D0
+	ANDI.L	#$00003F1F,D0
+	MOVEC	D0,CACR
+
+	CMPI.W	#$A000,reg_level; Check register level2
+	BEQ	reg_level_check_end
+	PMMU	ON
+	ANDI.L	#$FFFF0003,REGCRPH
+	ANDI.L	#$FFFFFFF0,REGCRPL
+	PMOVE	REGCRPH,CRP
+	ANDI.L	#$FFFF0003,REGSRPH
+	ANDI.L	#$FFFFFFF0,REGSRPL
+	PMOVE	REGSRPH,SRP
+	ANDI.L	#$83FFFFFF,REGTC
+	PMOVE	REGTC,TC
+	ANDI.L	#$FFFF8777,REGTT0
+	PMOVE	REGTT0,TT0
+	ANDI.L	#$FFFF8777,REGTT1
+	PMOVE	REGTT1,TT1
+	ANDI.W	#$EE47,REGMMUSR
+	PMOVE	REGMMUSR,MMUSR
+	PMMU	OFF
+reg_level_check_end:
+
+	RESTORE
+
 G1:
 	MOVE.L	REGPC,-(A7)
+	ANDI.W	#$F71F,REGSR
 	MOVE	REGSR,-(A7)
 
 	MOVE.L	REGA7,A0
@@ -1982,11 +2060,33 @@ SHLS0:
 
 REG:
 	ADDQ	#1,A0
+	MOVE.B	(A0),D0
+	CMP.B	#'0',D0
+	BNE	reg_level_set_1
+	MOVE.W	#$8000,reg_level; Set register level0
+	BRA	reg_level_set_next
+reg_level_set_1:
+	CMP.B	#'1',D0
+	BNE	reg_level_set_2
+	MOVE.W	#$9000,reg_level; Set register level1
+	BRA	reg_level_set_next
+reg_level_set_2:
+	CMP.B	#'2',D0
+	BNE	reg_level_set_3
+	MOVE.W	#$A000,reg_level; Set register level2
+	BRA	reg_level_set_next
+reg_level_set_3:
+	CMP.B	#'3',D0
+	BNE	reg_level_set_end
+	MOVE.W	#$B000,reg_level; Set register level3
+	BRA	reg_level_set_next
+reg_level_set_end:
 	BSR	SKIPSP
 	MOVE.B	(A0),D0
 	BSR	UPPER
 	TST.B	D0
 	BNE	RG0
+reg_level_set_next:
 	BSR	RDUMP
 	BRA	WSTART
 RG0:
@@ -2010,7 +2110,9 @@ RG2:
 RG3:
 	MOVE.B	1(A1),D3
 	BEQ	RGE		; Found end mark
-	BPL	RG30
+;	BPL	RG30
+	CMP.B	reg_level,D3	; Check register level
+	BCC	RGE
 	;; Check MC68010
 	TST.B	PSPEC
 	BEQ	RGE
@@ -2072,7 +2174,10 @@ RDUMP:
 RD0:
 	MOVE	(A1)+,D1	; Flag
 	BEQ	CRLF		; Found END mark => CR,LF and return
-	BPL	RD00
+;	BPL	RD00
+	CMP.W	reg_level,D1	; Check register level
+	BCC	CRLF
+	;; Check MC68010
 	TST.B	PSPEC
 	BEQ	CRLF
 RD00:
@@ -2157,10 +2262,9 @@ MD03:
 	OR.W	D1,REGSR
 MD10:
 	;; Show SR register
-	BSR	mode_update
 	LEA	SR_read,A0
 	BSR	STROUT
-	LEA	SR_bit,A0
+	BSR	mode_update
 	BSR	STROUT
 	BSR	CRLF
 	BRA	WSTART
@@ -2840,6 +2944,23 @@ CH0:
 	MOVE.B	D0,REGDFC
 	RESTORE
 
+	;; MC68030
+	SAVE
+	CPU	68030
+	MOVEC	CACR,D0
+	MOVE.L	D0,REGCACR
+	MOVEC	CAAR,D0
+	MOVE.L	D0,REGCAAR
+	PMMU	ON
+	PMOVE	CRP,REGCRPH
+	PMOVE	SRP,REGSRPH
+	PMOVE	TC,REGTC
+	PMOVE	TT0,REGTT0
+	PMOVE	TT1,REGTT1
+	PMOVE	MMUSR,REGMMUSR
+	PMMU	OFF
+	RESTORE
+
 	MOVE	(A7)+,D2	; Format / Vector offset
 	MOVE	D2,REGFV
 	ROL.W	#4,D2
@@ -2856,7 +2977,11 @@ CH1:
 	DBF	D3,CH1
 
 CH2:
-	MOVE.L	A7,REGSSP
+;	MOVE.L	A7,REGSSP
+	MOVEC	ISP,D0
+	MOVE.L	D0,REGISP
+	MOVEC	MSP,D0
+	MOVE.L	D0,REGMSP
 
 	ELSE
 	;; USE_REGCMD == 0
@@ -3154,7 +3279,7 @@ HLPMSG:
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"M[T(0-2)|S|M|I(0-7)] :Mode(SR System Byte)",CR,LF
 	DC.B	"P(I|S)<adr,adr> :Save HexFile(I:Intel,S:Motorola)",CR,LF
-	DC.B	"R[<reg>] :Set or Dump Register",CR,LF
+	DC.B	"R[<reg>|(0-3)] :Set or Dump Register(Level)",CR,LF
 	DC.B	"S[<adr>] :Set Memory",CR,LF,$00
 
 OPNMSG:	DC.B	CR,LF,"Universal Monitor 68000",CR,LF,$00
@@ -3284,8 +3409,12 @@ RDTAB:	DC.W	$0003		; LONG
 
 	DC.W	$0003
 	DC.L	RDSPC,  REGPC
-	DC.W	$0003
-	DC.L	RDSSSP, REGSSP
+;	DC.W	$0003
+;	DC.L	RDSSSP, REGSSP
+	DC.W	$0003		; LONG
+	DC.L	RDSISP, REGISP
+	DC.W	$0003		; LONG
+	DC.L	RDSMSP, REGMSP
 ;	DC.W	$0002		; WORD
 ;	DC.L	RDSSR,  REGSR
 	DC.W	$0004		; Subroutine
@@ -3297,17 +3426,51 @@ RDTAB:	DC.W	$0003		; LONG
 	DC.L	RDSSFC, REGSFC
 	DC.W	$8001		; BYTE
 	DC.L	RDSDFC, REGDFC
+	DC.W	$9003		; LONG
+	DC.L	RDSCACR,REGCACR
+	DC.W	$9003		; LONG
+	DC.L	RDSCAAR,REGCAAR
+	DC.W	$A003		; LONG
+
+	DC.L	RDSCRPH,REGCRPH
+	DC.W	$A003		; LONG
+	DC.L	RDSCRPL,REGCRPL
+	DC.W	$A003		; LONG
+	DC.L	RDSTC,  REGTC
+	DC.W	$A003		; LONG
+	DC.L	RDSTT0, REGTT0
+
+	DC.W	$A003		; LONG
+	DC.L	RDSSRPH,REGSRPH
+	DC.W	$A003		; LONG
+	DC.L	RDSSRPL,REGSRPL
+	DC.W	$A002		; WORD
+	DC.L	RDSMMUSR,REGMMUSR
+	DC.W	$A003		; LONG
+	DC.L	RDSTT1, REGTT1
 
 	DC.W	$0000		; END
 
 RDSD07:	DC.B	"D0-D7=",$00
 RDSA07:	DC.B	CR,LF,"A0-A7=",$00
 RDSPC:	DC.B	CR,LF,"PC=",$00
-RDSSSP:	DC.B	" SSP=",$00
+;RDSSSP:	DC.B	" SSP=",$00
+RDSISP:	DC.B	" ISP=",$00
+RDSMSP:	DC.B	" MSP=",$00
 RDSSR:	DC.B	" SR=",$00
-RDSVBR:	DC.B	"  VBR=",$00
+RDSVBR:	DC.B	CR,LF,"VBR=",$00
 RDSSFC:	DC.B	" SFC=",$00
 RDSDFC:	DC.B	" DFC=",$00
+RDSCACR:DC.B	" CACR=",$00
+RDSCAAR:DC.B	" CAAR=",$00
+RDSCRPH:DC.B	CR,LF,"CRP(H/L)=",$00
+RDSCRPL:DC.B	"/",$00
+RDSTC:	DC.B	" TC=",$00
+RDSTT0:	DC.B	" TT0=",$00
+RDSSRPH:DC.B	CR,LF,"SRP(H/L)=",$00
+RDSSRPL:DC.B	"/",$00
+RDSMMUSR:DC.B	" MMUSR=",$00
+RDSTT1:	DC.B	"  TT1=",$00
 RDSC:	DC.B	",",$00
 RDSCS:	DC.B	", ",$00
 
@@ -3319,10 +3482,16 @@ RNTAB:
 	DC.L	RNTABC,0
 	DC.B	'D',$0F		; "D?"
 	DC.L	RNTABD,0
+	DC.B	'I',$0F		; "I?"
+	DC.L	RNTABI,0
+	DC.B	'M',$0F		; "M?"
+	DC.L	RNTABM,0
 	DC.B	'P',$0F		; "P?"
 	DC.L	RNTABP,0
 	DC.B	'S',$0F		; "S?"
 	DC.L	RNTABS,0
+	DC.B	'T',$0F		; "T?"
+	DC.L	RNTABT,0
 	DC.B	'V',$0F		; "V?"
 	DC.L	RNTABV,0
 
@@ -3331,111 +3500,243 @@ RNTAB:
 
 RNTABA:
 	DC.B	'0',3		; "A0"
-	DC.L	REGA0, RNA0
+	DC.L	REGA0,RNA0
 	DC.B	'1',3		; "A1"
-	DC.L	REGA1, RNA1
+	DC.L	REGA1,RNA1
 	DC.B	'2',3		; "A2"
-	DC.L	REGA2, RNA2
+	DC.L	REGA2,RNA2
 	DC.B	'3',3		; "A3"
-	DC.L	REGA3, RNA3
+	DC.L	REGA3,RNA3
 	DC.B	'4',3		; "A4"
-	DC.L	REGA4, RNA4
+	DC.L	REGA4,RNA4
 	DC.B	'5',3		; "A5"
-	DC.L	REGA5, RNA5
+	DC.L	REGA5,RNA5
 	DC.B	'6',3		; "A6"
-	DC.L	REGA6, RNA6
+	DC.L	REGA6,RNA6
 	DC.B	'7',3		; "A7"
-	DC.L	REGA7, RNA7
+	DC.L	REGA7,RNA7
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABC:
-	DC.B	'C', $0F	; "CC"
-	DC.L	RNTABCC, 0
+	DC.B	'A',$0F		; "CA"
+	DC.L	RNTABCA,0
+	DC.B	'C',$0F		; "CC"
+	DC.L	RNTABCC,0
+	DC.B	'R',$0F		; "CR"
+	DC.L	RNTABCR,0
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABD:
 	DC.B	'0',3		; "D0"
-	DC.L	REGD0, RND0
+	DC.L	REGD0,RND0
 	DC.B	'1',3		; "D1"
-	DC.L	REGD1, RND1
+	DC.L	REGD1,RND1
 	DC.B	'2',3		; "D2"
-	DC.L	REGD2, RND2
+	DC.L	REGD2,RND2
 	DC.B	'3',3		; "D3"
-	DC.L	REGD3, RND3
+	DC.L	REGD3,RND3
 	DC.B	'4',3		; "D4"
-	DC.L	REGD4, RND4
+	DC.L	REGD4,RND4
 	DC.B	'5',3		; "D5"
-	DC.L	REGD5, RND5
+	DC.L	REGD5,RND5
 	DC.B	'6',3		; "D6"
-	DC.L	REGD6, RND6
+	DC.L	REGD6,RND6
 	DC.B	'7',3		; "D7"
-	DC.L	REGD7, RND7
-	DC.B	'F', $0F	; "DF?"
-	DC.L	RNTABDF, 0
+	DC.L	REGD7,RND7
+	DC.B	'F',$0F		; "DF?"
+	DC.L	RNTABDF,0
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABI:
+	DC.B	'S',$0F		; "IS?"
+	DC.L	RNTABIS,0
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABM:
+	DC.B	'S',$0F		; "MS?"
+	DC.L	RNTABMS,0
+	DC.B	'M',$0F		; "MM?"
+	DC.L	RNTABMM,0
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABP:
 	DC.B	'C',3		; "PC"
-	DC.L	REGPC, RNPC
+	DC.L	REGPC,RNPC
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABS:
-	DC.B	'F', $0F	; "SF?"
-	DC.L	RNTABSF, 0
-	DC.B	'R', 2		; "SR"
-	DC.L	REGSR, RNSR
-	DC.B	'S', $0F	; "SS?"
-	DC.L	RNTABSS, 0
+	DC.B	'F',$0F		; "SF?"
+	DC.L	RNTABSF,0
+	DC.B	'R',$0F		; "SR?"
+	DC.L	RNTABSR,0
+;	DC.B	'R',2		; "SR"
+;	DC.L	REGSR,RNSR
+;	DC.B	'S',$0F		; "SS?"
+;	DC.L	RNTABSS,0
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABT:
+	DC.B	'C',$A3		; "TC"
+	DC.L	REGTC,RNTC
+	DC.B	'T',$0F		; "TT?"
+	DC.L	RNTABTT,0
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABV:
-	DC.B	'B', $0F	; "VB?"
-	DC.L	RNTABVB, 0
+	DC.B	'B',$0F		; "VB?"
+	DC.L	RNTABVB,0
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABCA:
+	DC.B	'A',$0F		; "CAA?"
+	DC.L	RNTABCAA,0
+	DC.B	'C',$0F		; "CAC?"
+	DC.L	RNTABCAC,0
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABCC:
-	DC.B	'R', 1		; "CCR"
-	DC.L	REGSR+1, RNCCR
+	DC.B	'R',1		; "CCR"
+	DC.L	REGSR+1,RNCCR
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABCR:
+	DC.B	'P',$0F		; "CRP?"
+	DC.L	RNTABCRP,0
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABDF:
-	DC.B	'C', $81	; "DFC"
-	DC.L	REGDFC, RNDFC
+	DC.B	'C',$81		; "DFC"
+	DC.L	REGDFC,RNDFC
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
+
+RNTABIS:
+	DC.B	'P',3		; "ISP"
+	DC.L	REGISP,RNISP
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+RNTABMM:
+	DC.B	'U',$0F		; "MMU?"
+	DC.L	RNTABMMU,0
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABMS:
+	DC.B	'P',3		; "MSP"
+	DC.L	REGMSP,RNMSP
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
 
 RNTABSF:
-	DC.B	'C', $81	; "SFC"
-	DC.L	REGSFC, RNSFC
+	DC.B	'C',$81		; "SFC"
+	DC.L	REGSFC,RNSFC
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
-RNTABSS:
-	DC.B	'P', 3		; "SSP"
-	DC.L	REGSSP, RNSSP
+RNTABSR:
+	DC.B	0,2		; "SR"
+	DC.L	REGSR,RNSR
+	DC.B	'P',$0F		; "SRP?"
+	DC.L	RNTABSRP,0
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+;RNTABSS:
+;	DC.B	'P',3		; "SSP"
+;	DC.L	REGSSP,RNSSP
+;
+;	DC.B	$00,$00		; End mark
+;	DC.L	0,0
+
+RNTABTT:
+	DC.B	'0',$A3		; "TT0"
+	DC.L	REGTT0,RNTT0
+	DC.B	'1',$A3		; "TT1"
+	DC.L	REGTT1,RNTT1
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
 
 RNTABVB:
-	DC.B	'R', $83	; "VBR"
-	DC.L	REGVBR, RNVBR
+	DC.B	'R',$83		; "VBR"
+	DC.L	REGVBR,RNVBR
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABCAA:
+	DC.B	'R',$93		; "CAAR"
+	DC.L	REGCAAR,RNCAAR
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABCAC:
+	DC.B	'R',$93		; "CACR"
+	DC.L	REGCACR,RNCACR
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABCRP:
+	DC.B	'H',$A3		; "CRPH"
+	DC.L	REGCRPH,RNCRPH
+	DC.B	'L',$A3		; "CRPL"
+	DC.L	REGCRPL,RNCRPL
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABMMU:
+	DC.B	'S',$0F		; "MMUS?"
+	DC.L	RNTABMMUS,0
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABSRP:
+	DC.B	'H',$A3		; "SRPH"
+	DC.L	REGSRPH,RNSRPH
+	DC.B	'L',$A3		; "SRPL"
+	DC.L	REGSRPL,RNSRPL
+
+	DC.B	$00,$00		; End mark
+	DC.L	0,0
+
+RNTABMMUS:
+	DC.B	'R',$A2		; "MMUSR"
+	DC.L	REGMMUSR,RNMMUSR
 
 	DC.B	$00,$00		; End mark
 	DC.L	0,0
@@ -3448,7 +3749,11 @@ RNA4:	DC.B	"A4",$00
 RNA5:	DC.B	"A5",$00
 RNA6:	DC.B	"A6",$00
 RNA7:	DC.B	"A7",$00
+RNCAAR:	DC.B	"CAAR",$00
+RNCACR:	DC.B	"CACR",$00
 RNCCR:	DC.B	"CCR",$00
+RNCRPH:	DC.B	"CRP(H)",$00
+RNCRPL:	DC.B	"CRP(L)",$00
 RND0:	DC.B	"D0",$00
 RND1:	DC.B	"D1",$00
 RND2:	DC.B	"D2",$00
@@ -3458,10 +3763,18 @@ RND5:	DC.B	"D5",$00
 RND6:	DC.B	"D6",$00
 RND7:	DC.B	"D7",$00
 RNDFC:	DC.B	"DFC",$00
+RNISP:	DC.B	"ISP",$00
+RNMMUSR:DC.B	"MMUSR",$00
+RNMSP:	DC.B	"MSP",$00
 RNPC:	DC.B	"PC",$00
 RNSFC:	DC.B	"SFC",$00
 RNSR:	DC.B	"SR",$00
-RNSSP:	DC.B	"SSP",$00
+RNSRPH:	DC.B	"SRP(H)",$00
+RNSRPL:	DC.B	"SRP(L)",$00
+;RNSSP:	DC.B	"SSP",$00
+RNTC:	DC.B	"TC",$00
+RNTT0:	DC.B	"TT0",$00
+RNTT1:	DC.B	"TT1",$00
 RNVBR:	DC.B	"VBR",$00
 
 FCTAB:	DC.L	FCN0,FCN1,FCN2,FCN3
@@ -3598,17 +3911,30 @@ REGA5:	DS.L	1
 REGA6:	DS.L	1
 REGA7:	DS.L	1		; USP
 
-REGSSP:	DS.L	1
+;REGSSP:	DS.L	1
+REGISP:	DS.L	1
+REGMSP:	DS.L	1
 REGSR:	DS.W	1
 REGVBR:	DS.L	1
 REGSFC:	DS.B	1
 REGDFC:	DS.B	1
+REGCACR:DS.L	1
+REGCAAR:DS.L	1
+REGCRPH:DS.L	1
+REGCRPL:DS.L	1
+REGSRPH:DS.L	1
+REGSRPL:DS.L	1
+REGTC:	DS.L	1
+REGTT0:	DS.L	1
+REGTT1:	DS.L	1
+REGMMUSR:DS.W	1
 
 GR0BUF:	DS.W	46-4		; Group 0 exception
 REGFV:	DS.W	1		; Format / Vector offset
 REG_E:
 
-SR_bit:	ds.b	SR_bitSize+1
+reg_level:	ds.w	1
+SR_bit:		ds.b	SR_bitSize+1
 
 	ENDIF
 
