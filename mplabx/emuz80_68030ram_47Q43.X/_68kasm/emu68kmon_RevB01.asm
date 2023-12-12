@@ -322,6 +322,9 @@ WSTART:
 	CMP.B	#'B',D0
 	BEQ	BRKPT
 
+	CMP.B	#'F',D0
+	BEQ	FILMEM
+
 	CMP.B	#'?',D0
 	BEQ	CMDHLP
 
@@ -2473,6 +2476,47 @@ BOOT:
 	JMP	(A0)
 
 ;;;
+;;; Fill Memory
+;;;
+
+FILMEM:
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	BSR	RDHEX
+	TST	D2
+	BEQ	ERR
+	MOVEA.L	D1,A1		; Value(start address)
+	BSR	SKIPSP
+	MOVE.B	(A0),D0
+	CMP.B	#',',D0
+	BNE	ERR
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	BSR	RDHEX
+	TST	D2
+	BEQ	ERR
+	MOVEA.L	D1,A2		; Value(end address)
+	BSR	SKIPSP
+	MOVE.B	(A0),D0
+	CMP.B	#',',D0
+	BNE	ERR
+	ADDQ	#1,A0
+	BSR	SKIPSP
+	BSR	RDHEX
+	TST	D2
+	BEQ	ERR
+	MOVE.L	D1,D3		; Value(value)
+	;; Set value in bytes to address
+	CMPA.L	A1,A2
+	BCS	FM1
+FM0:
+	MOVE.B	D3,(A1)+
+	CMPA.L	A1,A2
+	BCC	FM0
+FM1:
+	BRA	WSTART
+
+;;;
 ;;; Command help
 ;;;
 
@@ -3275,6 +3319,7 @@ HLPMSG:
 	DC.B	"BT :Reset Boot",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
 	DC.B	"DI[<adr>][,s<steps>|<adr>] :Mini Disassemble",CR,LF
+	DC.B	"F<adr>,<end adr>,<value> :Fill Memory(Byte)",CR,LF
 	DC.B	"G[<adr>][,<stop adr>] :Go and Stop",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"M[T(0-2)|S|M|I(0-7)] :Mode(SR System Byte)",CR,LF
