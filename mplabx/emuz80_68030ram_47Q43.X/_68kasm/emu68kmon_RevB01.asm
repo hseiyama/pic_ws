@@ -24,6 +24,8 @@ BUFLEN:	EQU	24		; Input buffer size
 VECSIZ:	EQU	256		; Number of vectors to be initialized
 
 SR_bitSize	equ	16
+ram_range_b	equ	$00000000
+ram_range_e	equ	$0001FFFF
 
 ;;;
 ;;; Options
@@ -2484,6 +2486,8 @@ FILMEM:
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
+	CMPI.L	#ram_range_b,D1	; Check ram range
+	BCS	ERR
 	MOVEA.L	D1,A1		; Value(start address)
 	BSR	SKIPSP
 	MOVE.B	(A0),D0
@@ -2494,6 +2498,8 @@ FILMEM:
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
+	CMPI.L	#ram_range_e,D1	; Check ram range
+	BHI	ERR
 	MOVEA.L	D1,A2		; Value(end address)
 	BSR	SKIPSP
 	MOVE.B	(A0),D0
