@@ -3917,16 +3917,13 @@ ROM_E:
 
 INBUF:	DS.B	BUFLEN		; Line input buffer
 DSADDR:	DS.L	1		; DUMP start address
-DEADDR:	DS.L	1
-DSTATE:	DS.B	1
-	ALIGN	2
-GADDR:	DS.L	1
+DEADDR:	DS.L	1		; DUMP end address
+GADDR:	DS.L	1		; GO address
 SADDR:	DS.L	1		; SET address
+DSTATE:	DS.B	1		; DUMP state
 HEXMOD:	DS.B	1		; HEX file mode
 RECTYP:	DS.B	1		; Record type
 PSPEC:	DS.B	1		; Processor spec.
-
-	ALIGN	2
 
 EXMSG:	DS.L	1		; Exception message
 EXGRP:	DS.W	1		; Exception Group
@@ -3979,6 +3976,7 @@ REG_E:
 
 reg_level:	ds.w	1
 SR_bit:		ds.b	SR_bitSize+1
+	ALIGN	2
 
 	ENDIF
 
@@ -3993,7 +3991,7 @@ bpt2_op:	ds.w	1
 tmpb_op:	ds.w	1
 bpt1_adr:	ds.l	1
 bpt2_adr:	ds.l	1
-tmpb_adr:	ds.l	2
+tmpb_adr:	ds.l	1
 
 dbg_wend	equ	*
 

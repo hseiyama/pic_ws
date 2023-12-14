@@ -78,8 +78,8 @@ nobrk		EQU	0					; null response to INPUT causes a break
 	CPU	68000
 	SUPMODE	ON
 
-EBSC_CS	EQU	$00002000	; Enhanced BASIC cold start
-TBSC_CS	EQU	$00006000	; Tiny BASIC cold start
+EBSC_CS	EQU	$00003000	; Enhanced BASIC cold start
+TBSC_CS	EQU	$00006600	; Tiny BASIC cold start
 
 ;	ORG	$00000000
 ;

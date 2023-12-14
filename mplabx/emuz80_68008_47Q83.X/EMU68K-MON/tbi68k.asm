@@ -34,7 +34,7 @@
 
 	SUPMODE	ON
 
-TBSC_CS	EQU	$00006000	; Tiny BASIC cold start
+TBSC_CS	EQU	$00006600	; Tiny BASIC cold start
 
 ;	ORG	$00000000
 ;

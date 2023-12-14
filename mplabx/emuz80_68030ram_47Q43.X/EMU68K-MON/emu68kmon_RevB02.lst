@@ -1,4 +1,4 @@
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 1 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 1 - 12/14/2023 14:1:1
 
 
     1/       0 :                        ;;;
@@ -61,7 +61,7 @@
    58/       0 :                        ;;; Constants
    59/       0 : =$D                    CR:	EQU	0x0D
    60/       0 : =$A                    LF:	EQU	0x0A
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 2 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 2 - 12/14/2023 14:1:1
 
 
    61/       0 : =$8                    BS:	EQU	0x08
@@ -124,7 +124,7 @@
   118/      74 : 0001 D1CC              	DC.L	DUMMY_H		; Level 5 Interrupt Autovector
   119/      78 : 0001 D1CC              	DC.L	DUMMY_H		; Level 6 Interrupt Autovector
   120/      7C : 0001 D1CC              	DC.L	DUMMY_H		; Level 7 Interrupt Autovector
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 3 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 3 - 12/14/2023 14:1:1
 
 
   121/      80 :                        
@@ -182,12 +182,12 @@
   170/   1B00E : 203C 0000 00C0         	MOVE.L	#RAM_B,D0
   171/   1B014 : [167]                  	ENDIF
   172/   1B014 : 23C0 0001 FE18         	MOVE.L	D0,DSADDR
-  173/   1B01A : 23C0 0001 FE22         	MOVE.L	D0,GADDR
-  174/   1B020 : 23C0 0001 FE26         	MOVE.L	D0,SADDR
-  175/   1B026 : 23C0 0001 FF30         	MOVE.L	D0,dasm_adr
-  176/   1B02C : 13FC 0053 0001 FE2A    	MOVE.B	#'S',HEXMOD
-  177/   1B034 : 13FC 0000 0001 FE2C    	MOVE.B	#MPU_SPEC,PSPEC
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 4 - 12/13/2023 13:23:51
+  173/   1B01A : 23C0 0001 FE20         	MOVE.L	D0,GADDR
+  174/   1B020 : 23C0 0001 FE24         	MOVE.L	D0,SADDR
+  175/   1B026 : 23C0 0001 FF2C         	MOVE.L	D0,dasm_adr
+  176/   1B02C : 13FC 0053 0001 FE29    	MOVE.B	#'S',HEXMOD
+  177/   1B034 : 13FC 0000 0001 FE2B    	MOVE.B	#MPU_SPEC,PSPEC
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 4 - 12/14/2023 14:1:1
 
 
   178/   1B03C :                        
@@ -213,7 +213,7 @@
   198/   1B03C : =>TRUE                 	IF USE_REGCMD
   199/   1B03C :                        
   200/   1B03C :                        	;; Initialize register save area
-  201/   1B03C : 41F9 0001 FE34         	LEA	REG_B,A0
+  201/   1B03C : 41F9 0001 FE32         	LEA	REG_B,A0
   202/   1B042 : 303C 00CF              	MOVE	#(REG_E-REG_B)-1,D0
   203/   1B046 :                        INIR0:
   204/   1B046 : 4218                   	CLR.B	(A0)+
@@ -221,36 +221,36 @@
   206/   1B04C :                        ;	MOVE.L	#STACK,REGSSP
   207/   1B04C : 203C 0001 FE00         	MOVE.L	#STACK,D0
   208/   1B052 : 4E7B 0803              	MOVEC	D0,MSP
-  209/   1B056 : 23C0 0001 FE78         	MOVE.L	D0,REGISP
-  210/   1B05C : 23C0 0001 FE7C         	MOVE.L	D0,REGMSP
-  211/   1B062 : 23F9 0001 FE22 0001    	MOVE.L	GADDR,REGPC
-         1B06A : FE34                  
+  209/   1B056 : 23C0 0001 FE76         	MOVE.L	D0,REGISP
+  210/   1B05C : 23C0 0001 FE7A         	MOVE.L	D0,REGMSP
+  211/   1B062 : 23F9 0001 FE20 0001    	MOVE.L	GADDR,REGPC
+         1B06A : FE32                  
   212/   1B06C : 23FC 0001 F800 0001    	MOVE.L	#USTACK,REGA7
-         1B074 : FE74                  
+         1B074 : FE72                  
   213/   1B076 : 4E7A 0801              	MOVEC	VBR,D0
-  214/   1B07A : 23C0 0001 FE82         	MOVE.L	D0,REGVBR
+  214/   1B07A : 23C0 0001 FE80         	MOVE.L	D0,REGVBR
   215/   1B080 : 4E7A 0000              	MOVEC	SFC,D0
-  216/   1B084 : 13C0 0001 FE86         	MOVE.B	D0,REGSFC
+  216/   1B084 : 13C0 0001 FE84         	MOVE.B	D0,REGSFC
   217/   1B08A : 4E7A 0001              	MOVEC	DFC,D0
-  218/   1B08E : 13C0 0001 FE87         	MOVE.B	D0,REGDFC
+  218/   1B08E : 13C0 0001 FE85         	MOVE.B	D0,REGDFC
   219/   1B094 : 4E7A 0002              	MOVEC	CACR,D0
-  220/   1B098 : 23C0 0001 FE88         	MOVE.L	D0,REGCACR
+  220/   1B098 : 23C0 0001 FE86         	MOVE.L	D0,REGCACR
   221/   1B09E : 4E7A 0802              	MOVEC	CAAR,D0
-  222/   1B0A2 : 23C0 0001 FE8C         	MOVE.L	D0,REGCAAR
+  222/   1B0A2 : 23C0 0001 FE8A         	MOVE.L	D0,REGCAAR
   223/   1B0A8 :                        	PMMU	ON
-  224/   1B0A8 : F039 4E00 0001 FE90    	PMOVE	CRP,REGCRPH
-  225/   1B0B0 : F039 4A00 0001 FE98    	PMOVE	SRP,REGSRPH
-  226/   1B0B8 : F039 4200 0001 FEA0    	PMOVE	TC,REGTC
-  227/   1B0C0 : F039 0A00 0001 FEA4    	PMOVE	TT0,REGTT0
-  228/   1B0C8 : F039 0E00 0001 FEA8    	PMOVE	TT1,REGTT1
-  229/   1B0D0 : F039 6200 0001 FEAC    	PMOVE	MMUSR,REGMMUSR
+  224/   1B0A8 : F039 4E00 0001 FE8E    	PMOVE	CRP,REGCRPH
+  225/   1B0B0 : F039 4A00 0001 FE96    	PMOVE	SRP,REGSRPH
+  226/   1B0B8 : F039 4200 0001 FE9E    	PMOVE	TC,REGTC
+  227/   1B0C0 : F039 0A00 0001 FEA2    	PMOVE	TT0,REGTT0
+  228/   1B0C8 : F039 0E00 0001 FEA6    	PMOVE	TT1,REGTT1
+  229/   1B0D0 : F039 6200 0001 FEAA    	PMOVE	MMUSR,REGMMUSR
   230/   1B0D8 :                        	PMMU	OFF
-  231/   1B0D8 : 33FC A000 0001 FF04    	MOVE.W	#$A000,reg_level
+  231/   1B0D8 : 33FC A000 0001 FF02    	MOVE.W	#$A000,reg_level
   232/   1B0E0 :                        
   233/   1B0E0 :                        	;; Initialize mode area
-  234/   1B0E0 : 41F9 0001 FF06         	LEA	SR_bit,A0
+  234/   1B0E0 : 41F9 0001 FF04         	LEA	SR_bit,A0
   235/   1B0E6 : 303C 0010              	MOVE	#SR_bitSize,D0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 5 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 5 - 12/14/2023 14:1:1
 
 
   236/   1B0EA :                        INIM0:
@@ -261,10 +261,10 @@
   241/   1B0F0 :                        
   242/   1B0F0 :                        	;; Initialize debug work area
   243/   1B0F0 : 303C 0000              	MOVE.W	#$0000,D0
-  244/   1B0F4 : 41F9 0001 FF17         	LEA	dbg_wtop,A0
+  244/   1B0F4 : 41F9 0001 FF16         	LEA	dbg_wtop,A0
   245/   1B0FA :                        INIB0:
   246/   1B0FA : 30C0                   	MOVE.W	D0,(A0)+
-  247/   1B0FC : B1FC 0001 FF30         	CMPA.L	#dbg_wend,A0
+  247/   1B0FC : B1FC 0001 FF2C         	CMPA.L	#dbg_wend,A0
   248/   1B102 : 65F6                   	BCS	INIB0
   249/   1B104 :                        	;; init address & opcode
   250/   1B104 : 203C 0000 00C0         	MOVE.L	#RAM_B,D0
@@ -293,7 +293,7 @@
   273/   1B146 : 06F9 0000 0001 D9D0    ID1:	CALLM	#0,MDESC	; Try MC68020 instruction
   274/   1B14E : ALL                    	RESTORE
   275/   1B14E : 41F9 0001 D9BB         	LEA	IM020,A0
-  276/   1B154 : 13FC 0002 0001 FE2C    	MOVE.B	#2,PSPEC
+  276/   1B154 : 13FC 0002 0001 FE2B    	MOVE.B	#2,PSPEC
   277/   1B15C : 6012                   	BRA	ID9
   278/   1B15E :                        
   279/   1B15E :                        ID2:
@@ -302,7 +302,7 @@
   282/   1B15E : 4E7A 0002              ID3:	MOVEC	CACR,D0		; Try MC68020 instruction (since MC68020 already eliminated, this checks MC68030)
   283/   1B162 : ALL                    	RESTORE
   284/   1B162 : 41F9 0001 D9C5         	LEA	IM030,A0
-  285/   1B168 : 13FC 0003 0001 FE2C    	MOVE.B	#3,PSPEC
+  285/   1B168 : 13FC 0003 0001 FE2B    	MOVE.B	#3,PSPEC
   286/   1B170 :                        
   287/   1B170 :                        ID9:
   288/   1B170 : 6100 1EEE              	BSR	STROUT
@@ -313,7 +313,7 @@
   293/   1B174 : 41F9 0001 D960         	LEA	PROMPT,A0
   294/   1B17A : 6100 1EE4              	BSR	STROUT
   295/   1B17E : 6100 1F64              	BSR	GETLIN
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 6 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 6 - 12/14/2023 14:1:1
 
 
   296/   1B182 : 41F9 0001 FE00         	LEA	INBUF,A0
@@ -376,7 +376,7 @@
   353/   1B212 : 66D0                   	BNE	ERR
   354/   1B214 : 2039 0001 FE18         	MOVE.L	DSADDR,D0
   355/   1B21A : D0BC 0000 0080         	ADD.L	#128,D0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 7 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 7 - 12/14/2023 14:1:1
 
 
   356/   1B220 : 23C0 0001 FE1C         	MOVE.L	D0,DEADDR
@@ -439,7 +439,7 @@
   412/   1B2BC :                        DPL0:
   413/   1B2BC : 613C                   	BSR	DPB
   414/   1B2BE : 51CB FFFC              	DBF	D3,DPL0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 8 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 8 - 12/14/2023 14:1:1
 
 
   415/   1B2C2 :                        
@@ -502,7 +502,7 @@
   472/   1B342 :                        ;;; Disassemble
   473/   1B342 :                        ;;;
   474/   1B342 :                        
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 9 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 9 - 12/14/2023 14:1:1
 
 
   475/   1B342 :                        DIASM:
@@ -511,7 +511,7 @@
   478/   1B348 : 6100 1E20              	BSR	RDHEX
   479/   1B34C : 4A42                   	TST	D2
   480/   1B34E : 6706                   	BEQ	DI01
-  481/   1B350 : 23C1 0001 FF30         	MOVE.L	D1,dasm_adr	; Set instruction address
+  481/   1B350 : 23C1 0001 FF2C         	MOVE.L	D1,dasm_adr	; Set instruction address
   482/   1B356 :                        DI01:
   483/   1B356 : 1010                   	MOVE.B	(A0),D0
   484/   1B358 : 4A00                   	TST.B	D0
@@ -532,40 +532,40 @@
   499/   1B384 : 6700 FE5E              	BEQ	ERR
   500/   1B388 : 4A41                   	TST	D1		; Check "S0" is inhibit
   501/   1B38A : 6700 FE58              	BEQ	ERR
-  502/   1B38E : 33C1 0001 FF3A         	MOVE.W	D1,dasm_step	; Set disassemble step
+  502/   1B38E : 33C1 0001 FF36         	MOVE.W	D1,dasm_step	; Set disassemble step
   503/   1B394 : 23FC 0000 0000 0001    	MOVE.L	#0,dasm_eadr	; Set end address
-         1B39C : FF34                  
+         1B39C : FF30                  
   504/   1B39E : 6036                   	BRA	DI04
   505/   1B3A0 :                        DI02:
-  506/   1B3A0 : 33FC 000A 0001 FF3A    	MOVE.W	#10,dasm_step	; Set disassemble step
+  506/   1B3A0 : 33FC 000A 0001 FF36    	MOVE.W	#10,dasm_step	; Set disassemble step
   507/   1B3A8 : 23FC 0000 0000 0001    	MOVE.L	#0,dasm_eadr	; Set end address
-         1B3B0 : FF34                  
+         1B3B0 : FF30                  
   508/   1B3B2 : 6022                   	BRA	DI04
   509/   1B3B4 :                        DI03:
   510/   1B3B4 : 6100 1DB4              	BSR	RDHEX
   511/   1B3B8 : 4A42                   	TST	D2
   512/   1B3BA : 6700 FE28              	BEQ	ERR
-  513/   1B3BE : 23C1 0001 FF34         	MOVE.L	D1,dasm_eadr	; Set end address
-  514/   1B3C4 : 33FC 0000 0001 FF3A    	MOVE.W	#0,dasm_step	; Set disassemble step(apply end address)
-  515/   1B3CC : B2B9 0001 FF30         	CMP.L	dasm_adr,D1	; Check dasm_adr > dasm_eadr ? finish
+  513/   1B3BE : 23C1 0001 FF30         	MOVE.L	D1,dasm_eadr	; Set end address
+  514/   1B3C4 : 33FC 0000 0001 FF36    	MOVE.W	#0,dasm_step	; Set disassemble step(apply end address)
+  515/   1B3CC : B2B9 0001 FF2C         	CMP.L	dasm_adr,D1	; Check dasm_adr > dasm_eadr ? finish
   516/   1B3D2 : 6500 FDA0              	BCS	WSTART
   517/   1B3D6 :                        DI04:
   518/   1B3D6 : 6122                   	BSR	dasm_dump
   519/   1B3D8 : 6000 FD9A              	BRA	WSTART
   520/   1B3DC :                        
   521/   1B3DC :                        dasm_call:
-  522/   1B3DC : 23F9 0001 FE34 0001    	MOVE.L	REGPC,dasm_adr	; Set instruction address
-         1B3E4 : FF30                  
-  523/   1B3E6 : 33FC 0001 0001 FF3A    	MOVE.W	#1,dasm_step	; Set disassemble step
+  522/   1B3DC : 23F9 0001 FE32 0001    	MOVE.L	REGPC,dasm_adr	; Set instruction address
+         1B3E4 : FF2C                  
+  523/   1B3E6 : 33FC 0001 0001 FF36    	MOVE.W	#1,dasm_step	; Set disassemble step
   524/   1B3EE : 23FC 0000 0000 0001    	MOVE.L	#0,dasm_eadr	; Set end address
-         1B3F6 : FF34                  
+         1B3F6 : FF30                  
   525/   1B3F8 : 4E71                   	BRA	dasm_dump	; RTS in subroutine
   526/   1B3FA :                        
   527/   1B3FA :                        dasm_dump:
   528/   1B3FA :                        	;; In [dasm_adr] Instruction address
   529/   1B3FA :                        	;; In [dasm_step] Disassemble step(if 0 then apply end address)
   530/   1B3FA :                        	;; In [dasm_eadr] End address
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 10 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 10 - 12/14/2023 14:1:1
 
 
   531/   1B3FA : 2F00                   	MOVE.L	D0,-(A7)	; Push
@@ -573,23 +573,23 @@
   533/   1B3FE : 2F08                   	MOVE.L	A0,-(A7)	; Push
   534/   1B400 : 2F09                   	MOVE.L	A1,-(A7)	; Push
   535/   1B402 :                        dasm_dump_0:
-  536/   1B402 : 33FC 0000 0001 FF3C    	MOVE.W	#0,dasm_cdsz	; Initialize code size
-  537/   1B40A : 33FC 0000 0001 FF3E    	MOVE.W	#0,dasm_opsz	; Initialize operate size
-  538/   1B412 : 2279 0001 FF30         	MOVEA.L	dasm_adr,A1
-  539/   1B418 : 33D1 0001 FF38         	MOVE.W	(A1),dasm_op	; Set instruction
+  536/   1B402 : 33FC 0000 0001 FF38    	MOVE.W	#0,dasm_cdsz	; Initialize code size
+  537/   1B40A : 33FC 0000 0001 FF3A    	MOVE.W	#0,dasm_opsz	; Initialize operate size
+  538/   1B412 : 2279 0001 FF2C         	MOVEA.L	dasm_adr,A1
+  539/   1B418 : 33D1 0001 FF34         	MOVE.W	(A1),dasm_op	; Set instruction
   540/   1B41E :                        	;; Out address
-  541/   1B41E : 2039 0001 FF30         	MOVE.L	dasm_adr,D0
+  541/   1B41E : 2039 0001 FF2C         	MOVE.L	dasm_adr,D0
   542/   1B424 : 6100 1C48              	BSR	HEXOUT8
   543/   1B428 :                        	;; Out operation code
   544/   1B428 : 6100 05CC              	BSR	cout_space
-  545/   1B42C : 3039 0001 FF38         	MOVE.W	dasm_op,D0
+  545/   1B42C : 3039 0001 FF34         	MOVE.W	dasm_op,D0
   546/   1B432 : 6100 1C42              	BSR	HEXOUT4
   547/   1B436 :                        	;; Search instruction table
   548/   1B436 : 41F9 0001 BA06         	LEA	inst_tbl,A0
   549/   1B43C : 7000                   	MOVEQ	#0,D0
   550/   1B43E :                        dasm_dump_1:
   551/   1B43E : 3230 0002              	MOVE.W	2(A0,D0.W),D1	; Get [1st]Mask data
-  552/   1B442 : C279 0001 FF38         	AND.W	dasm_op,D1
+  552/   1B442 : C279 0001 FF34         	AND.W	dasm_op,D1
   553/   1B448 : B270 0000              	CMP.W	0(A0,D0.W),D1	; Compare [1st]Instruction data
   554/   1B44C : 6708                   	BEQ	dasm_dump_2
   555/   1B44E : 0680 0000 000C         	ADDI.L	#inst_tbl_sz,D0
@@ -601,34 +601,34 @@
   561/   1B45A : 6100 059A              	BSR	cout_space
   562/   1B45E : 2069 0004              	MOVE.L	4(A1),A0	; Get [2nd]Instruction address
   563/   1B462 : 6100 1BFC              	BSR	STROUT
-  564/   1B466 : 5479 0001 FF3C         	ADDQ.W	#2,dasm_cdsz	; Add code size
+  564/   1B466 : 5479 0001 FF38         	ADDQ.W	#2,dasm_cdsz	; Add code size
   565/   1B46C :                        	;; Call instruction subroutine
   566/   1B46C : 2069 0008              	MOVE.L	8(A1),A0	; Get [3rd]Subroutine address
   567/   1B470 : 4E90                   	JSR	(A0)
   568/   1B472 : 6100 1C60              	BSR	CRLF
   569/   1B476 :                        	;; Next instruction
-  570/   1B476 : 2279 0001 FF30         	MOVEA.L	dasm_adr,A1
-  571/   1B47C : D2F9 0001 FF3C         	ADDA.W	dasm_cdsz,A1
-  572/   1B482 : 23C9 0001 FF30         	MOVE.L	A1,dasm_adr	; Set next instruction address
+  570/   1B476 : 2279 0001 FF2C         	MOVEA.L	dasm_adr,A1
+  571/   1B47C : D2F9 0001 FF38         	ADDA.W	dasm_cdsz,A1
+  572/   1B482 : 23C9 0001 FF2C         	MOVE.L	A1,dasm_adr	; Set next instruction address
   573/   1B488 :                        	;; Check input any key
   574/   1B488 : 6100 2D76              	BSR	CONST
   575/   1B48C : 4A00                   	TST.B	D0
   576/   1B48E : 6626                   	BNE	dasm_dump_4
   577/   1B490 :                        	;; Check stop condition type
-  578/   1B490 : 4A79 0001 FF3A         	TST.W	dasm_step	; If 0 then apply end address
+  578/   1B490 : 4A79 0001 FF36         	TST.W	dasm_step	; If 0 then apply end address
   579/   1B496 : 6612                   	BNE	dasm_dump_3
   580/   1B498 :                        	;; Check end address
-  581/   1B498 : 2079 0001 FF34         	MOVEA.L	dasm_eadr,A0
-  582/   1B49E : B1F9 0001 FF30         	CMPA.L	dasm_adr,A0
+  581/   1B498 : 2079 0001 FF30         	MOVEA.L	dasm_eadr,A0
+  582/   1B49E : B1F9 0001 FF2C         	CMPA.L	dasm_adr,A0
   583/   1B4A4 : 6400 FF5C              	BCC	dasm_dump_0
   584/   1B4A8 : 600C                   	BRA	dasm_dump_4
   585/   1B4AA :                        dasm_dump_3:
   586/   1B4AA :                        	;; Check disassemble step
-  587/   1B4AA : 0479 0001 0001 FF3A    	SUB.W	#1,dasm_step
+  587/   1B4AA : 0479 0001 0001 FF36    	SUB.W	#1,dasm_step
   588/   1B4B2 : 6600 FF4E              	BNE	dasm_dump_0
   589/   1B4B6 :                        dasm_dump_4:
   590/   1B4B6 : 225F                   	MOVE.L	(A7)+,A1	; Pop
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 11 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 11 - 12/14/2023 14:1:1
 
 
   591/   1B4B8 : 205F                   	MOVE.L	(A7)+,A0	; Pop
@@ -691,7 +691,7 @@
   648/   1B52A : 6100 04D2              	BSR	cout_comma
   649/   1B52E : 41F9 0001 C65F         	LEA	admd_001,A0	; "An"
   650/   1B534 : 6100 1B2A              	BSR	STROUT
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 12 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 12 - 12/14/2023 14:1:1
 
 
   651/   1B538 : 4E75                   	RTS
@@ -739,7 +739,7 @@
   693/   1B588 :                        
   694/   1B588 :                        	;; Bit Static
   695/   1B588 :                        dasb_BitStatc:
-  696/   1B588 : 33FC 0002 0001 FF3E    	MOVE.W	#2,dasm_opsz	; Set operation size
+  696/   1B588 : 33FC 0002 0001 FF3A    	MOVE.W	#2,dasm_opsz	; Set operation size
   697/   1B590 :                        	;; Out operand1
   698/   1B590 : 6100 0464              	BSR	cout_space
   699/   1B594 : 6100 0318              	BSR	dasm_out_imdata
@@ -754,7 +754,7 @@
   708/   1B5A2 : 6100 02AE              	BSR	dasm_out_size_displace
   709/   1B5A6 :                        	;; Out operand1
   710/   1B5A6 : 6100 044E              	BSR	cout_space
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 13 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 13 - 12/14/2023 14:1:1
 
 
   711/   1B5AA : 41F9 0001 C6BE         	LEA	oprnd_label,A0	; "<label>"
@@ -763,7 +763,7 @@
   714/   1B5B6 :                        
   715/   1B5B6 :                        	;; Decrement and Branch
   716/   1B5B6 :                        dasb_DecBranc:
-  717/   1B5B6 : 5479 0001 FF3C         	ADDQ.W	#2,dasm_cdsz	; Add code size
+  717/   1B5B6 : 5479 0001 FF38         	ADDQ.W	#2,dasm_cdsz	; Add code size
   718/   1B5BC :                        	;; Out size
   719/   1B5BC : 41F9 0001 C653         	LEA	inst_sz_w,A0	; ".W"
   720/   1B5C2 : 6100 1A9C              	BSR	STROUT
@@ -817,13 +817,13 @@
   768/   1B63A :                        
   769/   1B63A :                        	;; Move to CCR
   770/   1B63A :                        dasb_MovetCcr:
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 14 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 14 - 12/14/2023 14:1:1
 
 
   771/   1B63A :                        	;; Out size
   772/   1B63A : 41F9 0001 C653         	LEA	inst_sz_w,A0	; ".W"
   773/   1B640 : 6100 1A1E              	BSR	STROUT
-  774/   1B644 : 33FC 0002 0001 FF3E    	MOVE.W	#2,dasm_opsz
+  774/   1B644 : 33FC 0002 0001 FF3A    	MOVE.W	#2,dasm_opsz
   775/   1B64C :                        	;; Out operand1
   776/   1B64C : 6100 03A8              	BSR	cout_space
   777/   1B650 : 6100 023E              	BSR	dasm_out_eaddr
@@ -852,7 +852,7 @@
   800/   1B686 :                        	;; Out size
   801/   1B686 : 41F9 0001 C653         	LEA	inst_sz_w,A0	; ".W"
   802/   1B68C : 6100 19D2              	BSR	STROUT
-  803/   1B690 : 33FC 0002 0001 FF3E    	MOVE.W	#2,dasm_opsz
+  803/   1B690 : 33FC 0002 0001 FF3A    	MOVE.W	#2,dasm_opsz
   804/   1B698 :                        	;; Out operand1
   805/   1B698 : 6100 035C              	BSR	cout_space
   806/   1B69C : 6100 01F2              	BSR	dasm_out_eaddr
@@ -869,7 +869,7 @@
   817/   1B6B4 : 6100 0160              	BSR	dasm_out_size_2bit
   818/   1B6B8 :                        	;; Out operand
   819/   1B6B8 : 6100 033C              	BSR	cout_space
-  820/   1B6BC : 3039 0001 FF38         	MOVE.W	dasm_op,D0
+  820/   1B6BC : 3039 0001 FF34         	MOVE.W	dasm_op,D0
   821/   1B6C2 : 0800 0003              	BTST	#3,D0
   822/   1B6C6 : 6608                   	BNE	dasb_Extended_0
   823/   1B6C8 : 41F9 0001 C6C6         	LEA	oprnd_dtrg,A0	; "Dn,Dn"
@@ -880,7 +880,7 @@
   828/   1B6D6 : 6100 1988              	BSR	STROUT
   829/   1B6DA : 4E75                   	RTS
   830/   1B6DC :                        
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 15 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 15 - 12/14/2023 14:1:1
 
 
   831/   1B6DC :                        	;; Multiply / Divide
@@ -888,7 +888,7 @@
   833/   1B6DC :                        	;; Out size
   834/   1B6DC : 41F9 0001 C653         	LEA	inst_sz_w,A0	; ".W"
   835/   1B6E2 : 6100 197C              	BSR	STROUT
-  836/   1B6E6 : 33FC 0002 0001 FF3E    	MOVE.W	#2,dasm_opsz
+  836/   1B6E6 : 33FC 0002 0001 FF3A    	MOVE.W	#2,dasm_opsz
   837/   1B6EE :                        	;; Out operand1
   838/   1B6EE : 6100 0306              	BSR	cout_space
   839/   1B6F2 : 6100 019C              	BSR	dasm_out_eaddr
@@ -900,11 +900,11 @@
   845/   1B706 :                        
   846/   1B706 :                        	;; Move Multiple Registers
   847/   1B706 :                        dasb_Movem:
-  848/   1B706 : 5479 0001 FF3C         	ADDQ.W	#2,dasm_cdsz	; Add code size
+  848/   1B706 : 5479 0001 FF38         	ADDQ.W	#2,dasm_cdsz	; Add code size
   849/   1B70C :                        	;; Out size
   850/   1B70C : 303C 0006              	MOVE.W	#6,D0
   851/   1B710 : 6100 00F0              	BSR	dasm_out_size_1bit
-  852/   1B714 : 3039 0001 FF38         	MOVE.W	dasm_op,D0
+  852/   1B714 : 3039 0001 FF34         	MOVE.W	dasm_op,D0
   853/   1B71A : 0800 000A              	BTST	#10,D0
   854/   1B71E : 6618                   	BNE	dasb_Movem_0
   855/   1B720 :                        	;; Out operand1
@@ -943,10 +943,10 @@
   888/   1B768 : 6100 00AC              	BSR	dasm_out_size_2bit
   889/   1B76C :                        	;; Out operand
   890/   1B76C : 6100 0288              	BSR	cout_space
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 16 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 16 - 12/14/2023 14:1:1
 
 
-  891/   1B770 : 3039 0001 FF38         	MOVE.W	dasm_op,D0
+  891/   1B770 : 3039 0001 FF34         	MOVE.W	dasm_op,D0
   892/   1B776 : 0800 0005              	BTST	#5,D0
   893/   1B77A : 6608                   	BNE	dasb_ShiftReg_0
   894/   1B77C : 41F9 0001 C6E4         	LEA	oprnd_imdtr,A0	; "#<data>,Dn"
@@ -963,7 +963,7 @@
   905/   1B790 : 41F9 0001 C656         	LEA	inst_sz_l,A0	; ".L"
   906/   1B796 : 6100 18C8              	BSR	STROUT
   907/   1B79A :                        	;; Operand
-  908/   1B79A : 3039 0001 FF38         	MOVE.W	dasm_op,D0
+  908/   1B79A : 3039 0001 FF34         	MOVE.W	dasm_op,D0
   909/   1B7A0 : 0800 0000              	BTST	#0,D0
   910/   1B7A4 : 6612                   	BNE	dasb_Movec_0
   911/   1B7A6 :                        	;; Out operand1
@@ -1006,11 +1006,11 @@
   948/   1B7F6 : 4E75                   	RTS
   949/   1B7F8 :                        
   950/   1B7F8 :                        	;; None Operand at 1 Word Size
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 17 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 17 - 12/14/2023 14:1:1
 
 
   951/   1B7F8 :                        dasb_None1W:
-  952/   1B7F8 : 5479 0001 FF3C         	ADDQ.W	#2,dasm_cdsz	; Add code size
+  952/   1B7F8 : 5479 0001 FF38         	ADDQ.W	#2,dasm_cdsz	; Add code size
   953/   1B7FE : 4E75                   	RTS
   954/   1B800 :                        
   955/   1B800 :                        	;; None Operand
@@ -1049,7 +1049,7 @@
   988/   1B852 :                        
   989/   1B852 :                        dasm_out_size_displace:
   990/   1B852 :                        	;; Out size
-  991/   1B852 : 3039 0001 FF38         	MOVE.W	dasm_op,D0
+  991/   1B852 : 3039 0001 FF34         	MOVE.W	dasm_op,D0
   992/   1B858 : C07C 00FF              	AND.W	#$00FF,D0
   993/   1B85C : B03C 00FF              	CMP.B	#$FF,D0		; Check long size
   994/   1B860 : 670E                   	BEQ	dasm_out_size_displace_0
@@ -1058,22 +1058,22 @@
   997/   1B868 : 41F9 0001 C650         	LEA	inst_sz_b,A0	; Match byte size
   998/   1B86E : 601A                   	BRA	dasm_out_size_displace_2
   999/   1B870 :                        dasm_out_size_displace_0:
- 1000/   1B870 : 5879 0001 FF3C         	ADDQ.W	#4,dasm_cdsz	; Add code size
+ 1000/   1B870 : 5879 0001 FF38         	ADDQ.W	#4,dasm_cdsz	; Add code size
  1001/   1B876 : 41F9 0001 C656         	LEA	inst_sz_l,A0
  1002/   1B87C : 600C                   	BRA	dasm_out_size_displace_2
  1003/   1B87E :                        dasm_out_size_displace_1:
- 1004/   1B87E : 5479 0001 FF3C         	ADDQ.W	#2,dasm_cdsz	; Add code size
+ 1004/   1B87E : 5479 0001 FF38         	ADDQ.W	#2,dasm_cdsz	; Add code size
  1005/   1B884 : 41F9 0001 C653         	LEA	inst_sz_w,A0
  1006/   1B88A :                        dasm_out_size_displace_2:
  1007/   1B88A : 6100 17D4              	BSR	STROUT
  1008/   1B88E : 4E75                   	RTS
  1009/   1B890 :                        
  1010/   1B890 :                        dasm_out_eaddr:
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 18 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 18 - 12/14/2023 14:1:1
 
 
  1011/   1B890 :                        	;; Out effective address
- 1012/   1B890 : 3039 0001 FF38         	MOVE.W	dasm_op,D0
+ 1012/   1B890 : 3039 0001 FF34         	MOVE.W	dasm_op,D0
  1013/   1B896 : C07C 003F              	AND.W	#$003F,D0
  1014/   1B89A : 6000 0098              	BRA	dasm_eaddr	; RTS in subroutine
  1015/   1B89E :                        
@@ -1089,12 +1089,12 @@
  1025/   1B8B2 : 6000 0080              	BRA	dasm_eaddr	; RTS in subroutine
  1026/   1B8B6 :                        
  1027/   1B8B6 :                        dasm_out_ctrlreg:
- 1028/   1B8B6 : 2079 0001 FF30         	MOVE.L	dasm_adr,A0
+ 1028/   1B8B6 : 2079 0001 FF2C         	MOVE.L	dasm_adr,A0
  1029/   1B8BC : 3028 0002              	MOVE.W	2(A0),D0
  1030/   1B8C0 : 6000 00DC              	BRA	dasm_ctrlreg	; RTS in subroutine
  1031/   1B8C4 :                        
  1032/   1B8C4 :                        dasm_out_adfield:
- 1033/   1B8C4 : 2079 0001 FF30         	MOVE.L	dasm_adr,A0
+ 1033/   1B8C4 : 2079 0001 FF2C         	MOVE.L	dasm_adr,A0
  1034/   1B8CA : 3028 0002              	MOVE.W	2(A0),D0
  1035/   1B8CE : 6000 0108              	BRA	dasm_adfield	; RTS in subroutine
  1036/   1B8D2 :                        
@@ -1107,7 +1107,7 @@
  1043/   1B8D2 : 2F01                   	MOVE.L	D1,-(A7)	; Push
  1044/   1B8D4 : 3200                   	MOVE.W	D0,D1
  1045/   1B8D6 : 9250                   	SUB.W	(A0),D1
- 1046/   1B8D8 : 3039 0001 FF38         	MOVE.W	dasm_op,D0
+ 1046/   1B8D8 : 3039 0001 FF34         	MOVE.W	dasm_op,D0
  1047/   1B8DE : E268                   	LSR.W	D1,D0
  1048/   1B8E0 : C068 0002              	AND.W	2(A0),D0
  1049/   1B8E4 : 221F                   	MOVE.L	(A7)+,D1	; Pop
@@ -1126,18 +1126,18 @@
  1062/   1B8F8 : 41F9 0001 C659         	LEA	inst_sz_x,A0	; Unknown
  1063/   1B8FE : 602E                   	BRA	dasm_size_2bit_3
  1064/   1B900 :                        dasm_size_2bit_0:
- 1065/   1B900 : 33FC 0004 0001 FF3E    	MOVE.W	#4,dasm_opsz
+ 1065/   1B900 : 33FC 0004 0001 FF3A    	MOVE.W	#4,dasm_opsz
  1066/   1B908 : 41F9 0001 C656         	LEA	inst_sz_l,A0
  1067/   1B90E : 601E                   	BRA	dasm_size_2bit_3
  1068/   1B910 :                        dasm_size_2bit_1:
- 1069/   1B910 : 33FC 0002 0001 FF3E    	MOVE.W	#2,dasm_opsz
+ 1069/   1B910 : 33FC 0002 0001 FF3A    	MOVE.W	#2,dasm_opsz
  1070/   1B918 : 41F9 0001 C653         	LEA	inst_sz_w,A0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 19 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 19 - 12/14/2023 14:1:1
 
 
  1071/   1B91E : 600E                   	BRA	dasm_size_2bit_3
  1072/   1B920 :                        dasm_size_2bit_2:
- 1073/   1B920 : 33FC 0002 0001 FF3E    	MOVE.W	#2,dasm_opsz
+ 1073/   1B920 : 33FC 0002 0001 FF3A    	MOVE.W	#2,dasm_opsz
  1074/   1B928 : 41F9 0001 C650         	LEA	inst_sz_b,A0
  1075/   1B92E :                        dasm_size_2bit_3:
  1076/   1B92E : 6100 1730              	BSR	STROUT
@@ -1161,11 +1161,11 @@
  1094/   1B956 :                        dasm_eaddr_1:
  1095/   1B956 : D1C1                   	ADD.L	D1,A0
  1096/   1B958 : 3428 0002              	MOVE.W	2(A0),D2	; Get [1st]Operand size
- 1097/   1B95C : D579 0001 FF3C         	ADD.W	D2,dasm_cdsz	; Add code size
+ 1097/   1B95C : D579 0001 FF38         	ADD.W	D2,dasm_cdsz	; Add code size
  1098/   1B962 : 0CA8 0001 C695 0004    	CMPI.L	#admd_111_100,4(A0); Check "#<data>"
  1099/   1B96A : 660C                   	BNE	dasm_eaddr_2
- 1100/   1B96C : 3439 0001 FF3E         	MOVE.W	dasm_opsz,D2
- 1101/   1B972 : D579 0001 FF3C         	ADD.W	D2,dasm_cdsz	; Add code size
+ 1100/   1B96C : 3439 0001 FF3A         	MOVE.W	dasm_opsz,D2
+ 1101/   1B972 : D579 0001 FF38         	ADD.W	D2,dasm_cdsz	; Add code size
  1102/   1B978 :                        dasm_eaddr_2:
  1103/   1B978 :                        	;; Out effective address
  1104/   1B978 : 2068 0004              	MOVE.L	4(A0),A0	; Get [2nd]Effective address(address)
@@ -1195,7 +1195,7 @@
  1128/   1B9A2 : 2F02                   	MOVE.L	D2,-(A7)	; Push
  1129/   1B9A4 :                        	;; Search control register table
  1130/   1B9A4 : 41F9 0001 C242         	LEA	ctrg_tbl,A0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 20 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 20 - 12/14/2023 14:1:1
 
 
  1131/   1B9AA : 7200                   	MOVEQ	#0,D1
@@ -1211,7 +1211,7 @@
  1141/   1B9C2 :                        	;; Out effective address
  1142/   1B9C2 : 2068 0004              	MOVE.L	4(A0),A0	; Get [2nd]Control register address
  1143/   1B9C6 : 6100 1698              	BSR	STROUT
- 1144/   1B9CA : 5479 0001 FF3C         	ADDQ.W	#2,dasm_cdsz	; Add code size
+ 1144/   1B9CA : 5479 0001 FF38         	ADDQ.W	#2,dasm_cdsz	; Add code size
  1145/   1B9D0 : 241F                   	MOVE.L	(A7)+,D2	; Pop
  1146/   1B9D2 : 221F                   	MOVE.L	(A7)+,D1	; Pop
  1147/   1B9D4 : 205F                   	MOVE.L	(A7)+,A0	; Pop
@@ -1258,7 +1258,7 @@
  1185/   1BA2A :                        ;	dc.l	$00C0F9C0,inst_unknown ,dasb_Unknown	; CMP2
  1186/   1BA2A :                        ;	dc.l	$00C0F9C0,inst_unknown ,dasb_Unknown	; CHK2
  1187/   1BA2A : 0108 F1F8 0001 C4DA    	dc.l	$0108F1F8,inst_mvpwmr  ,dasb_None1W	; MOVEP Word(Memory to Register)
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 21 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 21 - 12/14/2023 14:1:1
 
 
          1BA32 : 0001 B7F8            
@@ -1321,7 +1321,7 @@
  1217/   1BB7A : 0C00 FF00 0001 C366    	dc.l	$0C00FF00,inst_cmpi    ,dasb_ImToEa	; CMPI
          1BB82 : 0001 B4C0            
  1218/   1BB86 :                        ;	dc.l	$0E00FF00,inst_unknown ,dasb_Unknown	; MOVES
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 22 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 22 - 12/14/2023 14:1:1
 
 
  1219/   1BB86 : 1000 F000 0001 C496    	dc.l	$1000F000,inst_move    ,dasb_Move	; MOVE Byte
@@ -1384,7 +1384,7 @@
  1250/   1BCBE : 4E60 FFF8 0001 C4A9    	dc.l	$4E60FFF8,inst_mvto_usp,dasb_None	; MOVE to USP
          1BCC6 : 0001 B800            
  1251/   1BCCA : 4E68 FFF8 0001 C49B    	dc.l	$4E68FFF8,inst_mvfm_usp,dasb_None	; MOVE from USP
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 23 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 23 - 12/14/2023 14:1:1
 
 
          1BCD2 : 0001 B800            
@@ -1447,7 +1447,7 @@
          1BE22 : 0001 B5B6            
  1281/   1BE26 :                        ;	dc.l	$50F8F0F8,inst_unknown ,dasb_Unknown	; TRAPcc
  1282/   1BE26 : 54C0 FFC0 0001 C59B    	dc.l	$54C0FFC0,inst_scc     ,dasb_SetCondi	; SCC
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 24 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 24 - 12/14/2023 14:1:1
 
 
          1BE2E : 0001 B5E4            
@@ -1510,7 +1510,7 @@
  1311/   1BF82 : 6A00 FF00 0001 C309    	dc.l	$6A00FF00,inst_bpl     ,dasb_Branch	; BPL
          1BF8A : 0001 B5A2            
  1312/   1BF8E : 6800 FF00 0001 C30D    	dc.l	$6800FF00,inst_bvc     ,dasb_Branch	; BVC
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 25 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 25 - 12/14/2023 14:1:1
 
 
          1BF96 : 0001 B5A2            
@@ -1573,7 +1573,7 @@
  1342/   1C0DE : D100 F130 0001 C2A2    	dc.l	$D100F130,inst_addx    ,dasb_Extended	; ADDX
          1C0E6 : 0001 B6B0            
  1343/   1C0EA : D0C0 F0C0 0001 C293    	dc.l	$D0C0F0C0,inst_adda    ,dasb_EaToAn	; ADDA
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 26 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 26 - 12/14/2023 14:1:1
 
 
          1C0F2 : 0001 B51A            
@@ -1636,7 +1636,7 @@
  1381/   1C1DA :                        	;;     [23-16]:Mask data
  1382/   1C1DA :                        	;;     [15-0]:Operand size
  1383/   1C1DA :                        	;; 2nd [31-0]:Effective address(address)
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 27 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 27 - 12/14/2023 14:1:1
 
 
  1384/   1C1DA : 0038 0000 0001 C65C    	dc.l	$00380000,admd_000		; "Dn"
@@ -1699,7 +1699,7 @@
  1437/   1C30D : 4256 4300              inst_bvc:	dc.b	"BVC",$00
  1438/   1C311 : 4256 5300              inst_bvs:	dc.b	"BVS",$00
  1439/   1C315 : 4243 4847 2E42 00      inst_bchgb:	dc.b	"BCHG.B",$00
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 28 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 28 - 12/14/2023 14:1:1
 
 
  1440/   1C31C : 4243 4847 2E4C 00      inst_bchgl:	dc.b	"BCHG.L",$00
@@ -1762,7 +1762,7 @@
  1484/   1C460 : 494C 4C45 4741 4C00    inst_illegal:	dc.b	"ILLEGAL",$00
  1485/   1C468 : 4A4D 5000              inst_jmp:	dc.b	"JMP",$00
  1486/   1C46C : 4A53 5200              inst_jsr:	dc.b	"JSR",$00
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 29 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 29 - 12/14/2023 14:1:1
 
 
  1487/   1C470 : 4C45 4100              inst_lea:	dc.b	"LEA",$00
@@ -1825,7 +1825,7 @@
  1530/   1C5B6 : 534C 4500              inst_sle:	dc.b	"SLE",$00
  1531/   1C5BA : 534C 5300              inst_sls:	dc.b	"SLS",$00
  1532/   1C5BE : 534C 5400              inst_slt:	dc.b	"SLT",$00
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 30 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 30 - 12/14/2023 14:1:1
 
 
  1533/   1C5C2 : 534D 4900              inst_smi:	dc.b	"SMI",$00
@@ -1888,7 +1888,7 @@
  1584/   1C6BE : 3C6C 6162 656C 3E00    oprnd_label:	dc.b	"<label>",$00
  1585/   1C6C6 : 446E 2C44 6E00         oprnd_dtrg:	dc.b	"Dn,Dn",$00
  1586/   1C6CC : 2D28 416E 292C 2D28    oprnd_pdam:	dc.b	"-(An),-(An)",$00
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 31 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 31 - 12/14/2023 14:1:1
 
 
          1C6D4 : 416E 2900            
@@ -1918,7 +1918,7 @@
  1607/   1C720 : 6100 0A48              	BSR	RDHEX
  1608/   1C724 : 2601                   	MOVE.L	D1,D3		; Value(start address)
  1609/   1C726 : 2802                   	MOVE.L	D2,D4		; Count(start address)
- 1610/   1C728 : 13FC 0000 0001 FF19    	MOVE.B	#0,tmpb_f	; Clear go break point
+ 1610/   1C728 : 13FC 0000 0001 FF18    	MOVE.B	#0,tmpb_f	; Clear go break point
  1611/   1C730 : 1010                   	MOVE.B	(A0),D0
  1612/   1C732 : 4A00                   	TST.B	D0
  1613/   1C734 : 672E                   	BEQ	go_bpt
@@ -1933,7 +1933,7 @@
  1622/   1C74E : 23C1 0001 FF28         	MOVE.L	D1,tmpb_adr
  1623/   1C754 : 2041                   	MOVE.L	D1,A0
  1624/   1C756 : 33D0 0001 FF1E         	MOVE.W	(A0),tmpb_op
- 1625/   1C75C : 13FC 0001 0001 FF19    	MOVE.B	#1,tmpb_f
+ 1625/   1C75C : 13FC 0001 0001 FF18    	MOVE.B	#1,tmpb_f
  1626/   1C764 :                        
  1627/   1C764 :                        go_bpt:
  1628/   1C764 : 6100 07B8              	BSR	start_bpt	; Sart break point
@@ -1943,15 +1943,15 @@
  1632/   1C76C :                        
  1633/   1C76C : =>TRUE                 	IF USE_REGCMD
  1634/   1C76C :                        
- 1635/   1C76C : 23C3 0001 FE34         	MOVE.L	D3,REGPC	; Value(start address)
+ 1635/   1C76C : 23C3 0001 FE32         	MOVE.L	D3,REGPC	; Value(start address)
  1636/   1C772 :                        G0:
- 1637/   1C772 : 3039 0001 FE80         	MOVE.W	REGSR,D0
+ 1637/   1C772 : 3039 0001 FE7E         	MOVE.W	REGSR,D0
  1638/   1C778 : 0800 000C              	BTST	#12,D0		; Check SR(M)
  1639/   1C77C : 6606                   	BNE	G01
  1640/   1C77E :                        	;; SR(M=Interrupt)
  1641/   1C77E : 027C EFFF              	ANDI	#$EFFF,SR
  1642/   1C782 : 6004                   	BRA	G02
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 32 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 32 - 12/14/2023 14:1:1
 
 
  1643/   1C784 :                        G01:
@@ -1961,14 +1961,14 @@
  1647/   1C788 :                        ;	MOVE.L	REGSSP,D0
  1648/   1C788 :                        ;	AND.L	#$FFFFFFFE,D0
  1649/   1C788 :                        ;	MOVE.L	D0,A7
- 1650/   1C788 : 2039 0001 FE78         	MOVE.L	REGISP,D0
+ 1650/   1C788 : 2039 0001 FE76         	MOVE.L	REGISP,D0
  1651/   1C78E : C0BC FFFF FFFE         	AND.L	#$FFFFFFFE,D0
  1652/   1C794 : 4E7B 0804              	MOVEC	D0,ISP
- 1653/   1C798 : 2039 0001 FE7C         	MOVE.L	REGMSP,D0
+ 1653/   1C798 : 2039 0001 FE7A         	MOVE.L	REGMSP,D0
  1654/   1C79E : C0BC FFFF FFFE         	AND.L	#$FFFFFFFE,D0
  1655/   1C7A4 : 4E7B 0803              	MOVEC	D0,MSP
  1656/   1C7A8 :                        
- 1657/   1C7A8 : 4A39 0001 FE2C         	TST.B	PSPEC
+ 1657/   1C7A8 : 4A39 0001 FE2B         	TST.B	PSPEC
  1658/   1C7AE : 6700 00EE              	BEQ	G1
  1659/   1C7B2 :                        
  1660/   1C7B2 :                        	;; MC68010 only
@@ -1977,15 +1977,15 @@
  1663/   1C7B2 :                        
  1664/   1C7B2 : 3F3C 0000              	MOVE	#$0000,-(A7)	; Format / Dummy (Vector Offset)
  1665/   1C7B6 :                        
- 1666/   1C7B6 : 0C79 8000 0001 FF04    	CMPI.W	#$8000,reg_level; Check register level0
+ 1666/   1C7B6 : 0C79 8000 0001 FF02    	CMPI.W	#$8000,reg_level; Check register level0
  1667/   1C7BE : 6700 00DE              	BEQ	reg_level_check_end
- 1668/   1C7C2 : 2039 0001 FE82         	MOVE.L	REGVBR,D0
+ 1668/   1C7C2 : 2039 0001 FE80         	MOVE.L	REGVBR,D0
  1669/   1C7C8 : C0BC FFFF FFFE         	AND.L	#$FFFFFFFE,D0
  1670/   1C7CE : 4E7B 0801              	MOVEC	D0,VBR		; Be careful!
- 1671/   1C7D2 : 1039 0001 FE86         	MOVE.B	REGSFC,D0
+ 1671/   1C7D2 : 1039 0001 FE84         	MOVE.B	REGSFC,D0
  1672/   1C7D8 : 0200 0007              	ANDI.B	#$07,D0
  1673/   1C7DC : 4E7B 0000              	MOVEC	D0,SFC
- 1674/   1C7E0 : 1039 0001 FE87         	MOVE.B	REGDFC,D0
+ 1674/   1C7E0 : 1039 0001 FE85         	MOVE.B	REGDFC,D0
  1675/   1C7E6 : 0200 0007              	ANDI.B	#$07,D0
  1676/   1C7EA : 4E7B 0001              	MOVEC	D0,DFC
  1677/   1C7EE :                        
@@ -1995,54 +1995,54 @@
  1681/   1C7EE :                        	SAVE
  1682/   1C7EE :                        	CPU	68030
  1683/   1C7EE :                        
- 1684/   1C7EE : 0C79 9000 0001 FF04    	CMPI.W	#$9000,reg_level; Check register level1
+ 1684/   1C7EE : 0C79 9000 0001 FF02    	CMPI.W	#$9000,reg_level; Check register level1
  1685/   1C7F6 : 6700 00A6              	BEQ	reg_level_check_end
- 1686/   1C7FA : 2039 0001 FE8C         	MOVE.L	REGCAAR,D0
+ 1686/   1C7FA : 2039 0001 FE8A         	MOVE.L	REGCAAR,D0
  1687/   1C800 : 4E7B 0802              	MOVEC	D0,CAAR
- 1688/   1C804 : 2039 0001 FE88         	MOVE.L	REGCACR,D0
+ 1688/   1C804 : 2039 0001 FE86         	MOVE.L	REGCACR,D0
  1689/   1C80A : 0280 0000 3F1F         	ANDI.L	#$00003F1F,D0
  1690/   1C810 : 4E7B 0002              	MOVEC	D0,CACR
  1691/   1C814 :                        
- 1692/   1C814 : 0C79 A000 0001 FF04    	CMPI.W	#$A000,reg_level; Check register level2
+ 1692/   1C814 : 0C79 A000 0001 FF02    	CMPI.W	#$A000,reg_level; Check register level2
  1693/   1C81C : 6700 0080              	BEQ	reg_level_check_end
  1694/   1C820 :                        	PMMU	ON
  1695/   1C820 : 02B9 FFFF 0003 0001    	ANDI.L	#$FFFF0003,REGCRPH
-         1C828 : FE90                  
+         1C828 : FE8E                  
  1696/   1C82A : 02B9 FFFF FFF0 0001    	ANDI.L	#$FFFFFFF0,REGCRPL
-         1C832 : FE94                  
- 1697/   1C834 : F039 4C00 0001 FE90    	PMOVE	REGCRPH,CRP
+         1C832 : FE92                  
+ 1697/   1C834 : F039 4C00 0001 FE8E    	PMOVE	REGCRPH,CRP
  1698/   1C83C : 02B9 FFFF 0003 0001    	ANDI.L	#$FFFF0003,REGSRPH
-         1C844 : FE98                  
+         1C844 : FE96                  
  1699/   1C846 : 02B9 FFFF FFF0 0001    	ANDI.L	#$FFFFFFF0,REGSRPL
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 33 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 33 - 12/14/2023 14:1:1
 
 
-         1C84E : FE9C                  
- 1700/   1C850 : F039 4800 0001 FE98    	PMOVE	REGSRPH,SRP
+         1C84E : FE9A                  
+ 1700/   1C850 : F039 4800 0001 FE96    	PMOVE	REGSRPH,SRP
  1701/   1C858 : 02B9 83FF FFFF 0001    	ANDI.L	#$83FFFFFF,REGTC
-         1C860 : FEA0                  
- 1702/   1C862 : F039 4000 0001 FEA0    	PMOVE	REGTC,TC
+         1C860 : FE9E                  
+ 1702/   1C862 : F039 4000 0001 FE9E    	PMOVE	REGTC,TC
  1703/   1C86A : 02B9 FFFF 8777 0001    	ANDI.L	#$FFFF8777,REGTT0
-         1C872 : FEA4                  
- 1704/   1C874 : F039 0800 0001 FEA4    	PMOVE	REGTT0,TT0
+         1C872 : FEA2                  
+ 1704/   1C874 : F039 0800 0001 FEA2    	PMOVE	REGTT0,TT0
  1705/   1C87C : 02B9 FFFF 8777 0001    	ANDI.L	#$FFFF8777,REGTT1
-         1C884 : FEA8                  
- 1706/   1C886 : F039 0C00 0001 FEA8    	PMOVE	REGTT1,TT1
- 1707/   1C88E : 0279 EE47 0001 FEAC    	ANDI.W	#$EE47,REGMMUSR
- 1708/   1C896 : F039 6000 0001 FEAC    	PMOVE	REGMMUSR,MMUSR
+         1C884 : FEA6                  
+ 1706/   1C886 : F039 0C00 0001 FEA6    	PMOVE	REGTT1,TT1
+ 1707/   1C88E : 0279 EE47 0001 FEAA    	ANDI.W	#$EE47,REGMMUSR
+ 1708/   1C896 : F039 6000 0001 FEAA    	PMOVE	REGMMUSR,MMUSR
  1709/   1C89E :                        	PMMU	OFF
  1710/   1C89E :                        reg_level_check_end:
  1711/   1C89E :                        
  1712/   1C89E : ALL                    	RESTORE
  1713/   1C89E :                        G1:
- 1714/   1C89E : 2F39 0001 FE34         	MOVE.L	REGPC,-(A7)
- 1715/   1C8A4 : 0279 F71F 0001 FE80    	ANDI.W	#$F71F,REGSR
- 1716/   1C8AC : 3F39 0001 FE80         	MOVE	REGSR,-(A7)
+ 1714/   1C89E : 2F39 0001 FE32         	MOVE.L	REGPC,-(A7)
+ 1715/   1C8A4 : 0279 F71F 0001 FE7E    	ANDI.W	#$F71F,REGSR
+ 1716/   1C8AC : 3F39 0001 FE7E         	MOVE	REGSR,-(A7)
  1717/   1C8B2 :                        
- 1718/   1C8B2 : 2079 0001 FE74         	MOVE.L	REGA7,A0
+ 1718/   1C8B2 : 2079 0001 FE72         	MOVE.L	REGA7,A0
  1719/   1C8B8 : 4E60                   	MOVE	A0,USP
  1720/   1C8BA :                        
- 1721/   1C8BA : 4CF9 7FFF 0001 FE38    	MOVEM.L	REGD0,D0-D7/A0-A6
+ 1721/   1C8BA : 4CF9 7FFF 0001 FE36    	MOVEM.L	REGD0,D0-D7/A0-A6
  1722/   1C8C2 :                        
  1723/   1C8C2 : 4E73                   	RTE
  1724/   1C8C4 :                        
@@ -2069,7 +2069,7 @@
  1745/   1C8D8 : 2241                   	MOVE.L	D1,A1
  1746/   1C8DA : 4A42                   	TST	D2
  1747/   1C8DC : 6606                   	BNE	SM0
- 1748/   1C8DE : 2279 0001 FE26         	MOVE.L	SADDR,A1
+ 1748/   1C8DE : 2279 0001 FE24         	MOVE.L	SADDR,A1
  1749/   1C8E4 :                        SM0:
  1750/   1C8E4 :                        SM1:
  1751/   1C8E4 : 2009                   	MOVE.L	A1,D0
@@ -2077,7 +2077,7 @@
  1753/   1C8EA : 41F9 0001 D988         	LEA	DSEP1,A0
  1754/   1C8F0 : 6100 076E              	BSR	STROUT
  1755/   1C8F4 : 1011                   	MOVE.B	(A1),D0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 34 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 34 - 12/14/2023 14:1:1
 
 
  1756/   1C8F6 : 6100 0786              	BSR	HEXOUT2
@@ -2090,27 +2090,27 @@
  1763/   1C912 : 660A                   	BNE	SM2
  1764/   1C914 :                        	;; Empty (Increment address)
  1765/   1C914 : 5249                   	ADDQ	#1,A1
- 1766/   1C916 : 23C9 0001 FE26         	MOVE.L	A1,SADDR
+ 1766/   1C916 : 23C9 0001 FE24         	MOVE.L	A1,SADDR
  1767/   1C91C : 60C6                   	BRA	SM1
  1768/   1C91E :                        SM2:
  1769/   1C91E : B03C 002D              	CMP.B	#'-',D0
  1770/   1C922 : 660A                   	BNE	SM3
  1771/   1C924 :                        	;; '-' (Decrement address)
  1772/   1C924 : 5349                   	SUBQ	#1,A1
- 1773/   1C926 : 23C9 0001 FE26         	MOVE.L	A1,SADDR
+ 1773/   1C926 : 23C9 0001 FE24         	MOVE.L	A1,SADDR
  1774/   1C92C : 60B6                   	BRA	SM1
  1775/   1C92E :                        SM3:
  1776/   1C92E : B03C 002E              	CMP.B	#'.',D0
  1777/   1C932 : 660A                   	BNE	SM4
  1778/   1C934 :                        	;; '.' (Quit)
- 1779/   1C934 : 23C9 0001 FE26         	MOVE.L	A1,SADDR
+ 1779/   1C934 : 23C9 0001 FE24         	MOVE.L	A1,SADDR
  1780/   1C93A : 6000 E838              	BRA	WSTART
  1781/   1C93E :                        SM4:
  1782/   1C93E : 6100 082A              	BSR	RDHEX
  1783/   1C942 : 4A42                   	TST	D2
  1784/   1C944 : 6700 E89E              	BEQ	ERR
  1785/   1C948 : 12C1                   	MOVE.B	D1,(A1)+
- 1786/   1C94A : 23C9 0001 FE26         	MOVE.L	A1,SADDR
+ 1786/   1C94A : 23C9 0001 FE24         	MOVE.L	A1,SADDR
  1787/   1C950 :                        
  1788/   1C950 : 6100 064A              	BSR	save_bpt	; Save break point
  1789/   1C954 : 608E                   	BRA	SM1
@@ -2140,7 +2140,7 @@
  1813/   1C984 :                        LH1:
  1814/   1C984 : B03C 003A              	CMP.B	#':',D0
  1815/   1C988 : 6712                   	BEQ	LHI0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 35 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 35 - 12/14/2023 14:1:1
 
 
  1816/   1C98A :                        	;; Skip to EOL
@@ -2175,7 +2175,7 @@
  1845/   1C9BC : 2244                   	MOVE.L	D4,A1
  1846/   1C9BE :                        
  1847/   1C9BE : 6100 06DE              	BSR	HEXIN
- 1848/   1C9C2 : 13C0 0001 FE2B         	MOVE.B	D0,RECTYP
+ 1848/   1C9C2 : 13C0 0001 FE2A         	MOVE.B	D0,RECTYP
  1849/   1C9C8 : D600                   	ADD.B	D0,D3		; Checksum
  1850/   1C9CA :                        
  1851/   1C9CA : 4A42                   	TST	D2
@@ -2185,7 +2185,7 @@
  1855/   1C9D0 : 6100 06CC              	BSR	HEXIN
  1856/   1C9D4 : D600                   	ADD.B	D0,D3		; Checksum
  1857/   1C9D6 :                        
- 1858/   1C9D6 : 4A39 0001 FE2B         	TST.B	RECTYP
+ 1858/   1C9D6 : 4A39 0001 FE2A         	TST.B	RECTYP
  1859/   1C9DC : 6602                   	BNE	LHI2
  1860/   1C9DE :                        
  1861/   1C9DE : 12C0                   	MOVE.B	D0,(A1)+
@@ -2195,7 +2195,7 @@
  1865/   1C9E4 : 6100 06B8              	BSR	HEXIN
  1866/   1C9E8 : D600                   	ADD.B	D0,D3		; Checksum
  1867/   1C9EA : 660C                   	BNE	LHIE		; Checksum error
- 1868/   1C9EC : 4A39 0001 FE2B         	TST.B	RECTYP
+ 1868/   1C9EC : 4A39 0001 FE2A         	TST.B	RECTYP
  1869/   1C9F2 : 67A2                   	BEQ	LH3
  1870/   1C9F4 : 6000 E77E              	BRA	WSTART
  1871/   1C9F8 :                        LHIE:
@@ -2203,13 +2203,13 @@
  1873/   1C9FE : 6100 0660              	BSR	STROUT
  1874/   1CA02 : 6000 E770              	BRA	WSTART
  1875/   1CA06 :                        
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 36 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 36 - 12/14/2023 14:1:1
 
 
  1876/   1CA06 :                        	;; Motorola S record
  1877/   1CA06 :                        LHS0:
  1878/   1CA06 : 6100 17E4              	BSR	CONIN
- 1879/   1CA0A : 13C0 0001 FE2B         	MOVE.B	D0,RECTYP
+ 1879/   1CA0A : 13C0 0001 FE2A         	MOVE.B	D0,RECTYP
  1880/   1CA10 :                        
  1881/   1CA10 : 6100 068C              	BSR	HEXIN
  1882/   1CA14 : 4242                   	CLR	D2
@@ -2237,7 +2237,7 @@
  1904/   1CA38 : 6100 0664              	BSR	HEXIN
  1905/   1CA3C : D600                   	ADD.B	D0,D3		; Checksum
  1906/   1CA3E :                        
- 1907/   1CA3E : 0C39 0031 0001 FE2B    	CMP.B	#'1',RECTYP
+ 1907/   1CA3E : 0C39 0031 0001 FE2A    	CMP.B	#'1',RECTYP
  1908/   1CA46 : 6602                   	BNE	LHS2
  1909/   1CA48 :                        
  1910/   1CA48 : 12C0                   	MOVE.B	D0,(A1)+
@@ -2249,7 +2249,7 @@
  1916/   1CA54 : B63C 00FF              	CMP.B	#$FF,D3
  1917/   1CA58 : 660E                   	BNE	LHSE		; Checksum error
  1918/   1CA5A :                        
- 1919/   1CA5A : 0C39 0039 0001 FE2B    	CMP.B	#'9',RECTYP
+ 1919/   1CA5A : 0C39 0039 0001 FE2A    	CMP.B	#'9',RECTYP
  1920/   1CA62 : 670E                   	BEQ	LHSR
  1921/   1CA64 : 6000 FF30              	BRA	LH3
  1922/   1CA68 :                        LHSE:
@@ -2266,7 +2266,7 @@
  1933/   1CA76 : 5248                   	ADDQ	#1,A0
  1934/   1CA78 : 1010                   	MOVE.B	(A0),D0
  1935/   1CA7A : 6100 06DC              	BSR	UPPER
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 37 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 37 - 12/14/2023 14:1:1
 
 
  1936/   1CA7E : B03C 0049              	CMP.B	#'I',D0
@@ -2275,7 +2275,7 @@
  1939/   1CA88 : 6608                   	BNE	SH1
  1940/   1CA8A :                        SH0:
  1941/   1CA8A : 5248                   	ADDQ	#1,A0
- 1942/   1CA8C : 13C0 0001 FE2A         	MOVE.B	D0,HEXMOD
+ 1942/   1CA8C : 13C0 0001 FE29         	MOVE.B	D0,HEXMOD
  1943/   1CA92 :                        SH1:
  1944/   1CA92 : 6100 06BA              	BSR	SKIPSP
  1945/   1CA96 : 6100 06D2              	BSR	RDHEX
@@ -2301,7 +2301,7 @@
  1965/   1CACC : 4A81                   	TST.L	D1
  1966/   1CACE : 66FA                   	BNE	SH3
  1967/   1CAD0 :                        
- 1968/   1CAD0 : 0C39 0049 0001 FE2A    	CMP.B	#'I',HEXMOD
+ 1968/   1CAD0 : 0C39 0049 0001 FE29    	CMP.B	#'I',HEXMOD
  1969/   1CAD8 : 660E                   	BNE	SH4
  1970/   1CADA :                        	;; End record for Intel HEX
  1971/   1CADA : 41F9 0001 D98C         	LEA	IHEXER,A0
@@ -2321,7 +2321,7 @@
  1985/   1CAFE :                        SHL0:
  1986/   1CAFE : 9282                   	SUB.L	D2,D1		; D1 = remain
  1987/   1CB00 :                        
- 1988/   1CB00 : 0C39 0049 0001 FE2A    	CMP.B	#'I',HEXMOD
+ 1988/   1CB00 : 0C39 0049 0001 FE29    	CMP.B	#'I',HEXMOD
  1989/   1CB08 : 6642                   	BNE	SHLS
  1990/   1CB0A :                        
  1991/   1CB0A :                        	;; Intel HEX
@@ -2329,7 +2329,7 @@
  1993/   1CB0E : 6100 16FC              	BSR	CONOUT
  1994/   1CB12 :                        
  1995/   1CB12 : 1002                   	MOVE.B	D2,D0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 38 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 38 - 12/14/2023 14:1:1
 
 
  1996/   1CB14 : 1602                   	MOVE.B	D2,D3		; Checksum
@@ -2392,7 +2392,7 @@
  2053/   1CB86 : 1003                   	MOVE.B	D3,D0
  2054/   1CB88 : 4600                   	NOT.B	D0
  2055/   1CB8A : 6100 04F2              	BSR	HEXOUT2
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 39 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 39 - 12/14/2023 14:1:1
 
 
  2056/   1CB8E : 6000 0544              	BRA	CRLF
@@ -2407,22 +2407,22 @@
  2065/   1CB94 : 1010                   	MOVE.B	(A0),D0
  2066/   1CB96 : B03C 0030              	CMP.B	#'0',D0
  2067/   1CB9A : 660A                   	BNE	reg_level_set_1
- 2068/   1CB9C : 33FC 8000 0001 FF04    	MOVE.W	#$8000,reg_level; Set register level0
+ 2068/   1CB9C : 33FC 8000 0001 FF02    	MOVE.W	#$8000,reg_level; Set register level0
  2069/   1CBA4 : 603E                   	BRA	reg_level_set_next
  2070/   1CBA6 :                        reg_level_set_1:
  2071/   1CBA6 : B03C 0031              	CMP.B	#'1',D0
  2072/   1CBAA : 660A                   	BNE	reg_level_set_2
- 2073/   1CBAC : 33FC 9000 0001 FF04    	MOVE.W	#$9000,reg_level; Set register level1
+ 2073/   1CBAC : 33FC 9000 0001 FF02    	MOVE.W	#$9000,reg_level; Set register level1
  2074/   1CBB4 : 602E                   	BRA	reg_level_set_next
  2075/   1CBB6 :                        reg_level_set_2:
  2076/   1CBB6 : B03C 0032              	CMP.B	#'2',D0
  2077/   1CBBA : 660A                   	BNE	reg_level_set_3
- 2078/   1CBBC : 33FC A000 0001 FF04    	MOVE.W	#$A000,reg_level; Set register level2
+ 2078/   1CBBC : 33FC A000 0001 FF02    	MOVE.W	#$A000,reg_level; Set register level2
  2079/   1CBC4 : 601E                   	BRA	reg_level_set_next
  2080/   1CBC6 :                        reg_level_set_3:
  2081/   1CBC6 : B03C 0033              	CMP.B	#'3',D0
  2082/   1CBCA : 660A                   	BNE	reg_level_set_end
- 2083/   1CBCC : 33FC B000 0001 FF04    	MOVE.W	#$B000,reg_level; Set register level3
+ 2083/   1CBCC : 33FC B000 0001 FF02    	MOVE.W	#$B000,reg_level; Set register level3
  2084/   1CBD4 : 600E                   	BRA	reg_level_set_next
  2085/   1CBD6 :                        reg_level_set_end:
  2086/   1CBD6 : 6100 0576              	BSR	SKIPSP
@@ -2455,13 +2455,13 @@
  2113/   1CC1C : 1629 0001              	MOVE.B	1(A1),D3
  2114/   1CC20 : 6700 0084              	BEQ	RGE		; Found end mark
  2115/   1CC24 :                        ;	BPL	RG30
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 40 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 40 - 12/14/2023 14:1:1
 
 
- 2116/   1CC24 : B639 0001 FF04         	CMP.B	reg_level,D3	; Check register level
+ 2116/   1CC24 : B639 0001 FF02         	CMP.B	reg_level,D3	; Check register level
  2117/   1CC2A : 647A                   	BCC	RGE
  2118/   1CC2C :                        	;; Check MC68010
- 2119/   1CC2C : 4A39 0001 FE2C         	TST.B	PSPEC
+ 2119/   1CC2C : 4A39 0001 FE2B         	TST.B	PSPEC
  2120/   1CC32 : 6772                   	BEQ	RGE
  2121/   1CC34 :                        RG30:
  2122/   1CC34 : 2069 0006              	MOVE.L	6(A1),A0
@@ -2518,17 +2518,17 @@
  2173/   1CCAA :                        
  2174/   1CCAA :                        RDUMP:
  2175/   1CCAA : 43F9 0001 DB14         	LEA	RDTAB,A1
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 41 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 41 - 12/14/2023 14:1:1
 
 
  2176/   1CCB0 :                        RD0:
  2177/   1CCB0 : 3219                   	MOVE	(A1)+,D1	; Flag
  2178/   1CCB2 : 6700 0420              	BEQ	CRLF		; Found END mark => CR,LF and return
  2179/   1CCB6 :                        ;	BPL	RD00
- 2180/   1CCB6 : B279 0001 FF04         	CMP.W	reg_level,D1	; Check register level
+ 2180/   1CCB6 : B279 0001 FF02         	CMP.W	reg_level,D1	; Check register level
  2181/   1CCBC : 6400 0416              	BCC	CRLF
  2182/   1CCC0 :                        	;; Check MC68010
- 2183/   1CCC0 : 4A39 0001 FE2C         	TST.B	PSPEC
+ 2183/   1CCC0 : 4A39 0001 FE2B         	TST.B	PSPEC
  2184/   1CCC6 : 6700 040C              	BEQ	CRLF
  2185/   1CCCA :                        RD00:
  2186/   1CCCA : 2059                   	MOVE.L	(A1)+,A0	; String address
@@ -2581,25 +2581,25 @@
  2233/   1CD1E : 6100 044A              	BSR	RDHEX
  2234/   1CD22 : 4A42                   	TST	D2
  2235/   1CD24 : 6700 E4BE              	BEQ	ERR
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 42 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 42 - 12/14/2023 14:1:1
 
 
  2236/   1CD28 : B2BC 0000 0003         	CMP.L	#3,D1
  2237/   1CD2E : 6400 E4B4              	BCC	ERR
  2238/   1CD32 : E149                   	LSL.W	#8,D1
  2239/   1CD34 : ED49                   	LSL.W	#6,D1
- 2240/   1CD36 : 0279 3FFF 0001 FE80    	ANDI.W	#$3FFF,REGSR
- 2241/   1CD3E : 8379 0001 FE80         	OR.W	D1,REGSR
+ 2240/   1CD36 : 0279 3FFF 0001 FE7E    	ANDI.W	#$3FFF,REGSR
+ 2241/   1CD3E : 8379 0001 FE7E         	OR.W	D1,REGSR
  2242/   1CD44 : 604E                   	BRA	MD10
  2243/   1CD46 :                        MD01:
  2244/   1CD46 : B03C 0053              	CMP.B	#'S',D0		; Supervisor
  2245/   1CD4A : 660A                   	BNE	MD02
- 2246/   1CD4C : 0A79 2000 0001 FE80    	EORI.W	#$2000,REGSR
+ 2246/   1CD4C : 0A79 2000 0001 FE7E    	EORI.W	#$2000,REGSR
  2247/   1CD54 : 603E                   	BRA	MD10
  2248/   1CD56 :                        MD02:
  2249/   1CD56 : B03C 004D              	CMP.B	#'M',D0		; Master
  2250/   1CD5A : 660A                   	BNE	MD03
- 2251/   1CD5C : 0A79 1000 0001 FE80    	EORI.W	#$1000,REGSR
+ 2251/   1CD5C : 0A79 1000 0001 FE7E    	EORI.W	#$1000,REGSR
  2252/   1CD64 : 602E                   	BRA	MD10
  2253/   1CD66 :                        MD03:
  2254/   1CD66 : B03C 0049              	CMP.B	#'I',D0		; Interrupt
@@ -2611,8 +2611,8 @@
  2260/   1CD7A : B2BC 0000 0008         	CMP.L	#8,D1
  2261/   1CD80 : 6400 E462              	BCC	ERR
  2262/   1CD84 : E149                   	LSL.W	#8,D1
- 2263/   1CD86 : 0279 F8FF 0001 FE80    	ANDI.W	#$F8FF,REGSR
- 2264/   1CD8E : 8379 0001 FE80         	OR.W	D1,REGSR
+ 2263/   1CD86 : 0279 F8FF 0001 FE7E    	ANDI.W	#$F8FF,REGSR
+ 2264/   1CD8E : 8379 0001 FE7E         	OR.W	D1,REGSR
  2265/   1CD94 :                        MD10:
  2266/   1CD94 :                        	;; Show SR register
  2267/   1CD94 : 41F9 0001 CDFE         	LEA	SR_read,A0
@@ -2629,9 +2629,9 @@
  2278/   1CDB0 : 2F09                   	MOVE.L	A1,-(A7)	; Push
  2279/   1CDB2 : 2F0A                   	MOVE.L	A2,-(A7)	; Push
  2280/   1CDB4 :                        	;; Update SR_bit
- 2281/   1CDB4 : 3039 0001 FE80         	MOVE.W	REGSR,D0
+ 2281/   1CDB4 : 3039 0001 FE7E         	MOVE.W	REGSR,D0
  2282/   1CDBA : 123C 0010              	MOVE.B	#SR_bitSize,D1
- 2283/   1CDBE : 41F9 0001 FF06         	LEA	SR_bit,A0
+ 2283/   1CDBE : 41F9 0001 FF04         	LEA	SR_bit,A0
  2284/   1CDC4 : 43F9 0001 CE02         	LEA	SR_bit_on,A1
  2285/   1CDCA : 45F9 0001 CE12         	LEA	SR_bit_off,A2
  2286/   1CDD0 :                        mode_update_0:
@@ -2644,13 +2644,13 @@
  2293/   1CDDE : 10D9                   	MOVE.B	(A1)+,(A0)+	; bit_on
  2294/   1CDE0 : D5FC 0000 0001         	ADD.L	#1,A2
  2295/   1CDE6 :                        mode_update_2:
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 43 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 43 - 12/14/2023 14:1:1
 
 
  2296/   1CDE6 : 923C 0001              	SUB.B	#1,D1
  2297/   1CDEA : 4A01                   	TST.B	D1
  2298/   1CDEC : 66E2                   	BNE	mode_update_0
- 2299/   1CDEE : 41F9 0001 FF06         	LEA	SR_bit,A0
+ 2299/   1CDEE : 41F9 0001 FF04         	LEA	SR_bit,A0
  2300/   1CDF4 : 245F                   	MOVE.L	(A7)+,A2	; Pop
  2301/   1CDF6 : 225F                   	MOVE.L	(A7)+,A1	; Pop
  2302/   1CDF8 : 221F                   	MOVE.L	(A7)+,D1	; Pop
@@ -2689,13 +2689,13 @@
  2333/   1CE4E :                        	;; Set break point1
  2334/   1CE4E : 43F9 0001 FF20         	LEA	bpt1_adr,A1
  2335/   1CE54 : 45F9 0001 FF1A         	LEA	bpt1_op,A2
- 2336/   1CE5A : 47F9 0001 FF17         	LEA	bpt1_f,A3
+ 2336/   1CE5A : 47F9 0001 FF16         	LEA	bpt1_f,A3
  2337/   1CE60 : 6012                   	BRA	set_bpt
  2338/   1CE62 :                        set_bpt2:
  2339/   1CE62 :                        	;; Set break point2
  2340/   1CE62 : 43F9 0001 FF24         	LEA	bpt2_adr,A1
  2341/   1CE68 : 45F9 0001 FF1C         	LEA	bpt2_op,A2
- 2342/   1CE6E : 47F9 0001 FF18         	LEA	bpt2_f,A3
+ 2342/   1CE6E : 47F9 0001 FF17         	LEA	bpt2_f,A3
  2343/   1CE74 :                        set_bpt:
  2344/   1CE74 : 5248                   	ADDQ	#1,A0
  2345/   1CE76 : 6100 02D6              	BSR	SKIPSP
@@ -2707,7 +2707,7 @@
  2351/   1CE8A : 6100 02DE              	BSR	RDHEX
  2352/   1CE8E : 4A42                   	TST	D2
  2353/   1CE90 : 6700 E352              	BEQ	ERR
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 44 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 44 - 12/14/2023 14:1:1
 
 
  2354/   1CE94 : 2281                   	MOVE.L	D1,(A1)		; bpt(x)_adr
@@ -2722,10 +2722,10 @@
  2363/   1CEA2 : 1010                   	MOVE.B	(A0),D0
  2364/   1CEA4 : 4A00                   	TST.B	D0
  2365/   1CEA6 : 6720                   	BEQ	clr_bpt_all
- 2366/   1CEA8 : 43F9 0001 FF17         	LEA	bpt1_f,A1	; Break point1
+ 2366/   1CEA8 : 43F9 0001 FF16         	LEA	bpt1_f,A1	; Break point1
  2367/   1CEAE : B03C 0031              	CMP.B	#'1',D0
  2368/   1CEB2 : 670E                   	BEQ	clr_bpt_0
- 2369/   1CEB4 : 43F9 0001 FF18         	LEA	bpt2_f,A1	; Break point2
+ 2369/   1CEB4 : 43F9 0001 FF17         	LEA	bpt2_f,A1	; Break point2
  2370/   1CEBA : B03C 0032              	CMP.B	#'2',D0
  2371/   1CEBE : 6600 E324              	BNE	ERR
  2372/   1CEC2 :                        clr_bpt_0:
@@ -2733,13 +2733,13 @@
  2374/   1CEC6 : 6012                   	BRA	lst_bpt
  2375/   1CEC8 :                        clr_bpt_all:
  2376/   1CEC8 : 103C 0000              	MOVE.B	#0,D0
- 2377/   1CECC : 13C0 0001 FF17         	MOVE.B	D0,bpt1_f
- 2378/   1CED2 : 13C0 0001 FF18         	MOVE.B	D0,bpt2_f
+ 2377/   1CECC : 13C0 0001 FF16         	MOVE.B	D0,bpt1_f
+ 2378/   1CED2 : 13C0 0001 FF17         	MOVE.B	D0,bpt2_f
  2379/   1CED8 : 4E71                   	BRA	lst_bpt
  2380/   1CEDA :                        
  2381/   1CEDA :                        lst_bpt:
  2382/   1CEDA :                        	;; List break point
- 2383/   1CEDA : 4A39 0001 FF17         	TST.B	bpt1_f		; Break point1
+ 2383/   1CEDA : 4A39 0001 FF16         	TST.B	bpt1_f		; Break point1
  2384/   1CEE0 : 6718                   	BEQ	lst_bpt_0
  2385/   1CEE2 : 41F9 0001 CFDC         	LEA	bp_msg1,A0
  2386/   1CEE8 : 6100 0176              	BSR	STROUT
@@ -2747,7 +2747,7 @@
  2388/   1CEF2 : 6100 017A              	BSR	HEXOUT8
  2389/   1CEF6 : 6100 01DC              	BSR	CRLF
  2390/   1CEFA :                        lst_bpt_0:
- 2391/   1CEFA : 4A39 0001 FF18         	TST.B	bpt2_f		; Break point2
+ 2391/   1CEFA : 4A39 0001 FF17         	TST.B	bpt2_f		; Break point2
  2392/   1CF00 : 6718                   	BEQ	lst_bpt_1
  2393/   1CF02 : 41F9 0001 CFE3         	LEA	bp_msg2,A0
  2394/   1CF08 : 6100 0156              	BSR	STROUT
@@ -2760,20 +2760,20 @@
  2401/   1CF1E :                        start_bpt:
  2402/   1CF1E :                        	;; Sart break point(subroutine)
  2403/   1CF1E : 2F08                   	MOVE.L	A0,-(A7)	; Push
- 2404/   1CF20 : 4A39 0001 FF17         	TST.B	bpt1_f		; Break point1
+ 2404/   1CF20 : 4A39 0001 FF16         	TST.B	bpt1_f		; Break point1
  2405/   1CF26 : 670A                   	BEQ	start_bpt_0
  2406/   1CF28 : 2079 0001 FF20         	MOVE.L	bpt1_adr,A0
  2407/   1CF2E : 30BC 4AFC              	MOVE.W	#$4AFC,(A0)
  2408/   1CF32 :                        start_bpt_0:
- 2409/   1CF32 : 4A39 0001 FF18         	TST.B	bpt2_f		; Break point2
+ 2409/   1CF32 : 4A39 0001 FF17         	TST.B	bpt2_f		; Break point2
  2410/   1CF38 : 670A                   	BEQ	start_bpt_1
  2411/   1CF3A : 2079 0001 FF24         	MOVE.L	bpt2_adr,A0
  2412/   1CF40 : 30BC 4AFC              	MOVE.W	#$4AFC,(A0)
  2413/   1CF44 :                        start_bpt_1:
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 45 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 45 - 12/14/2023 14:1:1
 
 
- 2414/   1CF44 : 4A39 0001 FF19         	TST.B	tmpb_f		; Go break point
+ 2414/   1CF44 : 4A39 0001 FF18         	TST.B	tmpb_f		; Go break point
  2415/   1CF4A : 670A                   	BEQ	start_bpt_2
  2416/   1CF4C : 2079 0001 FF28         	MOVE.L	tmpb_adr,A0
  2417/   1CF52 : 30BC 4AFC              	MOVE.W	#$4AFC,(A0)
@@ -2784,17 +2784,17 @@
  2422/   1CF5A :                        stop_bpt:
  2423/   1CF5A :                        	;; Stop break point(subroutine)
  2424/   1CF5A : 2F08                   	MOVE.L	A0,-(A7)	; Push
- 2425/   1CF5C : 4A39 0001 FF17         	TST.B	bpt1_f		; Break point1
+ 2425/   1CF5C : 4A39 0001 FF16         	TST.B	bpt1_f		; Break point1
  2426/   1CF62 : 670C                   	BEQ	stop_bpt_0
  2427/   1CF64 : 2079 0001 FF20         	MOVE.L	bpt1_adr,A0
  2428/   1CF6A : 30B9 0001 FF1A         	MOVE.W	bpt1_op,(A0)
  2429/   1CF70 :                        stop_bpt_0:
- 2430/   1CF70 : 4A39 0001 FF18         	TST.B	bpt2_f		; Break point2
+ 2430/   1CF70 : 4A39 0001 FF17         	TST.B	bpt2_f		; Break point2
  2431/   1CF76 : 670C                   	BEQ	stop_bpt_1
  2432/   1CF78 : 2079 0001 FF24         	MOVE.L	bpt2_adr,A0
  2433/   1CF7E : 30B9 0001 FF1C         	MOVE.W	bpt2_op,(A0)
  2434/   1CF84 :                        stop_bpt_1:
- 2435/   1CF84 : 4A39 0001 FF19         	TST.B	tmpb_f		; Go break point
+ 2435/   1CF84 : 4A39 0001 FF18         	TST.B	tmpb_f		; Go break point
  2436/   1CF8A : 670C                   	BEQ	stop_bpt_2
  2437/   1CF8C : 2079 0001 FF28         	MOVE.L	tmpb_adr,A0
  2438/   1CF92 : 30B9 0001 FF1E         	MOVE.W	tmpb_op,(A0)
@@ -2805,12 +2805,12 @@
  2443/   1CF9C :                        save_bpt:
  2444/   1CF9C :                        	;; Save break point(subroutine)
  2445/   1CF9C : 2F08                   	MOVE.L	A0,-(A7)	; Push
- 2446/   1CF9E : 4A39 0001 FF17         	TST.B	bpt1_f		; Break point1
+ 2446/   1CF9E : 4A39 0001 FF16         	TST.B	bpt1_f		; Break point1
  2447/   1CFA4 : 670C                   	BEQ	save_bpt_0
  2448/   1CFA6 : 2079 0001 FF20         	MOVE.L	bpt1_adr,A0
  2449/   1CFAC : 33D0 0001 FF1A         	MOVE.W	(A0),bpt1_op
  2450/   1CFB2 :                        save_bpt_0:
- 2451/   1CFB2 : 4A39 0001 FF18         	TST.B	bpt2_f		; Break point2
+ 2451/   1CFB2 : 4A39 0001 FF17         	TST.B	bpt2_f		; Break point2
  2452/   1CFB8 : 670C                   	BEQ	save_bpt_1
  2453/   1CFBA : 2079 0001 FF24         	MOVE.L	bpt2_adr,A0
  2454/   1CFC0 : 33D0 0001 FF1C         	MOVE.W	(A0),bpt2_op
@@ -2820,8 +2820,8 @@
  2458/   1CFCA :                        
  2459/   1CFCA :                        clear_bpt:
  2460/   1CFCA :                        	;; Clear break point(subroutine)
- 2461/   1CFCA : 13FC 0000 0001 FF17    	MOVE.B	#0,bpt1_f
- 2462/   1CFD2 : 13FC 0000 0001 FF18    	MOVE.B	#0,bpt2_f
+ 2461/   1CFCA : 13FC 0000 0001 FF16    	MOVE.B	#0,bpt1_f
+ 2462/   1CFD2 : 13FC 0000 0001 FF17    	MOVE.B	#0,bpt2_f
  2463/   1CFDA : 4E75                   	RTS
  2464/   1CFDC :                        
  2465/   1CFDC : 4250 2831 293A 00      bp_msg1:	DC.B	"BP(1):",$00
@@ -2833,7 +2833,7 @@
  2471/   1CFEA :                        
  2472/   1CFEA :                        BOOT:
  2473/   1CFEA : 2E78 0000              	MOVE.L	$00000000,A7	; Reset: Initial SSP
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 46 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 46 - 12/14/2023 14:1:1
 
 
  2474/   1CFEE : 2078 0004              	MOVE.L	$00000004,A0	; Reset: Initial PC
@@ -2896,7 +2896,7 @@
  2531/   1D060 :                        STROUT:
  2532/   1D060 : 1018                   	MOVE.B	(A0)+,D0
  2533/   1D062 : 4A00                   	TST.B	D0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 47 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 47 - 12/14/2023 14:1:1
 
 
  2534/   1D064 : 6706                   	BEQ	STROE
@@ -2959,7 +2959,7 @@
  2591/   1D0E0 : 6000 112A              	BRA	CONOUT
  2592/   1D0E4 :                        
  2593/   1D0E4 :                        GETLIN:
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 48 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 48 - 12/14/2023 14:1:1
 
 
  2594/   1D0E4 : 41F9 0001 FE00         	LEA	INBUF,A0
@@ -3022,7 +3022,7 @@
  2651/   1D16E :                        RH0:
  2652/   1D16E : 1010                   	MOVE.B	(A0),D0
  2653/   1D170 : 61E6                   	BSR	UPPER
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 49 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 49 - 12/14/2023 14:1:1
 
 
  2654/   1D172 : B03C 0030              	CMP.B	#'0',D0
@@ -3076,19 +3076,19 @@
  2702/   1D1CE :                        	;; 02 Bus Error
  2703/   1D1CE :                        BUSERR_H:
  2704/   1D1CE : 23FC 0001 D9E0 0001    	MOVE.L	#BUSERR_M,EXMSG
-         1D1D6 : FE2E                  
- 2705/   1D1D8 : 4279 0001 FE32         	CLR	EXGRP		; Exception Group 0
+         1D1D6 : FE2C                  
+ 2705/   1D1D8 : 4279 0001 FE30         	CLR	EXGRP		; Exception Group 0
  2706/   1D1DE :                        
  2707/   1D1DE : 6000 02A4              	BRA	COMM_H
  2708/   1D1E2 :                        
  2709/   1D1E2 :                        	;; 03 Address Error
  2710/   1D1E2 :                        ADDERR_H:
  2711/   1D1E2 : 23FC 0001 D9EA 0001    	MOVE.L	#ADDERR_M,EXMSG
-         1D1EA : FE2E                  
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 50 - 12/13/2023 13:23:51
+         1D1EA : FE2C                  
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 50 - 12/14/2023 14:1:1
 
 
- 2712/   1D1EC : 4279 0001 FE32         	CLR	EXGRP		; Exception Group 0
+ 2712/   1D1EC : 4279 0001 FE30         	CLR	EXGRP		; Exception Group 0
  2713/   1D1F2 :                        
  2714/   1D1F2 : 6000 0290              	BRA	COMM_H
  2715/   1D1F6 :                        
@@ -3102,7 +3102,7 @@
  2723/   1D200 :                        
  2724/   1D200 :                        	;; MOVEC VBR,D0 caused error ==> MC68000 or MC68008
  2725/   1D200 : 5C4F                   	ADDQ	#6,A7		; Drop stack frame (MC68000 format)
- 2726/   1D202 : 4239 0001 FE2C         	CLR.B	PSPEC
+ 2726/   1D202 : 4239 0001 FE2B         	CLR.B	PSPEC
  2727/   1D208 : 6000 DF66              	BRA	ID9
  2728/   1D20C :                        
  2729/   1D20C :                        ILLINS0:
@@ -3120,7 +3120,7 @@
  2741/   1D226 :                        	;; MOVEC CACR,D0 caused error ==> MC68010
  2742/   1D226 : 504F                   	ADDQ	#8,A7		; Drop stack frame (MC68010- format)
  2743/   1D228 : 41F9 0001 D9B1         	LEA	IM010,A0
- 2744/   1D22E : 13FC 0001 0001 FE2C    	MOVE.B	#1,PSPEC
+ 2744/   1D22E : 13FC 0001 0001 FE2B    	MOVE.B	#1,PSPEC
  2745/   1D236 : 6000 DF38              	BRA	ID9
  2746/   1D23A :                        
  2747/   1D23A :                        ILLINS2:
@@ -3128,15 +3128,15 @@
  2749/   1D23A : [2719]                 	ENDIF
  2750/   1D23A :                        
  2751/   1D23A : =>TRUE                 	IF USE_REGCMD
- 2752/   1D23A : 48F9 7FFF 0001 FE38    	MOVEM.L	D0-D7/A0-A6,REGD0
+ 2752/   1D23A : 48F9 7FFF 0001 FE36    	MOVEM.L	D0-D7/A0-A6,REGD0
  2753/   1D242 : =>FALSE                	ELSE
  2754/   1D242 :                        	MOVEM.L	D0-D3,REGD0
  2755/   1D242 :                        	MOVEM.L	A0-A3,REGA0
  2756/   1D242 : [2751]                 	ENDIF
  2757/   1D242 :                        
  2758/   1D242 : 23FC 0001 D9F8 0001    	MOVE.L	#ILLINS_M,EXMSG
-         1D24A : FE2E                  
- 2759/   1D24C : 33FC 0001 0001 FE32    	MOVE	#1,EXGRP	; Exception Group 1
+         1D24A : FE2C                  
+ 2759/   1D24C : 33FC 0001 0001 FE30    	MOVE	#1,EXGRP	; Exception Group 1
  2760/   1D254 :                        
  2761/   1D254 :                        	;; Check BREAK
  2762/   1D254 : 206F 0002              	MOVE.L	2(A7),A0	; Get PC
@@ -3148,211 +3148,211 @@
  2768/   1D268 : 6600 0222              	BNE	COMM_H0
  2769/   1D26C :                        BREAK:
  2770/   1D26C : 23FC 0001 DB0D 0001    	MOVE.L	#BREAK_M,EXMSG
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 51 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 51 - 12/14/2023 14:1:1
 
 
-         1D274 : FE2E                  
- 2771/   1D276 : 33FC 0101 0001 FE32    	MOVE	#$0101,EXGRP	; BREAK
+         1D274 : FE2C                  
+ 2771/   1D276 : 33FC 0101 0001 FE30    	MOVE	#$0101,EXGRP	; BREAK
  2772/   1D27E : 6000 020C              	BRA	COMM_H0
  2773/   1D282 :                        
  2774/   1D282 :                        	;; 05 Zero Divide
  2775/   1D282 :                        ZERDIV_H:
  2776/   1D282 : 23FC 0001 DA0C 0001    	MOVE.L	#ZERDIV_M,EXMSG
-         1D28A : FE2E                  
- 2777/   1D28C : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D28A : FE2C                  
+ 2777/   1D28C : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2778/   1D294 :                        
  2779/   1D294 : 6000 01EE              	BRA	COMM_H
  2780/   1D298 :                        
  2781/   1D298 :                        	;; 06 CHK Instruction
  2782/   1D298 :                        CHK_H:
  2783/   1D298 : 23FC 0001 DA18 0001    	MOVE.L	#CHK_M,EXMSG
-         1D2A0 : FE2E                  
- 2784/   1D2A2 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D2A0 : FE2C                  
+ 2784/   1D2A2 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2785/   1D2AA :                        
  2786/   1D2AA : 6000 01D8              	BRA	COMM_H
  2787/   1D2AE :                        
  2788/   1D2AE :                        	;; 07 TRAPV Instruction
  2789/   1D2AE :                        TRAPV_H:
  2790/   1D2AE : 23FC 0001 DA28 0001    	MOVE.L	#TRAPV_M,EXMSG
-         1D2B6 : FE2E                  
- 2791/   1D2B8 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D2B6 : FE2C                  
+ 2791/   1D2B8 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2792/   1D2C0 :                        
  2793/   1D2C0 : 6000 01C2              	BRA	COMM_H
  2794/   1D2C4 :                        
  2795/   1D2C4 :                        	;; 08 Privilege Violation
  2796/   1D2C4 :                        PRIV_H:
  2797/   1D2C4 : 23FC 0001 DA3A 0001    	MOVE.L	#PRIV_M,EXMSG
-         1D2CC : FE2E                  
- 2798/   1D2CE : 33FC 0001 0001 FE32    	MOVE	#1,EXGRP	; Exception Group 1
+         1D2CC : FE2C                  
+ 2798/   1D2CE : 33FC 0001 0001 FE30    	MOVE	#1,EXGRP	; Exception Group 1
  2799/   1D2D6 :                        
  2800/   1D2D6 : 6000 01AC              	BRA	COMM_H
  2801/   1D2DA :                        
  2802/   1D2DA :                        	;; 09 Trace
  2803/   1D2DA :                        TRACE_H:
  2804/   1D2DA : 23FC 0001 DA4E 0001    	MOVE.L	#TRACE_M,EXMSG
-         1D2E2 : FE2E                  
- 2805/   1D2E4 : 33FC 0001 0001 FE32    	MOVE	#1,EXGRP	; Exception Group 1
+         1D2E2 : FE2C                  
+ 2805/   1D2E4 : 33FC 0001 0001 FE30    	MOVE	#1,EXGRP	; Exception Group 1
  2806/   1D2EC :                        
  2807/   1D2EC : 6000 0196              	BRA	COMM_H
  2808/   1D2F0 :                        
  2809/   1D2F0 :                        	;; 10 Line 1010 Emulator
  2810/   1D2F0 :                        L1010_H:
  2811/   1D2F0 : 23FC 0001 DA54 0001    	MOVE.L	#L1010_M,EXMSG
-         1D2F8 : FE2E                  
- 2812/   1D2FA : 33FC 0001 0001 FE32    	MOVE	#1,EXGRP	; Exception Group 1
+         1D2F8 : FE2C                  
+ 2812/   1D2FA : 33FC 0001 0001 FE30    	MOVE	#1,EXGRP	; Exception Group 1
  2813/   1D302 :                        
  2814/   1D302 : 6000 0180              	BRA	COMM_H
  2815/   1D306 :                        
  2816/   1D306 :                        	;; 11 Line 1111 Emulator
  2817/   1D306 :                        L1111_H:
  2818/   1D306 : 23FC 0001 DA67 0001    	MOVE.L	#L1111_M,EXMSG
-         1D30E : FE2E                  
- 2819/   1D310 : 33FC 0001 0001 FE32    	MOVE	#1,EXGRP	; Exception Group 1
+         1D30E : FE2C                  
+ 2819/   1D310 : 33FC 0001 0001 FE30    	MOVE	#1,EXGRP	; Exception Group 1
  2820/   1D318 :                        
  2821/   1D318 : 6000 016A              	BRA	COMM_H
  2822/   1D31C :                        
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 52 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 52 - 12/14/2023 14:1:1
 
 
  2823/   1D31C :                        	;; 14 Format Error
  2824/   1D31C :                        FORMAT_H:
  2825/   1D31C : 23FC 0001 DA7A 0001    	MOVE.L	#FORMAT_M,EXMSG
-         1D324 : FE2E                  
- 2826/   1D326 : 33FC 0001 0001 FE32    	MOVE	#1,EXGRP	; Exception Group 1
+         1D324 : FE2C                  
+ 2826/   1D326 : 33FC 0001 0001 FE30    	MOVE	#1,EXGRP	; Exception Group 1
  2827/   1D32E :                        
  2828/   1D32E : 6000 0154              	BRA	COMM_H
  2829/   1D332 :                        
  2830/   1D332 :                        	;; 32 TRAP #0
  2831/   1D332 :                        TRAP0_H:
  2832/   1D332 : 23FC 0001 DA87 0001    	MOVE.L	#TRAP0_M,EXMSG
-         1D33A : FE2E                  
- 2833/   1D33C : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D33A : FE2C                  
+ 2833/   1D33C : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2834/   1D344 :                        
  2835/   1D344 : 6000 013E              	BRA	COMM_H
  2836/   1D348 :                        
  2837/   1D348 :                        	;; 33 TRAP #1
  2838/   1D348 :                        TRAP1_H:
  2839/   1D348 : 23FC 0001 DA8F 0001    	MOVE.L	#TRAP1_M,EXMSG
-         1D350 : FE2E                  
- 2840/   1D352 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D350 : FE2C                  
+ 2840/   1D352 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2841/   1D35A :                        
  2842/   1D35A : 6000 0128              	BRA	COMM_H
  2843/   1D35E :                        
  2844/   1D35E :                        	;; 34 TRAP #2
  2845/   1D35E :                        TRAP2_H:
  2846/   1D35E : 23FC 0001 DA97 0001    	MOVE.L	#TRAP2_M,EXMSG
-         1D366 : FE2E                  
- 2847/   1D368 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D366 : FE2C                  
+ 2847/   1D368 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2848/   1D370 :                        
  2849/   1D370 : 6000 0112              	BRA	COMM_H
  2850/   1D374 :                        
  2851/   1D374 :                        	;; 35 TRAP #3
  2852/   1D374 :                        TRAP3_H:
  2853/   1D374 : 23FC 0001 DA9F 0001    	MOVE.L	#TRAP3_M,EXMSG
-         1D37C : FE2E                  
- 2854/   1D37E : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D37C : FE2C                  
+ 2854/   1D37E : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2855/   1D386 :                        
  2856/   1D386 : 6000 00FC              	BRA	COMM_H
  2857/   1D38A :                        
  2858/   1D38A :                        	;; 36 TRAP #4
  2859/   1D38A :                        TRAP4_H:
  2860/   1D38A : 23FC 0001 DAA7 0001    	MOVE.L	#TRAP4_M,EXMSG
-         1D392 : FE2E                  
- 2861/   1D394 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D392 : FE2C                  
+ 2861/   1D394 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2862/   1D39C :                        
  2863/   1D39C : 6000 00E6              	BRA	COMM_H
  2864/   1D3A0 :                        
  2865/   1D3A0 :                        	;; 37 TRAP #5
  2866/   1D3A0 :                        TRAP5_H:
  2867/   1D3A0 : 23FC 0001 DAAF 0001    	MOVE.L	#TRAP5_M,EXMSG
-         1D3A8 : FE2E                  
- 2868/   1D3AA : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D3A8 : FE2C                  
+ 2868/   1D3AA : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2869/   1D3B2 :                        
  2870/   1D3B2 : 6000 00D0              	BRA	COMM_H
  2871/   1D3B6 :                        
  2872/   1D3B6 :                        	;; 38 TRAP #6
  2873/   1D3B6 :                        TRAP6_H:
  2874/   1D3B6 : 23FC 0001 DAB7 0001    	MOVE.L	#TRAP6_M,EXMSG
-         1D3BE : FE2E                  
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 53 - 12/13/2023 13:23:51
+         1D3BE : FE2C                  
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 53 - 12/14/2023 14:1:1
 
 
- 2875/   1D3C0 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+ 2875/   1D3C0 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2876/   1D3C8 :                        
  2877/   1D3C8 : 6000 00BA              	BRA	COMM_H
  2878/   1D3CC :                        
  2879/   1D3CC :                        	;; 39 TRAP #7
  2880/   1D3CC :                        TRAP7_H:
  2881/   1D3CC : 23FC 0001 DABF 0001    	MOVE.L	#TRAP7_M,EXMSG
-         1D3D4 : FE2E                  
- 2882/   1D3D6 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D3D4 : FE2C                  
+ 2882/   1D3D6 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2883/   1D3DE :                        
  2884/   1D3DE : 6000 00A4              	BRA	COMM_H
  2885/   1D3E2 :                        
  2886/   1D3E2 :                        	;; 40 TRAP #8
  2887/   1D3E2 :                        TRAP8_H:
  2888/   1D3E2 : 23FC 0001 DAC7 0001    	MOVE.L	#TRAP8_M,EXMSG
-         1D3EA : FE2E                  
- 2889/   1D3EC : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D3EA : FE2C                  
+ 2889/   1D3EC : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2890/   1D3F4 :                        
  2891/   1D3F4 : 6000 008E              	BRA	COMM_H
  2892/   1D3F8 :                        
  2893/   1D3F8 :                        	;; 41 TRAP #9
  2894/   1D3F8 :                        TRAP9_H:
  2895/   1D3F8 : 23FC 0001 DACF 0001    	MOVE.L	#TRAP9_M,EXMSG
-         1D400 : FE2E                  
- 2896/   1D402 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D400 : FE2C                  
+ 2896/   1D402 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2897/   1D40A :                        
  2898/   1D40A : 6078                   	BRA	COMM_H
  2899/   1D40C :                        
  2900/   1D40C :                        	;; 42 TRAP #10
  2901/   1D40C :                        TRAP10_H:
  2902/   1D40C : 23FC 0001 DAD7 0001    	MOVE.L	#TRAP10_M,EXMSG
-         1D414 : FE2E                  
- 2903/   1D416 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D414 : FE2C                  
+ 2903/   1D416 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2904/   1D41E :                        
  2905/   1D41E : 6064                   	BRA	COMM_H
  2906/   1D420 :                        
  2907/   1D420 :                        	;; 43 TRAP #11
  2908/   1D420 :                        TRAP11_H:
  2909/   1D420 : 23FC 0001 DAE0 0001    	MOVE.L	#TRAP11_M,EXMSG
-         1D428 : FE2E                  
- 2910/   1D42A : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D428 : FE2C                  
+ 2910/   1D42A : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2911/   1D432 :                        
  2912/   1D432 : 6050                   	BRA	COMM_H
  2913/   1D434 :                        
  2914/   1D434 :                        	;; 44 TRAP #12
  2915/   1D434 :                        TRAP12_H:
  2916/   1D434 : 23FC 0001 DAE9 0001    	MOVE.L	#TRAP12_M,EXMSG
-         1D43C : FE2E                  
- 2917/   1D43E : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D43C : FE2C                  
+ 2917/   1D43E : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2918/   1D446 :                        
  2919/   1D446 : 603C                   	BRA	COMM_H
  2920/   1D448 :                        
  2921/   1D448 :                        	;; 45 TRAP #13
  2922/   1D448 :                        TRAP13_H:
  2923/   1D448 : 23FC 0001 DAF2 0001    	MOVE.L	#TRAP13_M,EXMSG
-         1D450 : FE2E                  
- 2924/   1D452 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D450 : FE2C                  
+ 2924/   1D452 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2925/   1D45A :                        
  2926/   1D45A : 6028                   	BRA	COMM_H
  2927/   1D45C :                        
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 54 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 54 - 12/14/2023 14:1:1
 
 
  2928/   1D45C :                        	;; 46 TRAP #14
  2929/   1D45C :                        TRAP14_H:
  2930/   1D45C : 23FC 0001 DAFB 0001    	MOVE.L	#TRAP14_M,EXMSG
-         1D464 : FE2E                  
- 2931/   1D466 : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D464 : FE2C                  
+ 2931/   1D466 : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2932/   1D46E :                        
  2933/   1D46E : 6014                   	BRA	COMM_H
  2934/   1D470 :                        
  2935/   1D470 :                        	;; 47 TRAP #15
  2936/   1D470 :                        TRAP15_H:
  2937/   1D470 : 23FC 0001 DB04 0001    	MOVE.L	#TRAP15_M,EXMSG
-         1D478 : FE2E                  
- 2938/   1D47A : 33FC 0002 0001 FE32    	MOVE	#2,EXGRP	; Exception Group 2
+         1D478 : FE2C                  
+ 2938/   1D47A : 33FC 0002 0001 FE30    	MOVE	#2,EXGRP	; Exception Group 2
  2939/   1D482 :                        
  2940/   1D482 : 4E71                   	BRA	COMM_H
  2941/   1D484 :                        
@@ -3362,7 +3362,7 @@
  2945/   1D484 :                        COMM_H:
  2946/   1D484 :                        	;; Save registers
  2947/   1D484 : =>TRUE                 	IF USE_REGCMD
- 2948/   1D484 : 48F9 7FFF 0001 FE38    	MOVEM.L	D0-D7/A0-A6,REGD0
+ 2948/   1D484 : 48F9 7FFF 0001 FE36    	MOVEM.L	D0-D7/A0-A6,REGD0
  2949/   1D48C : =>FALSE                	ELSE
  2950/   1D48C :                        	MOVEM.L	D0-D3,REGD0
  2951/   1D48C :                        	MOVEM.L	A0-A3,REGA0
@@ -3372,63 +3372,63 @@
  2955/   1D48C :                        
  2956/   1D48C : =>TRUE                 	IF USE_REGCMD
  2957/   1D48C :                        
- 2958/   1D48C : 4A79 0001 FE32         	TST	EXGRP
+ 2958/   1D48C : 4A79 0001 FE30         	TST	EXGRP
  2959/   1D492 : 6614                   	BNE	CH0		; not Group 0
- 2960/   1D494 : 4A39 0001 FE2C         	TST.B	PSPEC
+ 2960/   1D494 : 4A39 0001 FE2B         	TST.B	PSPEC
  2961/   1D49A : 660C                   	BNE	CH0		; not MC68000/8
  2962/   1D49C :                        
  2963/   1D49C :                        	;; MC68000/8 : Group 0 (Bus/address error)
- 2964/   1D49C : 41F9 0001 FEAE         	LEA	GR0BUF,A0
+ 2964/   1D49C : 41F9 0001 FEAC         	LEA	GR0BUF,A0
  2965/   1D4A2 : 30DF                   	MOVE	(A7)+,(A0)+
  2966/   1D4A4 : 20DF                   	MOVE.L	(A7)+,(A0)+	; Access address
  2967/   1D4A6 : 30DF                   	MOVE	(A7)+,(A0)+	; Instruction register
  2968/   1D4A8 :                        CH0:
  2969/   1D4A8 :                        	;; Common
- 2970/   1D4A8 : 33DF 0001 FE80         	MOVE	(A7)+,REGSR
- 2971/   1D4AE : 23DF 0001 FE34         	MOVE.L	(A7)+,REGPC
+ 2970/   1D4A8 : 33DF 0001 FE7E         	MOVE	(A7)+,REGSR
+ 2971/   1D4AE : 23DF 0001 FE32         	MOVE.L	(A7)+,REGPC
  2972/   1D4B4 :                        
  2973/   1D4B4 : 4E68                   	MOVE	USP,A0
- 2974/   1D4B6 : 23C8 0001 FE74         	MOVE.L	A0,REGA7
+ 2974/   1D4B6 : 23C8 0001 FE72         	MOVE.L	A0,REGA7
  2975/   1D4BC :                        
- 2976/   1D4BC : 4A39 0001 FE2C         	TST.B	PSPEC
+ 2976/   1D4BC : 4A39 0001 FE2B         	TST.B	PSPEC
  2977/   1D4C2 : 6700 0090              	BEQ	CH2
  2978/   1D4C6 :                        
  2979/   1D4C6 :                        	;; MC68010
  2980/   1D4C6 :                        	SAVE
  2981/   1D4C6 :                        	CPU	68010
  2982/   1D4C6 : 4E7A 0801              	MOVEC	VBR,D0
- 2983/   1D4CA : 23C0 0001 FE82         	MOVE.L	D0,REGVBR
+ 2983/   1D4CA : 23C0 0001 FE80         	MOVE.L	D0,REGVBR
  2984/   1D4D0 : 4E7A 0000              	MOVEC	SFC,D0
- 2985/   1D4D4 : 13C0 0001 FE86         	MOVE.B	D0,REGSFC
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 55 - 12/13/2023 13:23:51
+ 2985/   1D4D4 : 13C0 0001 FE84         	MOVE.B	D0,REGSFC
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 55 - 12/14/2023 14:1:1
 
 
  2986/   1D4DA : 4E7A 0001              	MOVEC	DFC,D0
- 2987/   1D4DE : 13C0 0001 FE87         	MOVE.B	D0,REGDFC
+ 2987/   1D4DE : 13C0 0001 FE85         	MOVE.B	D0,REGDFC
  2988/   1D4E4 : ALL                    	RESTORE
  2989/   1D4E4 :                        
  2990/   1D4E4 :                        	;; MC68030
  2991/   1D4E4 :                        	SAVE
  2992/   1D4E4 :                        	CPU	68030
  2993/   1D4E4 : 4E7A 0002              	MOVEC	CACR,D0
- 2994/   1D4E8 : 23C0 0001 FE88         	MOVE.L	D0,REGCACR
+ 2994/   1D4E8 : 23C0 0001 FE86         	MOVE.L	D0,REGCACR
  2995/   1D4EE : 4E7A 0802              	MOVEC	CAAR,D0
- 2996/   1D4F2 : 23C0 0001 FE8C         	MOVE.L	D0,REGCAAR
+ 2996/   1D4F2 : 23C0 0001 FE8A         	MOVE.L	D0,REGCAAR
  2997/   1D4F8 :                        	PMMU	ON
- 2998/   1D4F8 : F039 4E00 0001 FE90    	PMOVE	CRP,REGCRPH
- 2999/   1D500 : F039 4A00 0001 FE98    	PMOVE	SRP,REGSRPH
- 3000/   1D508 : F039 4200 0001 FEA0    	PMOVE	TC,REGTC
- 3001/   1D510 : F039 0A00 0001 FEA4    	PMOVE	TT0,REGTT0
- 3002/   1D518 : F039 0E00 0001 FEA8    	PMOVE	TT1,REGTT1
- 3003/   1D520 : F039 6200 0001 FEAC    	PMOVE	MMUSR,REGMMUSR
+ 2998/   1D4F8 : F039 4E00 0001 FE8E    	PMOVE	CRP,REGCRPH
+ 2999/   1D500 : F039 4A00 0001 FE96    	PMOVE	SRP,REGSRPH
+ 3000/   1D508 : F039 4200 0001 FE9E    	PMOVE	TC,REGTC
+ 3001/   1D510 : F039 0A00 0001 FEA2    	PMOVE	TT0,REGTT0
+ 3002/   1D518 : F039 0E00 0001 FEA6    	PMOVE	TT1,REGTT1
+ 3003/   1D520 : F039 6200 0001 FEAA    	PMOVE	MMUSR,REGMMUSR
  3004/   1D528 :                        	PMMU	OFF
  3005/   1D528 : ALL                    	RESTORE
  3006/   1D528 :                        
  3007/   1D528 : 341F                   	MOVE	(A7)+,D2	; Format / Vector offset
- 3008/   1D52A : 33C2 0001 FF02         	MOVE	D2,REGFV
+ 3008/   1D52A : 33C2 0001 FF00         	MOVE	D2,REGFV
  3009/   1D530 : E95A                   	ROL.W	#4,D2
  3010/   1D532 : C47C 000F              	AND	#$000F,D2
- 3011/   1D536 : 41F9 0001 FEAE         	LEA	GR0BUF,A0
+ 3011/   1D536 : 41F9 0001 FEAC         	LEA	GR0BUF,A0
  3012/   1D53C : 43F9 0001 E1DA         	LEA	FMTLEN,A1
  3013/   1D542 : 4243                   	CLR	D3
  3014/   1D544 : 1631 2000              	MOVE.B	0(A1,D2.W),D3
@@ -3442,9 +3442,9 @@
  3022/   1D554 :                        CH2:
  3023/   1D554 :                        ;	MOVE.L	A7,REGSSP
  3024/   1D554 : 4E7A 0804              	MOVEC	ISP,D0
- 3025/   1D558 : 23C0 0001 FE78         	MOVE.L	D0,REGISP
+ 3025/   1D558 : 23C0 0001 FE76         	MOVE.L	D0,REGISP
  3026/   1D55E : 4E7A 0803              	MOVEC	MSP,D0
- 3027/   1D562 : 23C0 0001 FE7C         	MOVE.L	D0,REGMSP
+ 3027/   1D562 : 23C0 0001 FE7A         	MOVE.L	D0,REGMSP
  3028/   1D568 :                        
  3029/   1D568 : =>FALSE                	ELSE
  3030/   1D568 :                        	;; USE_REGCMD == 0
@@ -3463,7 +3463,7 @@
  3043/   1D568 :                        CH0:
  3044/   1D568 :                        	;; Group 1-3
  3045/   1D568 :                        	ADD.L	#3*2,A7
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 56 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 56 - 12/14/2023 14:1:1
 
 
  3046/   1D568 :                        	BRA	CH3
@@ -3484,11 +3484,11 @@
  3061/   1D568 :                        
  3062/   1D568 : 6100 F9F0              	BSR	stop_bpt	; Stop break point
  3063/   1D56C :                        
- 3064/   1D56C : 2079 0001 FE2E         	MOVE.L	EXMSG,A0
+ 3064/   1D56C : 2079 0001 FE2C         	MOVE.L	EXMSG,A0
  3065/   1D572 : 6100 FAEC              	BSR	STROUT
  3066/   1D576 : 6100 FB5C              	BSR	CRLF
  3067/   1D57A : =>TRUE                 	IF USE_REGCMD
- 3068/   1D57A : 4A79 0001 FE32         	TST	EXGRP
+ 3068/   1D57A : 4A79 0001 FE30         	TST	EXGRP
  3069/   1D580 : 6602                   	BNE	CH4
  3070/   1D582 : 610C                   	BSR	G0DUMP
  3071/   1D584 :                        CH4:
@@ -3507,7 +3507,7 @@
  3084/   1D590 : =>TRUE                 	IF USE_REGCMD
  3085/   1D590 :                        ;;; DUMP group 0 (Address/Bus Error)
  3086/   1D590 :                        G0DUMP:
- 3087/   1D590 : 4A39 0001 FE2C         	TST.B	PSPEC
+ 3087/   1D590 : 4A39 0001 FE2B         	TST.B	PSPEC
  3088/   1D596 : 6662                   	BNE	G0D1
  3089/   1D598 :                        
  3090/   1D598 :                        	;; MC68000/MC68008
@@ -3526,10 +3526,10 @@
  3103/   1D598 : [3091]                 	ENDIF
  3104/   1D598 :                        
  3105/   1D598 :                        	;; Function Code
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 57 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 57 - 12/14/2023 14:1:1
 
 
- 3106/   1D598 : 3039 0001 FEAE         	MOVE	GR0BUF,D0
+ 3106/   1D598 : 3039 0001 FEAC         	MOVE	GR0BUF,D0
  3107/   1D59E : C07C 0007              	AND	#$0007,D0
  3108/   1D5A2 : E548                   	LSL	#2,D0
  3109/   1D5A4 : 41F9 0001 E0D0         	LEA	FCTAB,A0
@@ -3537,7 +3537,7 @@
  3111/   1D5AE : 6100 FAB0              	BSR	STROUT
  3112/   1D5B2 :                        
  3113/   1D5B2 :                        	;; Read / Write
- 3114/   1D5B2 : 3039 0001 FEAE         	MOVE	GR0BUF,D0
+ 3114/   1D5B2 : 3039 0001 FEAC         	MOVE	GR0BUF,D0
  3115/   1D5B8 : C07C 0010              	AND	#$0010,D0
  3116/   1D5BC : 6608                   	BNE	G0D00
  3117/   1D5BE : 41F9 0001 E17C         	LEA	G0WR,A0
@@ -3548,13 +3548,13 @@
  3122/   1D5CC : 6100 FA92              	BSR	STROUT
  3123/   1D5D0 :                        
  3124/   1D5D0 :                        	;; Address
- 3125/   1D5D0 : 2039 0001 FEB0         	MOVE.L	GR0BUF+2,D0
+ 3125/   1D5D0 : 2039 0001 FEAE         	MOVE.L	GR0BUF+2,D0
  3126/   1D5D6 : 6100 FA96              	BSR	HEXOUT8		; Access address
  3127/   1D5DA :                        
  3128/   1D5DA :                        	;; Instruction Register
  3129/   1D5DA : 41F9 0001 E189         	LEA	G0INS0,A0
  3130/   1D5E0 : 6100 FA7E              	BSR	STROUT
- 3131/   1D5E4 : 3039 0001 FEB4         	MOVE	GR0BUF+6,D0
+ 3131/   1D5E4 : 3039 0001 FEB2         	MOVE	GR0BUF+6,D0
  3132/   1D5EA : 6100 FA8A              	BSR	HEXOUT4		; Instruction register
  3133/   1D5EE : 103C 0029              	MOVE.B	#')',D0
  3134/   1D5F2 : 6100 0C18              	BSR	CONOUT
@@ -3563,7 +3563,7 @@
  3137/   1D5FA :                        
  3138/   1D5FA :                        G0D1:
  3139/   1D5FA : =>TRUE                 	IF USE_SFDECODE
- 3140/   1D5FA : 3639 0001 FF02         	MOVE	REGFV,D3
+ 3140/   1D5FA : 3639 0001 FF00         	MOVE	REGFV,D3
  3141/   1D600 : E95B                   	ROL	#4,D3
  3142/   1D602 : C67C 000F              	AND	#$000F,D3
  3143/   1D606 : B67C 0008              	CMP	#$08,D3
@@ -3585,11 +3585,11 @@
  3159/   1D60E : [3147]                 	ENDIF
  3160/   1D60E :                        
  3161/   1D60E :                        	;; Function Code
- 3162/   1D60E : 3039 0001 FEAE         	MOVE	GR0BUF,D0
+ 3162/   1D60E : 3039 0001 FEAC         	MOVE	GR0BUF,D0
  3163/   1D614 : C07C 0007              	AND	#$0007,D0
  3164/   1D618 : E548                   	LSL	#2,D0
  3165/   1D61A : 41F9 0001 E0F0         	LEA	FCTAB2,A0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 58 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 58 - 12/14/2023 14:1:1
 
 
  3166/   1D620 : 2070 0000              	MOVE.L	0(A0,D0),A0
@@ -3598,7 +3598,7 @@
  3169/   1D62E : 6100 FA30              	BSR	STROUT
  3170/   1D632 :                        
  3171/   1D632 :                        	;; Read / Write
- 3172/   1D632 : 3039 0001 FEAE         	MOVE	GR0BUF,D0
+ 3172/   1D632 : 3039 0001 FEAC         	MOVE	GR0BUF,D0
  3173/   1D638 : 0800 0008              	BTST	#8,D0
  3174/   1D63C : 6608                   	BNE	G0D10
  3175/   1D63E : 41F9 0001 E17C         	LEA	G0WR,A0
@@ -3609,7 +3609,7 @@
  3180/   1D64C : 6100 FA12              	BSR	STROUT
  3181/   1D650 :                        
  3182/   1D650 :                        	;; BYTE / WORD
- 3183/   1D650 : 3039 0001 FEAE         	MOVE	GR0BUF,D0
+ 3183/   1D650 : 3039 0001 FEAC         	MOVE	GR0BUF,D0
  3184/   1D656 : 0800 0009              	BTST	#9,D0
  3185/   1D65A : 6708                   	BEQ	G0D12
  3186/   1D65C : 41F9 0001 E192         	LEA	G0BYTE,A0
@@ -3621,12 +3621,12 @@
  3192/   1D66E :                        
  3193/   1D66E :                        	;; Write Data
  3194/   1D66E : 41F9 0001 E1A3         	LEA	G0FROM,A0
- 3195/   1D674 : 3039 0001 FEAE         	MOVE	GR0BUF,D0
+ 3195/   1D674 : 3039 0001 FEAC         	MOVE	GR0BUF,D0
  3196/   1D67A : 0800 0008              	BTST	#8,D0
  3197/   1D67E : 662C                   	BNE	G0D17		; if READ
  3198/   1D680 : 0800 0009              	BTST	#9,D0
  3199/   1D684 : 6716                   	BEQ	G0D15		; if WORD
- 3200/   1D686 : 3239 0001 FEB6         	MOVE	GR0BUF+8,D1
+ 3200/   1D686 : 3239 0001 FEB4         	MOVE	GR0BUF+8,D1
  3201/   1D68C : 0800 000A              	BTST	#10,D0
  3202/   1D690 : 6702                   	BEQ	G0D14		; if not HB
  3203/   1D692 : E049                   	LSR	#8,D1
@@ -3635,7 +3635,7 @@
  3206/   1D696 : 6100 F9E6              	BSR	HEXOUT2
  3207/   1D69A : 600A                   	BRA	G0D16
  3208/   1D69C :                        G0D15:
- 3209/   1D69C : 3039 0001 FEB6         	MOVE	GR0BUF+8,D0
+ 3209/   1D69C : 3039 0001 FEB4         	MOVE	GR0BUF+8,D0
  3210/   1D6A2 : 6100 F9D2              	BSR	HEXOUT4
  3211/   1D6A6 :                        G0D16:
  3212/   1D6A6 : 41F9 0001 E19E         	LEA	G0TO,A0
@@ -3643,21 +3643,21 @@
  3214/   1D6AC : 6100 F9B2              	BSR	STROUT
  3215/   1D6B0 :                        
  3216/   1D6B0 :                        	;; Address
- 3217/   1D6B0 : 2039 0001 FEB0         	MOVE.L	GR0BUF+2,D0
+ 3217/   1D6B0 : 2039 0001 FEAE         	MOVE.L	GR0BUF+2,D0
  3218/   1D6B6 : 6100 F9B6              	BSR	HEXOUT8		; Access address
  3219/   1D6BA :                        
  3220/   1D6BA :                        	;; Instruction Fetch
- 3221/   1D6BA : 3039 0001 FEAE         	MOVE	GR0BUF,D0
+ 3221/   1D6BA : 3039 0001 FEAC         	MOVE	GR0BUF,D0
  3222/   1D6C0 : 0800 000D              	BTST	#13,D0
  3223/   1D6C4 : 670A                   	BEQ	G0D18
  3224/   1D6C6 : 41F9 0001 E1B0         	LEA	G0IF,A0
  3225/   1D6CC : 6100 F992              	BSR	STROUT
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 59 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 59 - 12/14/2023 14:1:1
 
 
  3226/   1D6D0 :                        G0D18:
  3227/   1D6D0 :                        	;; Read-Modify-Write
- 3228/   1D6D0 : 3039 0001 FEAE         	MOVE	GR0BUF,D0
+ 3228/   1D6D0 : 3039 0001 FEAC         	MOVE	GR0BUF,D0
  3229/   1D6D6 : 0800 000B              	BTST	#11,D0
  3230/   1D6DA : 670A                   	BEQ	G0D19
  3231/   1D6DC : 41F9 0001 E1C5         	LEA	G0RMW,A0
@@ -3679,34 +3679,34 @@
  3247/   1D6F6 :                        
  3248/   1D6F6 :                        G0D9:
  3249/   1D6F6 :                        	;; Unsupported Stack Frame
- 3250/   1D6F6 : 3039 0001 FE80         	MOVE	REGSR,D0
+ 3250/   1D6F6 : 3039 0001 FE7E         	MOVE	REGSR,D0
  3251/   1D6FC : 6100 F978              	BSR	HEXOUT4
  3252/   1D700 : 103C 0020              	MOVE.B	#' ',D0
  3253/   1D704 : 6100 0B06              	BSR	CONOUT
  3254/   1D708 :                        
- 3255/   1D708 : 3039 0001 FE34         	MOVE	REGPC,D0
+ 3255/   1D708 : 3039 0001 FE32         	MOVE	REGPC,D0
  3256/   1D70E : 6100 F966              	BSR	HEXOUT4
  3257/   1D712 : 103C 0020              	MOVE.B	#' ',D0
  3258/   1D716 : 6100 0AF4              	BSR	CONOUT
  3259/   1D71A :                        
- 3260/   1D71A : 3039 0001 FE36         	MOVE	REGPC+2,D0
+ 3260/   1D71A : 3039 0001 FE34         	MOVE	REGPC+2,D0
  3261/   1D720 : 6100 F954              	BSR	HEXOUT4
  3262/   1D724 : 103C 0020              	MOVE.B	#' ',D0
  3263/   1D728 : 6100 0AE2              	BSR	CONOUT
  3264/   1D72C :                        
- 3265/   1D72C : 3039 0001 FF02         	MOVE	REGFV,D0
+ 3265/   1D72C : 3039 0001 FF00         	MOVE	REGFV,D0
  3266/   1D732 : 6100 F942              	BSR	HEXOUT4
  3267/   1D736 : 103C 0020              	MOVE.B	#' ',D0
  3268/   1D73A : 6100 0AD0              	BSR	CONOUT
  3269/   1D73E :                        
  3270/   1D73E : 4242                   	CLR	D2
  3271/   1D740 : 41F9 0001 E1DA         	LEA	FMTLEN,A0
- 3272/   1D746 : 3639 0001 FF02         	MOVE	REGFV,D3
+ 3272/   1D746 : 3639 0001 FF00         	MOVE	REGFV,D3
  3273/   1D74C : E95B                   	ROL	#4,D3
  3274/   1D74E : C67C 000F              	AND	#$000F,D3
  3275/   1D752 : 1430 3000              	MOVE.B	0(A0,D3),D2
  3276/   1D756 : 7604                   	MOVEQ	#4,D3		; Counter.  4 words already printed
- 3277/   1D758 : 41F9 0001 FEAE         	LEA	GR0BUF,A0
+ 3277/   1D758 : 41F9 0001 FEAC         	LEA	GR0BUF,A0
  3278/   1D75E :                        
  3279/   1D75E :                        G0D90:
  3280/   1D75E : 3018                   	MOVE	(A0)+,D0
@@ -3715,7 +3715,7 @@
  3283/   1D766 : B443                   	CMP	D3,D2
  3284/   1D768 : 6318                   	BLS	G0D92
  3285/   1D76A : 303C 000F              	MOVE	#$000F,D0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 60 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 60 - 12/14/2023 14:1:1
 
 
  3286/   1D76E : C043                   	AND	D3,D0
@@ -3778,7 +3778,7 @@
  3322/   1D862 : 475B 3C61 6472 3E5D    	DC.B	"G[<adr>][,<stop adr>] :Go and Stop",CR,LF
          1D86A : 5B2C 3C73 746F 7020
          1D872 : 6164 723E 5D20 3A47
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 61 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 61 - 12/14/2023 14:1:1
 
 
          1D87A : 6F20 616E 6420 5374
@@ -3841,7 +3841,7 @@
  3347/   1D9C5 : 4D43 3638 3033 300D    IM030:	DC.B	"MC68030",CR,LF,$00
          1D9CD : 0A00                  
  3348/   1D9CF :                        
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 62 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 62 - 12/14/2023 14:1:1
 
 
  3349/   1D9CF :                        	;; Module Descriptor for CALLM
@@ -3904,7 +3904,7 @@
  3391/   1DAAF :                        TRAP5_M:
  3392/   1DAAF : 5452 4150 2023 3500    	DC.B	"TRAP #5",$00
  3393/   1DAB7 :                        TRAP6_M:
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 63 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 63 - 12/14/2023 14:1:1
 
 
  3394/   1DAB7 : 5452 4150 2023 3600    	DC.B	"TRAP #6",$00
@@ -3934,83 +3934,83 @@
  3418/   1DB13 :                        
  3419/   1DB13 :                        	ALIGN	2
  3420/   1DB14 : 0003                   RDTAB:	DC.W	$0003		; LONG
- 3421/   1DB16 : 0001 DC60 0001 FE38    	DC.L	RDSD07, REGD0
+ 3421/   1DB16 : 0001 DC60 0001 FE36    	DC.L	RDSD07, REGD0
  3422/   1DB1E : 0003                   	DC.W	$0003
- 3423/   1DB20 : 0001 DCDE 0001 FE3C    	DC.L	RDSC,   REGD1
+ 3423/   1DB20 : 0001 DCDE 0001 FE3A    	DC.L	RDSC,   REGD1
  3424/   1DB28 : 0003                   	DC.W	$0003
- 3425/   1DB2A : 0001 DCDE 0001 FE40    	DC.L	RDSC,   REGD2
+ 3425/   1DB2A : 0001 DCDE 0001 FE3E    	DC.L	RDSC,   REGD2
  3426/   1DB32 : 0003                   	DC.W	$0003
- 3427/   1DB34 : 0001 DCDE 0001 FE44    	DC.L	RDSC,   REGD3
+ 3427/   1DB34 : 0001 DCDE 0001 FE42    	DC.L	RDSC,   REGD3
  3428/   1DB3C : 0003                   	DC.W	$0003
- 3429/   1DB3E : 0001 DCE0 0001 FE48    	DC.L	RDSCS,  REGD4
+ 3429/   1DB3E : 0001 DCE0 0001 FE46    	DC.L	RDSCS,  REGD4
  3430/   1DB46 : 0003                   	DC.W	$0003
- 3431/   1DB48 : 0001 DCDE 0001 FE4C    	DC.L	RDSC,   REGD5
+ 3431/   1DB48 : 0001 DCDE 0001 FE4A    	DC.L	RDSC,   REGD5
  3432/   1DB50 : 0003                   	DC.W	$0003
- 3433/   1DB52 : 0001 DCDE 0001 FE50    	DC.L	RDSC,   REGD6
+ 3433/   1DB52 : 0001 DCDE 0001 FE4E    	DC.L	RDSC,   REGD6
  3434/   1DB5A : 0003                   	DC.W	$0003
- 3435/   1DB5C : 0001 DCDE 0001 FE54    	DC.L	RDSC,   REGD7
+ 3435/   1DB5C : 0001 DCDE 0001 FE52    	DC.L	RDSC,   REGD7
  3436/   1DB64 :                        
  3437/   1DB64 : 0003                   	DC.W	$0003
- 3438/   1DB66 : 0001 DC67 0001 FE58    	DC.L	RDSA07, REGA0
+ 3438/   1DB66 : 0001 DC67 0001 FE56    	DC.L	RDSA07, REGA0
  3439/   1DB6E : 0003                   	DC.W	$0003
- 3440/   1DB70 : 0001 DCDE 0001 FE5C    	DC.L	RDSC,   REGA1
+ 3440/   1DB70 : 0001 DCDE 0001 FE5A    	DC.L	RDSC,   REGA1
  3441/   1DB78 : 0003                   	DC.W	$0003
- 3442/   1DB7A : 0001 DCDE 0001 FE60    	DC.L	RDSC,   REGA2
+ 3442/   1DB7A : 0001 DCDE 0001 FE5E    	DC.L	RDSC,   REGA2
  3443/   1DB82 : 0003                   	DC.W	$0003
- 3444/   1DB84 : 0001 DCDE 0001 FE64    	DC.L	RDSC,   REGA3
+ 3444/   1DB84 : 0001 DCDE 0001 FE62    	DC.L	RDSC,   REGA3
  3445/   1DB8C : 0003                   	DC.W	$0003
- 3446/   1DB8E : 0001 DCE0 0001 FE68    	DC.L	RDSCS,  REGA4
+ 3446/   1DB8E : 0001 DCE0 0001 FE66    	DC.L	RDSCS,  REGA4
  3447/   1DB96 : 0003                   	DC.W	$0003
- 3448/   1DB98 : 0001 DCDE 0001 FE6C    	DC.L	RDSC,   REGA5
+ 3448/   1DB98 : 0001 DCDE 0001 FE6A    	DC.L	RDSC,   REGA5
  3449/   1DBA0 : 0003                   	DC.W	$0003
- 3450/   1DBA2 : 0001 DCDE 0001 FE70    	DC.L	RDSC,   REGA6
+ 3450/   1DBA2 : 0001 DCDE 0001 FE6E    	DC.L	RDSC,   REGA6
  3451/   1DBAA : 0003                   	DC.W	$0003
- 3452/   1DBAC : 0001 DCDE 0001 FE74    	DC.L	RDSC,   REGA7
+ 3452/   1DBAC : 0001 DCDE 0001 FE72    	DC.L	RDSC,   REGA7
  3453/   1DBB4 :                        
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 64 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 64 - 12/14/2023 14:1:1
 
 
  3454/   1DBB4 : 0003                   	DC.W	$0003
- 3455/   1DBB6 : 0001 DC70 0001 FE34    	DC.L	RDSPC,  REGPC
+ 3455/   1DBB6 : 0001 DC70 0001 FE32    	DC.L	RDSPC,  REGPC
  3456/   1DBBE :                        ;	DC.W	$0003
  3457/   1DBBE :                        ;	DC.L	RDSSSP, REGSSP
  3458/   1DBBE : 0003                   	DC.W	$0003		; LONG
- 3459/   1DBC0 : 0001 DC76 0001 FE78    	DC.L	RDSISP, REGISP
+ 3459/   1DBC0 : 0001 DC76 0001 FE76    	DC.L	RDSISP, REGISP
  3460/   1DBC8 : 0003                   	DC.W	$0003		; LONG
- 3461/   1DBCA : 0001 DC7C 0001 FE7C    	DC.L	RDSMSP, REGMSP
+ 3461/   1DBCA : 0001 DC7C 0001 FE7A    	DC.L	RDSMSP, REGMSP
  3462/   1DBD2 :                        ;	DC.W	$0002		; WORD
  3463/   1DBD2 :                        ;	DC.L	RDSSR,  REGSR
  3464/   1DBD2 : 0004                   	DC.W	$0004		; Subroutine
  3465/   1DBD4 : 0001 DC82 0001 CDAC    	DC.L	RDSSR,  mode_update
  3466/   1DBDC :                        
  3467/   1DBDC : 8003                   	DC.W	$8003		; LONG + (END flag for MC68000/8)
- 3468/   1DBDE : 0001 DC87 0001 FE82    	DC.L	RDSVBR, REGVBR
+ 3468/   1DBDE : 0001 DC87 0001 FE80    	DC.L	RDSVBR, REGVBR
  3469/   1DBE6 : 8001                   	DC.W	$8001		; BYTE
- 3470/   1DBE8 : 0001 DC8E 0001 FE86    	DC.L	RDSSFC, REGSFC
+ 3470/   1DBE8 : 0001 DC8E 0001 FE84    	DC.L	RDSSFC, REGSFC
  3471/   1DBF0 : 8001                   	DC.W	$8001		; BYTE
- 3472/   1DBF2 : 0001 DC94 0001 FE87    	DC.L	RDSDFC, REGDFC
+ 3472/   1DBF2 : 0001 DC94 0001 FE85    	DC.L	RDSDFC, REGDFC
  3473/   1DBFA : 9003                   	DC.W	$9003		; LONG
- 3474/   1DBFC : 0001 DC9A 0001 FE88    	DC.L	RDSCACR,REGCACR
+ 3474/   1DBFC : 0001 DC9A 0001 FE86    	DC.L	RDSCACR,REGCACR
  3475/   1DC04 : 9003                   	DC.W	$9003		; LONG
- 3476/   1DC06 : 0001 DCA1 0001 FE8C    	DC.L	RDSCAAR,REGCAAR
+ 3476/   1DC06 : 0001 DCA1 0001 FE8A    	DC.L	RDSCAAR,REGCAAR
  3477/   1DC0E : A003                   	DC.W	$A003		; LONG
  3478/   1DC10 :                        
- 3479/   1DC10 : 0001 DCA8 0001 FE90    	DC.L	RDSCRPH,REGCRPH
+ 3479/   1DC10 : 0001 DCA8 0001 FE8E    	DC.L	RDSCRPH,REGCRPH
  3480/   1DC18 : A003                   	DC.W	$A003		; LONG
- 3481/   1DC1A : 0001 DCB4 0001 FE94    	DC.L	RDSCRPL,REGCRPL
+ 3481/   1DC1A : 0001 DCB4 0001 FE92    	DC.L	RDSCRPL,REGCRPL
  3482/   1DC22 : A003                   	DC.W	$A003		; LONG
- 3483/   1DC24 : 0001 DCB6 0001 FEA0    	DC.L	RDSTC,  REGTC
+ 3483/   1DC24 : 0001 DCB6 0001 FE9E    	DC.L	RDSTC,  REGTC
  3484/   1DC2C : A003                   	DC.W	$A003		; LONG
- 3485/   1DC2E : 0001 DCBB 0001 FEA4    	DC.L	RDSTT0, REGTT0
+ 3485/   1DC2E : 0001 DCBB 0001 FEA2    	DC.L	RDSTT0, REGTT0
  3486/   1DC36 :                        
  3487/   1DC36 : A003                   	DC.W	$A003		; LONG
- 3488/   1DC38 : 0001 DCC1 0001 FE98    	DC.L	RDSSRPH,REGSRPH
+ 3488/   1DC38 : 0001 DCC1 0001 FE96    	DC.L	RDSSRPH,REGSRPH
  3489/   1DC40 : A003                   	DC.W	$A003		; LONG
- 3490/   1DC42 : 0001 DCCD 0001 FE9C    	DC.L	RDSSRPL,REGSRPL
+ 3490/   1DC42 : 0001 DCCD 0001 FE9A    	DC.L	RDSSRPL,REGSRPL
  3491/   1DC4A : A002                   	DC.W	$A002		; WORD
- 3492/   1DC4C : 0001 DCCF 0001 FEAC    	DC.L	RDSMMUSR,REGMMUSR
+ 3492/   1DC4C : 0001 DCCF 0001 FEAA    	DC.L	RDSMMUSR,REGMMUSR
  3493/   1DC54 : A003                   	DC.W	$A003		; LONG
- 3494/   1DC56 : 0001 DCD7 0001 FEA8    	DC.L	RDSTT1, REGTT1
+ 3494/   1DC56 : 0001 DCD7 0001 FEA6    	DC.L	RDSTT1, REGTT1
  3495/   1DC5E :                        
  3496/   1DC5E : 0000                   	DC.W	$0000		; END
  3497/   1DC60 :                        
@@ -4030,7 +4030,7 @@
          1DCB0 : 4C29 3D00            
  3511/   1DCB4 : 2F00                   RDSCRPL:DC.B	"/",$00
  3512/   1DCB6 : 2054 433D 00           RDSTC:	DC.B	" TC=",$00
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 65 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 65 - 12/14/2023 14:1:1
 
 
  3513/   1DCBB : 2054 5430 3D00         RDSTT0:	DC.B	" TT0=",$00
@@ -4068,21 +4068,21 @@
  3544/   1DD48 :                        
  3545/   1DD48 :                        RNTABA:
  3546/   1DD48 : 3003                   	DC.B	'0',3		; "A0"
- 3547/   1DD4A : 0001 FE58 0001 E04A    	DC.L	REGA0,RNA0
+ 3547/   1DD4A : 0001 FE56 0001 E04A    	DC.L	REGA0,RNA0
  3548/   1DD52 : 3103                   	DC.B	'1',3		; "A1"
- 3549/   1DD54 : 0001 FE5C 0001 E04D    	DC.L	REGA1,RNA1
+ 3549/   1DD54 : 0001 FE5A 0001 E04D    	DC.L	REGA1,RNA1
  3550/   1DD5C : 3203                   	DC.B	'2',3		; "A2"
- 3551/   1DD5E : 0001 FE60 0001 E050    	DC.L	REGA2,RNA2
+ 3551/   1DD5E : 0001 FE5E 0001 E050    	DC.L	REGA2,RNA2
  3552/   1DD66 : 3303                   	DC.B	'3',3		; "A3"
- 3553/   1DD68 : 0001 FE64 0001 E053    	DC.L	REGA3,RNA3
+ 3553/   1DD68 : 0001 FE62 0001 E053    	DC.L	REGA3,RNA3
  3554/   1DD70 : 3403                   	DC.B	'4',3		; "A4"
- 3555/   1DD72 : 0001 FE68 0001 E056    	DC.L	REGA4,RNA4
+ 3555/   1DD72 : 0001 FE66 0001 E056    	DC.L	REGA4,RNA4
  3556/   1DD7A : 3503                   	DC.B	'5',3		; "A5"
- 3557/   1DD7C : 0001 FE6C 0001 E059    	DC.L	REGA5,RNA5
+ 3557/   1DD7C : 0001 FE6A 0001 E059    	DC.L	REGA5,RNA5
  3558/   1DD84 : 3603                   	DC.B	'6',3		; "A6"
- 3559/   1DD86 : 0001 FE70 0001 E05C    	DC.L	REGA6,RNA6
+ 3559/   1DD86 : 0001 FE6E 0001 E05C    	DC.L	REGA6,RNA6
  3560/   1DD8E : 3703                   	DC.B	'7',3		; "A7"
- 3561/   1DD90 : 0001 FE74 0001 E05F    	DC.L	REGA7,RNA7
+ 3561/   1DD90 : 0001 FE72 0001 E05F    	DC.L	REGA7,RNA7
  3562/   1DD98 :                        
  3563/   1DD98 : 0000                   	DC.B	$00,$00		; End mark
  3564/   1DD9A : 0000 0000 0000 0000    	DC.L	0,0
@@ -4093,7 +4093,7 @@
  3569/   1DDAC : 430F                   	DC.B	'C',$0F		; "CC"
  3570/   1DDAE : 0001 DEE2 0000 0000    	DC.L	RNTABCC,0
  3571/   1DDB6 : 520F                   	DC.B	'R',$0F		; "CR"
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 66 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 66 - 12/14/2023 14:1:1
 
 
  3572/   1DDB8 : 0001 DEF6 0000 0000    	DC.L	RNTABCR,0
@@ -4103,21 +4103,21 @@
  3576/   1DDCA :                        
  3577/   1DDCA :                        RNTABD:
  3578/   1DDCA : 3003                   	DC.B	'0',3		; "D0"
- 3579/   1DDCC : 0001 FE38 0001 E07E    	DC.L	REGD0,RND0
+ 3579/   1DDCC : 0001 FE36 0001 E07E    	DC.L	REGD0,RND0
  3580/   1DDD4 : 3103                   	DC.B	'1',3		; "D1"
- 3581/   1DDD6 : 0001 FE3C 0001 E081    	DC.L	REGD1,RND1
+ 3581/   1DDD6 : 0001 FE3A 0001 E081    	DC.L	REGD1,RND1
  3582/   1DDDE : 3203                   	DC.B	'2',3		; "D2"
- 3583/   1DDE0 : 0001 FE40 0001 E084    	DC.L	REGD2,RND2
+ 3583/   1DDE0 : 0001 FE3E 0001 E084    	DC.L	REGD2,RND2
  3584/   1DDE8 : 3303                   	DC.B	'3',3		; "D3"
- 3585/   1DDEA : 0001 FE44 0001 E087    	DC.L	REGD3,RND3
+ 3585/   1DDEA : 0001 FE42 0001 E087    	DC.L	REGD3,RND3
  3586/   1DDF2 : 3403                   	DC.B	'4',3		; "D4"
- 3587/   1DDF4 : 0001 FE48 0001 E08A    	DC.L	REGD4,RND4
+ 3587/   1DDF4 : 0001 FE46 0001 E08A    	DC.L	REGD4,RND4
  3588/   1DDFC : 3503                   	DC.B	'5',3		; "D5"
- 3589/   1DDFE : 0001 FE4C 0001 E08D    	DC.L	REGD5,RND5
+ 3589/   1DDFE : 0001 FE4A 0001 E08D    	DC.L	REGD5,RND5
  3590/   1DE06 : 3603                   	DC.B	'6',3		; "D6"
- 3591/   1DE08 : 0001 FE50 0001 E090    	DC.L	REGD6,RND6
+ 3591/   1DE08 : 0001 FE4E 0001 E090    	DC.L	REGD6,RND6
  3592/   1DE10 : 3703                   	DC.B	'7',3		; "D7"
- 3593/   1DE12 : 0001 FE54 0001 E093    	DC.L	REGD7,RND7
+ 3593/   1DE12 : 0001 FE52 0001 E093    	DC.L	REGD7,RND7
  3594/   1DE1A : 460F                   	DC.B	'F',$0F		; "DF?"
  3595/   1DE1C : 0001 DF0A 0000 0000    	DC.L	RNTABDF,0
  3596/   1DE24 :                        
@@ -4142,7 +4142,7 @@
  3615/   1DE60 :                        
  3616/   1DE60 :                        RNTABP:
  3617/   1DE60 : 4303                   	DC.B	'C',3		; "PC"
- 3618/   1DE62 : 0001 FE34 0001 E0A8    	DC.L	REGPC,RNPC
+ 3618/   1DE62 : 0001 FE32 0001 E0A8    	DC.L	REGPC,RNPC
  3619/   1DE6A :                        
  3620/   1DE6A : 0000                   	DC.B	$00,$00		; End mark
  3621/   1DE6C : 0000 0000 0000 0000    	DC.L	0,0
@@ -4156,7 +4156,7 @@
  3629/   1DE88 :                        ;	DC.L	REGSR,RNSR
  3630/   1DE88 :                        ;	DC.B	'S',$0F		; "SS?"
  3631/   1DE88 :                        ;	DC.L	RNTABSS,0
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 67 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 67 - 12/14/2023 14:1:1
 
 
  3632/   1DE88 :                        
@@ -4165,7 +4165,7 @@
  3635/   1DE92 :                        
  3636/   1DE92 :                        RNTABT:
  3637/   1DE92 : 43A3                   	DC.B	'C',$A3		; "TC"
- 3638/   1DE94 : 0001 FEA0 0001 E0C0    	DC.L	REGTC,RNTC
+ 3638/   1DE94 : 0001 FE9E 0001 E0C0    	DC.L	REGTC,RNTC
  3639/   1DE9C : 540F                   	DC.B	'T',$0F		; "TT?"
  3640/   1DE9E : 0001 DF8C 0000 0000    	DC.L	RNTABTT,0
  3641/   1DEA6 :                        
@@ -4190,7 +4190,7 @@
  3660/   1DEE2 :                        
  3661/   1DEE2 :                        RNTABCC:
  3662/   1DEE2 : 5201                   	DC.B	'R',1		; "CCR"
- 3663/   1DEE4 : 0001 FE81 0001 E06C    	DC.L	REGSR+1,RNCCR
+ 3663/   1DEE4 : 0001 FE7F 0001 E06C    	DC.L	REGSR+1,RNCCR
  3664/   1DEEC :                        
  3665/   1DEEC : 0000                   	DC.B	$00,$00		; End mark
  3666/   1DEEE : 0000 0000 0000 0000    	DC.L	0,0
@@ -4204,14 +4204,14 @@
  3674/   1DF0A :                        
  3675/   1DF0A :                        RNTABDF:
  3676/   1DF0A : 4381                   	DC.B	'C',$81		; "DFC"
- 3677/   1DF0C : 0001 FE87 0001 E096    	DC.L	REGDFC,RNDFC
+ 3677/   1DF0C : 0001 FE85 0001 E096    	DC.L	REGDFC,RNDFC
  3678/   1DF14 :                        
  3679/   1DF14 : 0000                   	DC.B	$00,$00		; End mark
  3680/   1DF16 : 0000 0000 0000 0000    	DC.L	0,0
  3681/   1DF1E :                        
  3682/   1DF1E :                        RNTABIS:
  3683/   1DF1E : 5003                   	DC.B	'P',3		; "ISP"
- 3684/   1DF20 : 0001 FE78 0001 E09A    	DC.L	REGISP,RNISP
+ 3684/   1DF20 : 0001 FE76 0001 E09A    	DC.L	REGISP,RNISP
  3685/   1DF28 :                        
  3686/   1DF28 : 0000                   	DC.B	$00,$00		; End mark
  3687/   1DF2A : 0000 0000 0000 0000    	DC.L	0,0
@@ -4219,7 +4219,7 @@
  3689/   1DF32 : 550F                   	DC.B	'U',$0F		; "MMU?"
  3690/   1DF34 : 0001 E004 0000 0000    	DC.L	RNTABMMU,0
  3691/   1DF3C :                        
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 68 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 68 - 12/14/2023 14:1:1
 
 
  3692/   1DF3C : 0000                   	DC.B	$00,$00		; End mark
@@ -4227,7 +4227,7 @@
  3694/   1DF46 :                        
  3695/   1DF46 :                        RNTABMS:
  3696/   1DF46 : 5003                   	DC.B	'P',3		; "MSP"
- 3697/   1DF48 : 0001 FE7C 0001 E0A4    	DC.L	REGMSP,RNMSP
+ 3697/   1DF48 : 0001 FE7A 0001 E0A4    	DC.L	REGMSP,RNMSP
  3698/   1DF50 :                        
  3699/   1DF50 : 0000                   	DC.B	$00,$00		; End mark
  3700/   1DF52 : 0000 0000 0000 0000    	DC.L	0,0
@@ -4235,14 +4235,14 @@
  3702/   1DF5A :                        
  3703/   1DF5A :                        RNTABSF:
  3704/   1DF5A : 4381                   	DC.B	'C',$81		; "SFC"
- 3705/   1DF5C : 0001 FE86 0001 E0AB    	DC.L	REGSFC,RNSFC
+ 3705/   1DF5C : 0001 FE84 0001 E0AB    	DC.L	REGSFC,RNSFC
  3706/   1DF64 :                        
  3707/   1DF64 : 0000                   	DC.B	$00,$00		; End mark
  3708/   1DF66 : 0000 0000 0000 0000    	DC.L	0,0
  3709/   1DF6E :                        
  3710/   1DF6E :                        RNTABSR:
  3711/   1DF6E : 0002                   	DC.B	0,2		; "SR"
- 3712/   1DF70 : 0001 FE80 0001 E0AF    	DC.L	REGSR,RNSR
+ 3712/   1DF70 : 0001 FE7E 0001 E0AF    	DC.L	REGSR,RNSR
  3713/   1DF78 : 500F                   	DC.B	'P',$0F		; "SRP?"
  3714/   1DF7A : 0001 E018 0000 0000    	DC.L	RNTABSRP,0
  3715/   1DF82 :                        
@@ -4258,31 +4258,31 @@
  3725/   1DF8C :                        
  3726/   1DF8C :                        RNTABTT:
  3727/   1DF8C : 30A3                   	DC.B	'0',$A3		; "TT0"
- 3728/   1DF8E : 0001 FEA4 0001 E0C3    	DC.L	REGTT0,RNTT0
+ 3728/   1DF8E : 0001 FEA2 0001 E0C3    	DC.L	REGTT0,RNTT0
  3729/   1DF96 : 31A3                   	DC.B	'1',$A3		; "TT1"
- 3730/   1DF98 : 0001 FEA8 0001 E0C7    	DC.L	REGTT1,RNTT1
+ 3730/   1DF98 : 0001 FEA6 0001 E0C7    	DC.L	REGTT1,RNTT1
  3731/   1DFA0 :                        
  3732/   1DFA0 : 0000                   	DC.B	$00,$00		; End mark
  3733/   1DFA2 : 0000 0000 0000 0000    	DC.L	0,0
  3734/   1DFAA :                        
  3735/   1DFAA :                        RNTABVB:
  3736/   1DFAA : 5283                   	DC.B	'R',$83		; "VBR"
- 3737/   1DFAC : 0001 FE82 0001 E0CB    	DC.L	REGVBR,RNVBR
+ 3737/   1DFAC : 0001 FE80 0001 E0CB    	DC.L	REGVBR,RNVBR
  3738/   1DFB4 :                        
  3739/   1DFB4 : 0000                   	DC.B	$00,$00		; End mark
  3740/   1DFB6 : 0000 0000 0000 0000    	DC.L	0,0
  3741/   1DFBE :                        
  3742/   1DFBE :                        RNTABCAA:
  3743/   1DFBE : 5293                   	DC.B	'R',$93		; "CAAR"
- 3744/   1DFC0 : 0001 FE8C 0001 E062    	DC.L	REGCAAR,RNCAAR
+ 3744/   1DFC0 : 0001 FE8A 0001 E062    	DC.L	REGCAAR,RNCAAR
  3745/   1DFC8 :                        
  3746/   1DFC8 : 0000                   	DC.B	$00,$00		; End mark
  3747/   1DFCA : 0000 0000 0000 0000    	DC.L	0,0
  3748/   1DFD2 :                        
  3749/   1DFD2 :                        RNTABCAC:
  3750/   1DFD2 : 5293                   	DC.B	'R',$93		; "CACR"
- 3751/   1DFD4 : 0001 FE88 0001 E067    	DC.L	REGCACR,RNCACR
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 69 - 12/13/2023 13:23:51
+ 3751/   1DFD4 : 0001 FE86 0001 E067    	DC.L	REGCACR,RNCACR
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 69 - 12/14/2023 14:1:1
 
 
  3752/   1DFDC :                        
@@ -4291,9 +4291,9 @@
  3755/   1DFE6 :                        
  3756/   1DFE6 :                        RNTABCRP:
  3757/   1DFE6 : 48A3                   	DC.B	'H',$A3		; "CRPH"
- 3758/   1DFE8 : 0001 FE90 0001 E070    	DC.L	REGCRPH,RNCRPH
+ 3758/   1DFE8 : 0001 FE8E 0001 E070    	DC.L	REGCRPH,RNCRPH
  3759/   1DFF0 : 4CA3                   	DC.B	'L',$A3		; "CRPL"
- 3760/   1DFF2 : 0001 FE94 0001 E077    	DC.L	REGCRPL,RNCRPL
+ 3760/   1DFF2 : 0001 FE92 0001 E077    	DC.L	REGCRPL,RNCRPL
  3761/   1DFFA :                        
  3762/   1DFFA : 0000                   	DC.B	$00,$00		; End mark
  3763/   1DFFC : 0000 0000 0000 0000    	DC.L	0,0
@@ -4307,16 +4307,16 @@
  3771/   1E018 :                        
  3772/   1E018 :                        RNTABSRP:
  3773/   1E018 : 48A3                   	DC.B	'H',$A3		; "SRPH"
- 3774/   1E01A : 0001 FE98 0001 E0B2    	DC.L	REGSRPH,RNSRPH
+ 3774/   1E01A : 0001 FE96 0001 E0B2    	DC.L	REGSRPH,RNSRPH
  3775/   1E022 : 4CA3                   	DC.B	'L',$A3		; "SRPL"
- 3776/   1E024 : 0001 FE9C 0001 E0B9    	DC.L	REGSRPL,RNSRPL
+ 3776/   1E024 : 0001 FE9A 0001 E0B9    	DC.L	REGSRPL,RNSRPL
  3777/   1E02C :                        
  3778/   1E02C : 0000                   	DC.B	$00,$00		; End mark
  3779/   1E02E : 0000 0000 0000 0000    	DC.L	0,0
  3780/   1E036 :                        
  3781/   1E036 :                        RNTABMMUS:
  3782/   1E036 : 52A2                   	DC.B	'R',$A2		; "MMUSR"
- 3783/   1E038 : 0001 FEAC 0001 E09E    	DC.L	REGMMUSR,RNMMUSR
+ 3783/   1E038 : 0001 FEAA 0001 E09E    	DC.L	REGMMUSR,RNMMUSR
  3784/   1E040 :                        
  3785/   1E040 : 0000                   	DC.B	$00,$00		; End mark
  3786/   1E042 : 0000 0000 0000 0000    	DC.L	0,0
@@ -4345,7 +4345,7 @@
  3809/   1E096 : 4446 4300              RNDFC:	DC.B	"DFC",$00
  3810/   1E09A : 4953 5000              RNISP:	DC.B	"ISP",$00
  3811/   1E09E : 4D4D 5553 5200         RNMMUSR:DC.B	"MMUSR",$00
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 70 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 70 - 12/14/2023 14:1:1
 
 
  3812/   1E0A4 : 4D53 5000              RNMSP:	DC.B	"MSP",$00
@@ -4408,7 +4408,7 @@
  3853/   1E1DC : 06                     	DC.B	6		; 0010 (68020)
  3854/   1E1DD : 06                     	DC.B	6		; 0011
  3855/   1E1DE : 08                     	DC.B	8		; 0100
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 71 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 71 - 12/14/2023 14:1:1
 
 
  3856/   1E1DF : 00                     	DC.B	0		; 0101
@@ -4471,7 +4471,7 @@
          1E23C : FFFF FFFF FFFF FFFF
          1E244 : FFFF FFFF FFFF FFFF
          1E24C : FFFF FFFF FFFF FFFF
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 72 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 72 - 12/14/2023 14:1:1
 
 
          1E254 : FFFF FFFF FFFF FFFF
@@ -4505,102 +4505,97 @@
  3917/   1FE00 :                        
  3918/   1FE00 :                        INBUF:	DS.B	BUFLEN		; Line input buffer
  3919/   1FE18 :                        DSADDR:	DS.L	1		; DUMP start address
- 3920/   1FE1C :                        DEADDR:	DS.L	1
- 3921/   1FE20 :                        DSTATE:	DS.B	1
- 3922/   1FE21 :                        	ALIGN	2
- 3923/   1FE22 :                        GADDR:	DS.L	1
- 3924/   1FE26 :                        SADDR:	DS.L	1		; SET address
- 3925/   1FE2A :                        HEXMOD:	DS.B	1		; HEX file mode
- 3926/   1FE2B :                        RECTYP:	DS.B	1		; Record type
- 3927/   1FE2C :                        PSPEC:	DS.B	1		; Processor spec.
- 3928/   1FE2D :                        
- 3929/   1FE2D :                        	ALIGN	2
- 3930/   1FE2E :                        
- 3931/   1FE2E :                        EXMSG:	DS.L	1		; Exception message
- 3932/   1FE32 :                        EXGRP:	DS.W	1		; Exception Group
- 3933/   1FE34 :                        
- 3934/   1FE34 :                        REG_B:
- 3935/   1FE34 :                        REGPC:	DS.L	1
- 3936/   1FE38 :                        
- 3937/   1FE38 :                        REGD0:	DS.L	1
- 3938/   1FE3C :                        REGD1:	DS.L	1
- 3939/   1FE40 :                        REGD2:	DS.L	1
- 3940/   1FE44 :                        REGD3:	DS.L	1
- 3941/   1FE48 : =>TRUE                 	IF USE_REGCMD
- 3942/   1FE48 :                        REGD4:	DS.L	1
- 3943/   1FE4C :                        REGD5:	DS.L	1
- 3944/   1FE50 :                        REGD6:	DS.L	1
- 3945/   1FE54 :                        REGD7:	DS.L	1
- 3946/   1FE58 : [3941]                 	ENDIF
- 3947/   1FE58 :                        
- 3948/   1FE58 :                        REGA0:	DS.L	1
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 73 - 12/13/2023 13:23:51
+ 3920/   1FE1C :                        DEADDR:	DS.L	1		; DUMP end address
+ 3921/   1FE20 :                        GADDR:	DS.L	1		; GO address
+ 3922/   1FE24 :                        SADDR:	DS.L	1		; SET address
+ 3923/   1FE28 :                        DSTATE:	DS.B	1		; DUMP state
+ 3924/   1FE29 :                        HEXMOD:	DS.B	1		; HEX file mode
+ 3925/   1FE2A :                        RECTYP:	DS.B	1		; Record type
+ 3926/   1FE2B :                        PSPEC:	DS.B	1		; Processor spec.
+ 3927/   1FE2C :                        
+ 3928/   1FE2C :                        EXMSG:	DS.L	1		; Exception message
+ 3929/   1FE30 :                        EXGRP:	DS.W	1		; Exception Group
+ 3930/   1FE32 :                        
+ 3931/   1FE32 :                        REG_B:
+ 3932/   1FE32 :                        REGPC:	DS.L	1
+ 3933/   1FE36 :                        
+ 3934/   1FE36 :                        REGD0:	DS.L	1
+ 3935/   1FE3A :                        REGD1:	DS.L	1
+ 3936/   1FE3E :                        REGD2:	DS.L	1
+ 3937/   1FE42 :                        REGD3:	DS.L	1
+ 3938/   1FE46 : =>TRUE                 	IF USE_REGCMD
+ 3939/   1FE46 :                        REGD4:	DS.L	1
+ 3940/   1FE4A :                        REGD5:	DS.L	1
+ 3941/   1FE4E :                        REGD6:	DS.L	1
+ 3942/   1FE52 :                        REGD7:	DS.L	1
+ 3943/   1FE56 : [3938]                 	ENDIF
+ 3944/   1FE56 :                        
+ 3945/   1FE56 :                        REGA0:	DS.L	1
+ 3946/   1FE5A :                        REGA1:	DS.L	1
+ 3947/   1FE5E :                        REGA2:	DS.L	1
+ 3948/   1FE62 :                        REGA3:	DS.L	1
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 73 - 12/14/2023 14:1:1
 
 
- 3949/   1FE5C :                        REGA1:	DS.L	1
- 3950/   1FE60 :                        REGA2:	DS.L	1
- 3951/   1FE64 :                        REGA3:	DS.L	1
- 3952/   1FE68 : =>TRUE                 	IF USE_REGCMD
- 3953/   1FE68 :                        REGA4:	DS.L	1
- 3954/   1FE6C :                        REGA5:	DS.L	1
- 3955/   1FE70 :                        REGA6:	DS.L	1
- 3956/   1FE74 :                        REGA7:	DS.L	1		; USP
- 3957/   1FE78 :                        
- 3958/   1FE78 :                        ;REGSSP:	DS.L	1
- 3959/   1FE78 :                        REGISP:	DS.L	1
- 3960/   1FE7C :                        REGMSP:	DS.L	1
- 3961/   1FE80 :                        REGSR:	DS.W	1
- 3962/   1FE82 :                        REGVBR:	DS.L	1
- 3963/   1FE86 :                        REGSFC:	DS.B	1
- 3964/   1FE87 :                        REGDFC:	DS.B	1
- 3965/   1FE88 :                        REGCACR:DS.L	1
- 3966/   1FE8C :                        REGCAAR:DS.L	1
- 3967/   1FE90 :                        REGCRPH:DS.L	1
- 3968/   1FE94 :                        REGCRPL:DS.L	1
- 3969/   1FE98 :                        REGSRPH:DS.L	1
- 3970/   1FE9C :                        REGSRPL:DS.L	1
- 3971/   1FEA0 :                        REGTC:	DS.L	1
- 3972/   1FEA4 :                        REGTT0:	DS.L	1
- 3973/   1FEA8 :                        REGTT1:	DS.L	1
- 3974/   1FEAC :                        REGMMUSR:DS.W	1
- 3975/   1FEAE :                        
- 3976/   1FEAE :                        GR0BUF:	DS.W	46-4		; Group 0 exception
- 3977/   1FF02 :                        REGFV:	DS.W	1		; Format / Vector offset
- 3978/   1FF04 :                        REG_E:
- 3979/   1FF04 :                        
- 3980/   1FF04 :                        reg_level:	ds.w	1
- 3981/   1FF06 :                        SR_bit:		ds.b	SR_bitSize+1
- 3982/   1FF17 :                        
- 3983/   1FF17 : [3952]                 	ENDIF
- 3984/   1FF17 :                        
- 3985/   1FF17 :                        ;; Break point work area
- 3986/   1FF17 : =$1FF17                dbg_wtop	equ	*
- 3987/   1FF17 :                        bpt1_f:		ds.b	1
- 3988/   1FF18 :                        bpt2_f:		ds.b	1
- 3989/   1FF19 :                        tmpb_f:		ds.b	1
- 3990/   1FF1A :                        	ALIGN	2
- 3991/   1FF1A :                        bpt1_op:	ds.w	1
- 3992/   1FF1C :                        bpt2_op:	ds.w	1
- 3993/   1FF1E :                        tmpb_op:	ds.w	1
- 3994/   1FF20 :                        bpt1_adr:	ds.l	1
- 3995/   1FF24 :                        bpt2_adr:	ds.l	1
- 3996/   1FF28 :                        tmpb_adr:	ds.l	2
- 3997/   1FF30 :                        
- 3998/   1FF30 : =$1FF30                dbg_wend	equ	*
- 3999/   1FF30 :                        
- 4000/   1FF30 :                        ;; Disassemble work area
- 4001/   1FF30 :                        dasm_adr:	ds.l	1
- 4002/   1FF34 :                        dasm_eadr:	ds.l	1
- 4003/   1FF38 :                        dasm_op:	ds.w	1
- 4004/   1FF3A :                        dasm_step:	ds.w	1	; if 0 then apply dasm_eadr
- 4005/   1FF3C :                        dasm_cdsz:	ds.w	1
- 4006/   1FF3E :                        dasm_opsz:	ds.w	1
- 4007/   1FF40 :                        
- 4008/   1FF40 :                        	END
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 74 - 12/13/2023 13:23:51
-
-
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 75 - 12/13/2023 13:23:51
+ 3949/   1FE66 : =>TRUE                 	IF USE_REGCMD
+ 3950/   1FE66 :                        REGA4:	DS.L	1
+ 3951/   1FE6A :                        REGA5:	DS.L	1
+ 3952/   1FE6E :                        REGA6:	DS.L	1
+ 3953/   1FE72 :                        REGA7:	DS.L	1		; USP
+ 3954/   1FE76 :                        
+ 3955/   1FE76 :                        ;REGSSP:	DS.L	1
+ 3956/   1FE76 :                        REGISP:	DS.L	1
+ 3957/   1FE7A :                        REGMSP:	DS.L	1
+ 3958/   1FE7E :                        REGSR:	DS.W	1
+ 3959/   1FE80 :                        REGVBR:	DS.L	1
+ 3960/   1FE84 :                        REGSFC:	DS.B	1
+ 3961/   1FE85 :                        REGDFC:	DS.B	1
+ 3962/   1FE86 :                        REGCACR:DS.L	1
+ 3963/   1FE8A :                        REGCAAR:DS.L	1
+ 3964/   1FE8E :                        REGCRPH:DS.L	1
+ 3965/   1FE92 :                        REGCRPL:DS.L	1
+ 3966/   1FE96 :                        REGSRPH:DS.L	1
+ 3967/   1FE9A :                        REGSRPL:DS.L	1
+ 3968/   1FE9E :                        REGTC:	DS.L	1
+ 3969/   1FEA2 :                        REGTT0:	DS.L	1
+ 3970/   1FEA6 :                        REGTT1:	DS.L	1
+ 3971/   1FEAA :                        REGMMUSR:DS.W	1
+ 3972/   1FEAC :                        
+ 3973/   1FEAC :                        GR0BUF:	DS.W	46-4		; Group 0 exception
+ 3974/   1FF00 :                        REGFV:	DS.W	1		; Format / Vector offset
+ 3975/   1FF02 :                        REG_E:
+ 3976/   1FF02 :                        
+ 3977/   1FF02 :                        reg_level:	ds.w	1
+ 3978/   1FF04 :                        SR_bit:		ds.b	SR_bitSize+1
+ 3979/   1FF15 :                        	ALIGN	2
+ 3980/   1FF16 :                        
+ 3981/   1FF16 : [3949]                 	ENDIF
+ 3982/   1FF16 :                        
+ 3983/   1FF16 :                        ;; Break point work area
+ 3984/   1FF16 : =$1FF16                dbg_wtop	equ	*
+ 3985/   1FF16 :                        bpt1_f:		ds.b	1
+ 3986/   1FF17 :                        bpt2_f:		ds.b	1
+ 3987/   1FF18 :                        tmpb_f:		ds.b	1
+ 3988/   1FF19 :                        	ALIGN	2
+ 3989/   1FF1A :                        bpt1_op:	ds.w	1
+ 3990/   1FF1C :                        bpt2_op:	ds.w	1
+ 3991/   1FF1E :                        tmpb_op:	ds.w	1
+ 3992/   1FF20 :                        bpt1_adr:	ds.l	1
+ 3993/   1FF24 :                        bpt2_adr:	ds.l	1
+ 3994/   1FF28 :                        tmpb_adr:	ds.l	1
+ 3995/   1FF2C :                        
+ 3996/   1FF2C : =$1FF2C                dbg_wend	equ	*
+ 3997/   1FF2C :                        
+ 3998/   1FF2C :                        ;; Disassemble work area
+ 3999/   1FF2C :                        dasm_adr:	ds.l	1
+ 4000/   1FF30 :                        dasm_eadr:	ds.l	1
+ 4001/   1FF34 :                        dasm_op:	ds.w	1
+ 4002/   1FF36 :                        dasm_step:	ds.w	1	; if 0 then apply dasm_eadr
+ 4003/   1FF38 :                        dasm_cdsz:	ds.w	1
+ 4004/   1FF3A :                        dasm_opsz:	ds.w	1
+ 4005/   1FF3C :                        
+ 4006/   1FF3C :                        	END
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 74 - 12/14/2023 14:1:1
 
 
   Symbol Table (* = unused):
@@ -4618,8 +4613,8 @@
  ADMD_TBL_SZ :                    8 - |
 *ARCHITECTURE :                                        "i386-unknown-win32" - |
  BOOT :                       1CFEA C |  BPT1_ADR :                   1FF20 C |
- BPT1_F :                     1FF17 C |  BPT1_OP :                    1FF1A C |
- BPT2_ADR :                   1FF24 C |  BPT2_F :                     1FF18 C |
+ BPT1_F :                     1FF16 C |  BPT1_OP :                    1FF1A C |
+ BPT2_ADR :                   1FF24 C |  BPT2_F :                     1FF17 C |
  BPT2_OP :                    1FF1C C |  BP_MSG1 :                    1CFDC C |
  BP_MSG2 :                    1CFE3 C |  BREAK :                      1D26C C |
  BREAK_M :                    1DB0D C |  BRKPT :                      1CE22 C |
@@ -4662,20 +4657,20 @@
  DASB_SHIFTREG_0 :            1B784 C |  DASB_SHIFTREG_1 :            1B78A C |
  DASB_UNKNOWN :               1B7E8 C |  DASM_ADFIELD :               1B9D8 C |
  DASM_ADFIELD_0 :             1B9E8 C |  DASM_ADFIELD_1 :             1B9EE C |
- DASM_ADR :                   1FF30 C |  DASM_CALL :                  1B3DC C |
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 76 - 12/13/2023 13:23:51
+ DASM_ADR :                   1FF2C C |  DASM_CALL :                  1B3DC C |
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 75 - 12/14/2023 14:1:1
 
 
- DASM_CDSZ :                  1FF3C C |  DASM_CTRLREG :               1B99E C |
+ DASM_CDSZ :                  1FF38 C |  DASM_CTRLREG :               1B99E C |
  DASM_CTRLREG_0 :             1B9AC C |  DASM_CTRLREG_1 :             1B9C0 C |
  DASM_DUMP :                  1B3FA C |  DASM_DUMP_0 :                1B402 C |
  DASM_DUMP_1 :                1B43E C |  DASM_DUMP_2 :                1B456 C |
  DASM_DUMP_3 :                1B4AA C |  DASM_DUMP_4 :                1B4B6 C |
  DASM_EADDR :                 1B934 C |  DASM_EADDR_0 :               1B942 C |
  DASM_EADDR_1 :               1B956 C |  DASM_EADDR_2 :               1B978 C |
- DASM_EADDR_MV :              1B988 C |  DASM_EADR :                  1FF34 C |
- DASM_GET_OP :                1B8D2 C |  DASM_OP :                    1FF38 C |
- DASM_OPSZ :                  1FF3E C |  DASM_OUT_ADFIELD :           1B8C4 C |
+ DASM_EADDR_MV :              1B988 C |  DASM_EADR :                  1FF30 C |
+ DASM_GET_OP :                1B8D2 C |  DASM_OP :                    1FF34 C |
+ DASM_OPSZ :                  1FF3A C |  DASM_OUT_ADFIELD :           1B8C4 C |
  DASM_OUT_CTRLREG :           1B8B6 C |  DASM_OUT_EADDR :             1B890 C |
  DASM_OUT_EADDR_MV :          1B89E C |  DASM_OUT_IMDATA :            1B8AE C |
  DASM_OUT_SIZE_1BIT :         1B802 C |  DASM_OUT_SIZE_2BIT :         1B816 C |
@@ -4684,9 +4679,9 @@
  DASM_OUT_SIZE_DISPLACE_1 :   1B87E C |  DASM_OUT_SIZE_DISPLACE_2 :   1B88A C |
  DASM_SIZE_2BIT :             1B8E8 C |  DASM_SIZE_2BIT_0 :           1B900 C |
  DASM_SIZE_2BIT_1 :           1B910 C |  DASM_SIZE_2BIT_2 :           1B920 C |
- DASM_SIZE_2BIT_3 :           1B92E C |  DASM_STEP :                  1FF3A C |
-*DATE :                "12/13/2023" - |  DBG_WEND :                   1FF30 - |
- DBG_WTOP :                   1FF17 - |  DEADDR :                     1FE1C C |
+ DASM_SIZE_2BIT_3 :           1B92E C |  DASM_STEP :                  1FF36 C |
+*DATE :                "12/14/2023" - |  DBG_WEND :                   1FF2C - |
+ DBG_WTOP :                   1FF16 - |  DEADDR :                     1FE1C C |
  DEL :                           7F - |  DI01 :                       1B356 C |
  DI02 :                       1B3A0 C |  DI03 :                       1B3B4 C |
  DI04 :                       1B3D6 C |  DIASM :                      1B342 C |
@@ -4699,11 +4694,11 @@
  DPL3 :                       1B2F2 C |  DPM :                        1B268 C |
  DPM0 :                       1B276 C |  DPM1 :                       1B294 C |
  DSADDR :                     1FE18 C |  DSEP0 :                      1D985 C |
- DSEP1 :                      1D988 C | *DSTATE :                     1FE20 C |
+ DSEP1 :                      1D988 C | *DSTATE :                     1FE28 C |
  DUMMY_H :                    1D1CC C |  DUMP :                       1B1F0 C |
  ENTRY :                         C0 C |  ERR :                        1B1E4 C |
- ERRMSG :                     1D97D C |  EXGRP :                      1FE32 C |
- EXMSG :                      1FE2E C | *FALSE :                          0 - |
+ ERRMSG :                     1D97D C |  EXGRP :                      1FE30 C |
+ EXMSG :                      1FE2C C | *FALSE :                          0 - |
  FCN0 :                       1E110 C |  FCN1 :                       1E116 C |
  FCN2 :                       1E121 C |  FCN3 :                       1E12F C |
  FCN4 :                       1E135 C |  FCN5 :                       1E13B C |
@@ -4726,20 +4721,20 @@
 *G0D9 :                       1D6F6 C |  G0D90 :                      1D75E C |
  G0D91 :                      1D778 C |  G0D92 :                      1D782 C |
  G0DUMP :                     1D590 C |  G0FROM :                     1E1A3 C |
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 77 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 76 - 12/14/2023 14:1:1
 
 
  G0IF :                       1E1B0 C |  G0INS0 :                     1E189 C |
  G0RD :                       1E183 C |  G0RMW :                      1E1C5 C |
  G0SPC :                      1E1A9 C |  G0TO :                       1E19E C |
  G0WORD :                     1E198 C |  G0WR :                       1E17C C |
- G1 :                         1C89E C |  GADDR :                      1FE22 C |
+ G1 :                         1C89E C |  GADDR :                      1FE20 C |
  GETLIN :                     1D0E4 C |  GL0 :                        1D0EC C |
  GLB :                        1D124 C |  GLE :                        1D146 C |
  GO :                         1C71A C |  GO_BPT :                     1C764 C |
- GR0BUF :                     1FEAE C | *HAS64 :                          0 - |
+ GR0BUF :                     1FEAC C | *HAS64 :                          0 - |
 *HASFPU :                         0 - | *HASPMMU :                        0 - |
- HEXIN :                      1D09E C |  HEXMOD :                     1FE2A C |
+ HEXIN :                      1D09E C |  HEXMOD :                     1FE29 C |
  HEXOUT1 :                    1D086 C |  HEXOUT2 :                    1D07E C |
  HEXOUT4 :                    1D076 C |  HEXOUT8 :                    1D06E C |
  HI0 :                        1D0A4 C |  HI1 :                        1D0CA C |
@@ -4789,7 +4784,7 @@
  INST_DIVS :                  1C3F2 C |  INST_DIVU :                  1C3F7 C |
  INST_EOR :                   1C3FC C |  INST_EORI :                  1C400 C |
  INST_EORI_CCR :              1C405 C |  INST_EORI_SR :               1C418 C |
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 78 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 77 - 12/14/2023 14:1:1
 
 
  INST_EXGA :                  1C436 C |  INST_EXGD :                  1C42A C |
@@ -4852,7 +4847,7 @@
  MD02 :                       1CD56 C |  MD03 :                       1CD66 C |
  MD10 :                       1CD94 C |  MDESC :                      1D9D0 C |
  MODE :                       1CD08 C |  MODE_UPDATE :                1CDAC C |
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 79 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 78 - 12/14/2023 14:1:1
 
 
  MODE_UPDATE_0 :              1CDD0 C |  MODE_UPDATE_1 :              1CDDE C |
@@ -4865,7 +4860,7 @@
  OPRND_RGLST :                1C6D8 C |  OPRND_SR :                   1C6BB C |
 *PADDING :                        1 - |  PRIV_H :                     1D2C4 C |
  PRIV_M :                     1DA3A C |  PROMPT :                     1D960 C |
- PSPEC :                      1FE2C C |  RAM_B :                         C0 - |
+ PSPEC :                      1FE2B C |  RAM_B :                         C0 - |
  RD0 :                        1CCB0 C | *RD00 :                       1CCCA C |
  RD1 :                        1CCE4 C |  RD2 :                        1CCF2 C |
  RD3 :                        1CD00 C |  RDC0 :                       1D1A2 C |
@@ -4882,26 +4877,26 @@
  RDSTC :                      1DCB6 C |  RDSTT0 :                     1DCBB C |
  RDSTT1 :                     1DCD7 C |  RDSVBR :                     1DC87 C |
  RDTAB :                      1DB14 C |  RDUMP :                      1CCAA C |
- RECTYP :                     1FE2B C |  REG :                        1CB92 C |
- REGA0 :                      1FE58 C |  REGA1 :                      1FE5C C |
- REGA2 :                      1FE60 C |  REGA3 :                      1FE64 C |
- REGA4 :                      1FE68 C |  REGA5 :                      1FE6C C |
- REGA6 :                      1FE70 C |  REGA7 :                      1FE74 C |
- REGCAAR :                    1FE8C C |  REGCACR :                    1FE88 C |
- REGCRPH :                    1FE90 C |  REGCRPL :                    1FE94 C |
- REGD0 :                      1FE38 C |  REGD1 :                      1FE3C C |
- REGD2 :                      1FE40 C |  REGD3 :                      1FE44 C |
- REGD4 :                      1FE48 C |  REGD5 :                      1FE4C C |
- REGD6 :                      1FE50 C |  REGD7 :                      1FE54 C |
- REGDFC :                     1FE87 C |  REGFV :                      1FF02 C |
- REGISP :                     1FE78 C |  REGMMUSR :                   1FEAC C |
- REGMSP :                     1FE7C C |  REGPC :                      1FE34 C |
- REGSFC :                     1FE86 C |  REGSR :                      1FE80 C |
- REGSRPH :                    1FE98 C |  REGSRPL :                    1FE9C C |
- REGTC :                      1FEA0 C |  REGTT0 :                     1FEA4 C |
- REGTT1 :                     1FEA8 C |  REGVBR :                     1FE82 C |
- REG_B :                      1FE34 C |  REG_E :                      1FF04 C |
- REG_LEVEL :                  1FF04 C |  REG_LEVEL_CHECK_END :        1C89E C |
+ RECTYP :                     1FE2A C |  REG :                        1CB92 C |
+ REGA0 :                      1FE56 C |  REGA1 :                      1FE5A C |
+ REGA2 :                      1FE5E C |  REGA3 :                      1FE62 C |
+ REGA4 :                      1FE66 C |  REGA5 :                      1FE6A C |
+ REGA6 :                      1FE6E C |  REGA7 :                      1FE72 C |
+ REGCAAR :                    1FE8A C |  REGCACR :                    1FE86 C |
+ REGCRPH :                    1FE8E C |  REGCRPL :                    1FE92 C |
+ REGD0 :                      1FE36 C |  REGD1 :                      1FE3A C |
+ REGD2 :                      1FE3E C |  REGD3 :                      1FE42 C |
+ REGD4 :                      1FE46 C |  REGD5 :                      1FE4A C |
+ REGD6 :                      1FE4E C |  REGD7 :                      1FE52 C |
+ REGDFC :                     1FE85 C |  REGFV :                      1FF00 C |
+ REGISP :                     1FE76 C |  REGMMUSR :                   1FEAA C |
+ REGMSP :                     1FE7A C |  REGPC :                      1FE32 C |
+ REGSFC :                     1FE84 C |  REGSR :                      1FE7E C |
+ REGSRPH :                    1FE96 C |  REGSRPL :                    1FE9A C |
+ REGTC :                      1FE9E C |  REGTT0 :                     1FEA2 C |
+ REGTT1 :                     1FEA6 C |  REGVBR :                     1FE80 C |
+ REG_B :                      1FE32 C |  REG_E :                      1FF02 C |
+ REG_LEVEL :                  1FF02 C |  REG_LEVEL_CHECK_END :        1C89E C |
  REG_LEVEL_SET_1 :            1CBA6 C |  REG_LEVEL_SET_2 :            1CBB6 C |
  REG_LEVEL_SET_3 :            1CBC6 C |  REG_LEVEL_SET_END :          1CBD6 C |
  REG_LEVEL_SET_NEXT :         1CBE4 C | *RELAXED :                        0 - |
@@ -4915,7 +4910,7 @@
  RH1 :                        1D18E C |  RHE :                        1D19C C |
  RNA0 :                       1E04A C |  RNA1 :                       1E04D C |
  RNA2 :                       1E050 C |  RNA3 :                       1E053 C |
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 80 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 79 - 12/14/2023 14:1:1
 
 
  RNA4 :                       1E056 C |  RNA5 :                       1E059 C |
@@ -4947,7 +4942,7 @@
  RNTABVB :                    1DFAA C |  RNTC :                       1E0C0 C |
  RNTT0 :                      1E0C3 C |  RNTT1 :                      1E0C7 C |
  RNVBR :                      1E0CB C |  ROM_B :                          0 - |
- ROM_E :                      1E224 C |  SADDR :                      1FE26 C |
+ ROM_E :                      1E224 C |  SADDR :                      1FE24 C |
  SAVEH :                      1CA76 C |  SAVE_BPT :                   1CF9C C |
  SAVE_BPT_0 :                 1CFB2 C |  SAVE_BPT_1 :                 1CFC6 C |
  SETM :                       1C8C4 C |  SET_BPT :                    1CE74 C |
@@ -4961,7 +4956,7 @@
  SM0 :                        1C8E4 C |  SM1 :                        1C8E4 C |
  SM2 :                        1C91E C |  SM3 :                        1C92E C |
  SM4 :                        1C93E C |  SRECER :                     1D99A C |
- SR_BIT :                     1FF06 C |  SR_BITSIZE :                    10 - |
+ SR_BIT :                     1FF04 C |  SR_BITSIZE :                    10 - |
  SR_BIT_OFF :                 1CE12 C |  SR_BIT_ON :                  1CE02 C |
  SR_READ :                    1CDFE C |  STACK :                      1FE00 - |
  START_BPT :                  1CF1E C |  START_BPT_0 :                1CF32 C |
@@ -4969,8 +4964,8 @@
  STOP_BPT :                   1CF5A C |  STOP_BPT_0 :                 1CF70 C |
  STOP_BPT_1 :                 1CF84 C |  STOP_BPT_2 :                 1CF98 C |
  STROE :                      1D06C C |  STROUT :                     1D060 C |
- SV_ROM :                       100 - | *TIME :                  "13:23:50" - |
- TMPB_ADR :                   1FF28 C |  TMPB_F :                     1FF19 C |
+ SV_ROM :                       100 - | *TIME :                    "14:1:1" - |
+ TMPB_ADR :                   1FF28 C |  TMPB_F :                     1FF18 C |
  TMPB_OP :                    1FF1E C |  TRACE_H :                    1D2DA C |
  TRACE_M :                    1DA4E C |  TRAP0_H :                    1D332 C |
  TRAP0_M :                    1DA87 C |  TRAP10_H :                   1D40C C |
@@ -4978,7 +4973,7 @@
  TRAP11_M :                   1DAE0 C |  TRAP12_H :                   1D434 C |
  TRAP12_M :                   1DAE9 C |  TRAP13_H :                   1D448 C |
  TRAP13_M :                   1DAF2 C |  TRAP14_H :                   1D45C C |
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 81 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 80 - 12/14/2023 14:1:1
 
 
  TRAP14_M :                   1DAFB C |  TRAP15_H :                   1D470 C |
@@ -5004,7 +4999,7 @@
     749 symbols
      29 unused symbols
 
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 82 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 81 - 12/14/2023 14:1:1
 
 
   Defined Functions:
@@ -5012,7 +5007,7 @@
 
 HIGH                                  | LOW                                  
 
- AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 83 - 12/13/2023 13:23:51
+ AS V1.42 Beta [Bld 254] - Source File emu68kmon_RevB02.asm - Page 82 - 12/14/2023 14:1:1
 
 
   Code Pages:
@@ -5022,9 +5017,9 @@ STANDARD (0 changed characters)
 
 1 code page
 
-0.24 seconds assembly time
+0.26 seconds assembly time
 
-   4009 lines source file
+   4007 lines source file
       7 passes
       0 errors
       0 warnings
