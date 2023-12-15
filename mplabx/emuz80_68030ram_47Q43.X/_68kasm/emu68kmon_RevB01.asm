@@ -3324,7 +3324,7 @@ HLPMSG:
 	DC.B	"BT :Reset Boot",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
 	DC.B	"DI[<adr>][,s<steps>|<adr>] :Mini Disassemble",CR,LF
-	DC.B	"F<adr>,<end adr>,<value> :Fill Memory(Byte)",CR,LF
+	DC.B	"F<adr,adr,value> :Fill Memory(Byte)",CR,LF
 	DC.B	"G[<adr>][,<stop adr>] :Go and Stop",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"M[T(0-2)|S|M|I(0-7)] :Mode(SR System Byte)",CR,LF

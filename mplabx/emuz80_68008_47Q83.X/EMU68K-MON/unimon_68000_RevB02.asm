@@ -24,6 +24,8 @@ EBSC_CS	EQU	$00003000	; Enhanced BASIC cold start
 TBSC_CS	EQU	$00006600	; Tiny BASIC cold start
 
 SR_bitSize	equ	16
+ram_range_b	equ	RAM_B
+ram_range_e	equ	$00009FFF
 
 ;;;
 ;;; Options
@@ -2319,6 +2321,8 @@ FILMEM:
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
+	CMPI.L	#ram_range_b,D1	; Check ram range
+	BCS	ERR
 	MOVEA.L	D1,A1		; Value(start address)
 	BSR	SKIPSP
 	MOVE.B	(A0),D0
@@ -2329,6 +2333,8 @@ FILMEM:
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
+	CMPI.L	#ram_range_e,D1	; Check ram range
+	BHI	ERR
 	MOVEA.L	D1,A2		; Value(end address)
 	BSR	SKIPSP
 	MOVE.B	(A0),D0
