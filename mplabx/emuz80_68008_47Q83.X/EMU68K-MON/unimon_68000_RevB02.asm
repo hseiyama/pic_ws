@@ -422,6 +422,7 @@ DIASM:
 	BSR	RDHEX
 	TST	D2
 	BEQ	DI01
+	ANDI.L	#$FFFFFFFE,D1	; Correct odd addresses
 	MOVE.L	D1,dasm_adr	; Set instruction address
 DI01:
 	MOVE.B	(A0),D0
@@ -1494,6 +1495,8 @@ inst_tst:	dc.b	"TST",$00
 inst_unlk:	dc.b	"UNLK An",$00
 inst_unknown:	dc.b	"Unknown",$00		; Unknown
 
+	ALIGN	2
+
 ;; get_op parameter(offset adjust,mask)
 inst_get1_pm:	dc.w	$0000,$0001		; get_op parameter(1bit)
 inst_get2_pm:	dc.w	$0001,$0003		; get_op parameter(2bit)
@@ -1541,6 +1544,8 @@ ctrg_msp:	dc.b	"MSP",$00
 ctrg_isp:	dc.b	"ISP",$00
 ctrg_unkw:	dc.b	"Unknown",$00		; Unknown
 
+	ALIGN	2
+
 ;;;
 ;;; GO address
 ;;;
@@ -1549,6 +1554,7 @@ GO:
 	ADDQ	#1,A0
 	BSR	SKIPSP
 	BSR	RDHEX
+	ANDI.L	#$FFFFFFFE,D1	; Correct odd addresses
 	MOVE.L	D1,D3		; Value(start address)
 	MOVE.L	D2,D4		; Count(start address)
 	MOVE.B	#0,tmpb_f	; Clear go break point
@@ -1562,6 +1568,7 @@ GO:
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
+	ANDI.L	#$FFFFFFFE,D1	; Correct odd addresses
 	;; Set go break point
 	MOVE.L	D1,tmpb_adr
 	MOVE.L	D1,A0
@@ -2155,6 +2162,8 @@ SR_read:	dc.b	"SR=",$00
 SR_bit_on:	DC.B	"T.S..III...XNZVC"
 SR_bit_off:	DC.B	"................"
 
+	ALIGN	2
+
 	ENDIF
 
 ;;;
@@ -2197,6 +2206,7 @@ set_bpt:
 	BSR	RDHEX
 	TST	D2
 	BEQ	ERR
+	ANDI.L	#$FFFFFFFE,D1	; Correct odd addresses
 	MOVE.L	D1,(A1)		; bpt(x)_adr
 	MOVE.L	D1,A0
 	MOVE.W	(A0),(A2)	; bpt(x)_op
@@ -2310,6 +2320,8 @@ clear_bpt:
 
 bp_msg1:	DC.B	"BP(1):",$00
 bp_msg2:	DC.B	"BP(2):",$00
+
+	ALIGN	2
 
 ;;;
 ;;; Fill Memory
@@ -2971,7 +2983,7 @@ HLPMSG:
 	DC.B	"BC[1|2] :Clear Break Point",CR,LF
 	DC.B	"D[<adr>] :Dump Memory",CR,LF
 	DC.B	"DI[<adr>][,s<steps>|<adr>] :Mini Disassemble",CR,LF
-	DC.B	"F<adr>,<end adr>,<value> :Fill Memory(Byte)",CR,LF
+	DC.B	"F<adr,adr,value> :Fill Memory(Byte)",CR,LF
 	DC.B	"G[<adr>][,<stop adr>] :Go and Stop",CR,LF
 	DC.B	"L[<offset>] :Load HexFile",CR,LF
 	DC.B	"M[T|S|I(0-7)] :Mode(SR System Byte)",CR,LF
@@ -3279,6 +3291,8 @@ RNSFC:	DC.B	"SFC",$00
 RNSR:	DC.B	"SR",$00
 RNSSP:	DC.B	"SSP",$00
 RNVBR:	DC.B	"VBR",$00
+
+	ALIGN	2
 
 FCTAB:	DC.L	FCN0,FCN1,FCN2,FCN3
 	DC.L	FCN4,FCN5,FCN6,FCN7
