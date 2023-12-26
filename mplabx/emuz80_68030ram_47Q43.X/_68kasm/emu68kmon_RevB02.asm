@@ -1384,13 +1384,69 @@ admd_tbl:
 	;;     [23-16]:Mask data
 	;;     [15-0]:Operand size
 	;; 2nd [31-0]:Effective address(address)
-	dc.l	$00380000,admd_000		; "Dn"
-	dc.l	$08380000,admd_001		; "An"
-	dc.l	$10380000,admd_010		; "(An)"
-	dc.l	$18380000,admd_011		; "(An)+"
-	dc.l	$20380000,admd_100		; "-(An)"
-	dc.l	$28380002,admd_101		; "d16(An)"
-	dc.l	$30380002,admd_110		; "d8(An,Xn)"
+;	dc.l	$00380000,admd_000		; "Dn"
+	dc.l	$003F0000,admd_000_000		; "D0"
+	dc.l	$013F0000,admd_000_001		; "D1"
+	dc.l	$023F0000,admd_000_010		; "D2"
+	dc.l	$033F0000,admd_000_011		; "D3"
+	dc.l	$043F0000,admd_000_100		; "D4"
+	dc.l	$053F0000,admd_000_101		; "D5"
+	dc.l	$063F0000,admd_000_110		; "D6"
+	dc.l	$073F0000,admd_000_111		; "D7"
+;	dc.l	$08380000,admd_001		; "An"
+	dc.l	$083F0000,admd_001_000		; "A0"
+	dc.l	$093F0000,admd_001_001		; "A1"
+	dc.l	$0A3F0000,admd_001_010		; "A2"
+	dc.l	$0B3F0000,admd_001_011		; "A3"
+	dc.l	$0C3F0000,admd_001_100		; "A4"
+	dc.l	$0D3F0000,admd_001_101		; "A5"
+	dc.l	$0E3F0000,admd_001_110		; "A6"
+	dc.l	$0F3F0000,admd_001_111		; "A7"
+;	dc.l	$10380000,admd_010		; "(An)"
+	dc.l	$103F0000,admd_010_000		; "(A0)"
+	dc.l	$113F0000,admd_010_001		; "(A1)"
+	dc.l	$123F0000,admd_010_010		; "(A2)"
+	dc.l	$133F0000,admd_010_011		; "(A3)"
+	dc.l	$143F0000,admd_010_100		; "(A4)"
+	dc.l	$153F0000,admd_010_101		; "(A5)"
+	dc.l	$163F0000,admd_010_110		; "(A6)"
+	dc.l	$173F0000,admd_010_111		; "(A7)"
+;	dc.l	$18380000,admd_011		; "(An)+"
+	dc.l	$183F0000,admd_011_000		; "(A0)+"
+	dc.l	$193F0000,admd_011_001		; "(A1)+"
+	dc.l	$1A3F0000,admd_011_010		; "(A2)+"
+	dc.l	$1B3F0000,admd_011_011		; "(A3)+"
+	dc.l	$1C3F0000,admd_011_100		; "(A4)+"
+	dc.l	$1D3F0000,admd_011_101		; "(A5)+"
+	dc.l	$1E3F0000,admd_011_110		; "(A6)+"
+	dc.l	$1F3F0000,admd_011_111		; "(A7)+"
+;	dc.l	$20380000,admd_100		; "-(An)"
+	dc.l	$203F0000,admd_100_000		; "-(A0)"
+	dc.l	$213F0000,admd_100_001		; "-(A1)"
+	dc.l	$223F0000,admd_100_010		; "-(A2)"
+	dc.l	$233F0000,admd_100_011		; "-(A3)"
+	dc.l	$243F0000,admd_100_100		; "-(A4)"
+	dc.l	$253F0000,admd_100_101		; "-(A5)"
+	dc.l	$263F0000,admd_100_110		; "-(A6)"
+	dc.l	$273F0000,admd_100_111		; "-(A7)"
+;	dc.l	$28380002,admd_101		; "d16(An)"
+	dc.l	$283F0002,admd_101_000		; "d16(A0)"
+	dc.l	$293F0002,admd_101_001		; "d16(A1)"
+	dc.l	$2A3F0002,admd_101_010		; "d16(A2)"
+	dc.l	$2B3F0002,admd_101_011		; "d16(A3)"
+	dc.l	$2C3F0002,admd_101_100		; "d16(A4)"
+	dc.l	$2D3F0002,admd_101_101		; "d16(A5)"
+	dc.l	$2E3F0002,admd_101_110		; "d16(A6)"
+	dc.l	$2F3F0002,admd_101_111		; "d16(A7)"
+;	dc.l	$30380002,admd_110		; "d8(An,Xn)"
+	dc.l	$303F0002,admd_110_000		; "d8(A0,Xn)"
+	dc.l	$313F0002,admd_110_001		; "d8(A1,Xn)"
+	dc.l	$323F0002,admd_110_010		; "d8(A2,Xn)"
+	dc.l	$333F0002,admd_110_011		; "d8(A3,Xn)"
+	dc.l	$343F0002,admd_110_100		; "d8(A4,Xn)"
+	dc.l	$353F0002,admd_110_101		; "d8(A5,Xn)"
+	dc.l	$363F0002,admd_110_110		; "d8(A6,Xn)"
+	dc.l	$373F0002,admd_110_111		; "d8(A7,Xn)"
 	dc.l	$383F0002,admd_111_000		; "(xxx).W"
 	dc.l	$393F0004,admd_111_001		; "(xxx).L"
 	dc.l	$3C3F0000,admd_111_100		; "#<data>"
@@ -1571,12 +1627,68 @@ inst_sz_l:	dc.b	".L",$00
 inst_sz_x:	dc.b	".X",$00		; Unknown
 
 admd_000:	dc.b	"Dn",$00
+admd_000_000:	dc.b	"D0",$00
+admd_000_001:	dc.b	"D1",$00
+admd_000_010:	dc.b	"D2",$00
+admd_000_011:	dc.b	"D3",$00
+admd_000_100:	dc.b	"D4",$00
+admd_000_101:	dc.b	"D5",$00
+admd_000_110:	dc.b	"D6",$00
+admd_000_111:	dc.b	"D7",$00
 admd_001:	dc.b	"An",$00
+admd_001_000:	dc.b	"A0",$00
+admd_001_001:	dc.b	"A1",$00
+admd_001_010:	dc.b	"A2",$00
+admd_001_011:	dc.b	"A3",$00
+admd_001_100:	dc.b	"A4",$00
+admd_001_101:	dc.b	"A5",$00
+admd_001_110:	dc.b	"A6",$00
+admd_001_111:	dc.b	"A7",$00
 admd_010:	dc.b	"(An)",$00
+admd_010_000:	dc.b	"(A0)",$00
+admd_010_001:	dc.b	"(A1)",$00
+admd_010_010:	dc.b	"(A2)",$00
+admd_010_011:	dc.b	"(A3)",$00
+admd_010_100:	dc.b	"(A4)",$00
+admd_010_101:	dc.b	"(A5)",$00
+admd_010_110:	dc.b	"(A6)",$00
+admd_010_111:	dc.b	"(A7)",$00
 admd_011:	dc.b	"(An)+",$00
+admd_011_000:	dc.b	"(A0)+",$00
+admd_011_001:	dc.b	"(A1)+",$00
+admd_011_010:	dc.b	"(A2)+",$00
+admd_011_011:	dc.b	"(A3)+",$00
+admd_011_100:	dc.b	"(A4)+",$00
+admd_011_101:	dc.b	"(A5)+",$00
+admd_011_110:	dc.b	"(A6)+",$00
+admd_011_111:	dc.b	"(A7)+",$00
 admd_100:	dc.b	"-(An)",$00
+admd_100_000:	dc.b	"-(A0)",$00
+admd_100_001:	dc.b	"-(A1)",$00
+admd_100_010:	dc.b	"-(A2)",$00
+admd_100_011:	dc.b	"-(A3)",$00
+admd_100_100:	dc.b	"-(A4)",$00
+admd_100_101:	dc.b	"-(A5)",$00
+admd_100_110:	dc.b	"-(A6)",$00
+admd_100_111:	dc.b	"-(A7)",$00
 admd_101:	dc.b	"d16(An)",$00
+admd_101_000:	dc.b	"d16(A0)",$00
+admd_101_001:	dc.b	"d16(A1)",$00
+admd_101_010:	dc.b	"d16(A2)",$00
+admd_101_011:	dc.b	"d16(A3)",$00
+admd_101_100:	dc.b	"d16(A4)",$00
+admd_101_101:	dc.b	"d16(A5)",$00
+admd_101_110:	dc.b	"d16(A6)",$00
+admd_101_111:	dc.b	"d16(A7)",$00
 admd_110:	dc.b	"d8(An,Xn)",$00
+admd_110_000:	dc.b	"d8(An,X0)",$00
+admd_110_001:	dc.b	"d8(An,X1)",$00
+admd_110_010:	dc.b	"d8(An,X2)",$00
+admd_110_011:	dc.b	"d8(An,X3)",$00
+admd_110_100:	dc.b	"d8(An,X4)",$00
+admd_110_101:	dc.b	"d8(An,X5)",$00
+admd_110_110:	dc.b	"d8(An,X6)",$00
+admd_110_111:	dc.b	"d8(An,X7)",$00
 admd_111_000:	dc.b	"(xxx).W",$00
 admd_111_001:	dc.b	"(xxx).L",$00
 admd_111_100:	dc.b	"#<data>",$00
