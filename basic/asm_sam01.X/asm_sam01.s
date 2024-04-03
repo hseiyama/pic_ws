@@ -13,11 +13,11 @@ PROCESSOR 18F47Q43
 #include <xc.inc>
 
 ; ***** ram ************************
-PSECT udata_acs						; force Access Bank
+PSECT udata_acs						; common memory
 count_a:
     DS      1
 
-PSECT udata_bank5					; BSR to select bank
+PSECT udata_bank5					; banked memory
 count_b5:
     DS      1
 count_bw:
@@ -26,10 +26,10 @@ count_bw:
 ; ***** vector *********************
 PSECT resetVec,class=CODE,reloc=2
 resetVec:
-    org     0x0
+    org     0h
     goto    main
 
-    org     0x8
+    org     8h
     goto    intp
 
 ; ***** main ***********************
@@ -37,14 +37,15 @@ PSECT code
 main:
     nop
 loop:
-    incf    count_a,w,a				; force Access Bank
-    movwf   count_a,a
+    incf    BANKMASK(count_a),w,c	; common memory
+    movwf   BANKMASK(count_a),c
 
-    movlb   5
-    incf    count_b5,f,b			; BSR to select bank
+	BANKSEL(count_b5)
+    incf    BANKMASK(count_b5),f,b	; banked memory
 
-    incf    count_bw,w,b			; BSR to select bank
-    movwf   count_bw,b
+	BANKSEL(count_bw)
+    incf    BANKMASK(count_bw),w,b	; banked memory
+    movwf   BANKMASK(count_bw),b
 
     goto    loop
 
