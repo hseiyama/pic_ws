@@ -2,8 +2,6 @@
  * File:   asm_sam01.s
  * Author: hseiyama
  *
- * Created on 2024/03/30, 21:35
- *
  * Using for PSECT
  * Using for Access Bank
  */
