@@ -4,8 +4,8 @@
 ; Assembly source line config statements
 
 ; CONFIG1
-  CONFIG  FEXTOSC = ECH         ; External Oscillator Selection (EC (external clock) above 8 MHz)
-  CONFIG  RSTOSC = EXTOSC       ; Reset Oscillator Selection (EXTOSC operating per FEXTOSC bits (device manufacturing default))
+  CONFIG  FEXTOSC = OFF         ; External Oscillator Selection (Oscillator not enabled)
+  CONFIG  RSTOSC = HFINTOSC_64MHZ; Reset Oscillator Selection (HFINTOSC with HFFRQ = 64 MHz and CDIV = 1:1)
 
 ; CONFIG2
   CONFIG  CLKOUTEN = OFF        ; Clock out Enable bit (CLKOUT function is disabled)
@@ -24,14 +24,14 @@
 ; CONFIG4
   CONFIG  BORV = VBOR_1P9       ; Brown-out Reset Voltage Selection bits (Brown-out Reset Voltage (VBOR) set to 1.9V)
   CONFIG  ZCD = OFF             ; ZCD Disable bit (ZCD module is disabled. ZCD can be enabled by setting the ZCDSEN bit of ZCDCON)
-  CONFIG  PPS1WAY = ON          ; PPSLOCK bit One-Way Set Enable bit (PPSLOCKED bit can be cleared and set only once; PPS registers remain locked after one clear/set cycle)
+  CONFIG  PPS1WAY = OFF         ; PPSLOCK bit One-Way Set Enable bit (PPSLOCKED bit can be set and cleared repeatedly (subject to the unlock sequence))
   CONFIG  STVREN = ON           ; Stack Full/Underflow Reset Enable bit (Stack full/underflow will cause Reset)
   CONFIG  LVP = ON              ; Low Voltage Programming Enable bit (Low voltage programming enabled. MCLR/VPP pin function is MCLR. MCLRE configuration bit is ignored)
   CONFIG  XINST = OFF           ; Extended Instruction Set Enable bit (Extended Instruction Set and Indexed Addressing Mode disabled)
 
 ; CONFIG5
   CONFIG  WDTCPS = WDTCPS_31    ; WDT Period selection bits (Divider ratio 1:65536; software control of WDTPS)
-  CONFIG  WDTE = ON             ; WDT operating mode (WDT enabled regardless of sleep; SWDTEN is ignored)
+  CONFIG  WDTE = OFF            ; WDT operating mode (WDT Disabled; SWDTEN is ignored)
 
 ; CONFIG6
   CONFIG  WDTCWS = WDTCWS_7     ; WDT Window Select bits (window always open (100%); software control; keyed access not required)
@@ -71,26 +71,31 @@ PSECT code
 main:
     clrf	read_data,c
 	; RA0 input pin
-	bcf		ANSELA,0,c				; Disable analog function
-	bsf		WPUA,0,c				; Week pull up
-	bsf		TRISA,0,c				; Set as intput
+	BANKSEL	ANSELA
+	bcf		ANSELA0					; Disable analog function
+	BANKSEL	WPUA
+	bsf		WPUA0					; Week pull up
+	BANKSEL	TRISA
+	bsf		TRISA0					; Set as intput
 	; RA1 output pin
-	bcf		ANSELA,1,c				; Disable analog function
-	bsf		LATA,1,c				; Default level
-	bcf		TRISA,1,c				; Set as output
+	BANKSEL	ANSELA
+	bcf		ANSELA1					; Disable analog function
+	BANKSEL	LATA
+	bsf		LATA1					; Default level
+	BANKSEL	TRISA
+	bcf		TRISA1					; Set as output
 loop:
-	btfss	PORTA,0,c				; Read port
+	btfss	RA0						; Read port (PORTA:ACCESS)
 	goto	read_low
 	; Set high level
-	bsf		LATA,1,c
+	bsf		LATA1					; Write port (LATA:ACCESS)
 	movlw	1
 	movwf	read_data,c
 	goto	read_end
 read_low:
 	; Set low level
-	bcf		LATA,1,c
-	movlw	0
-	movwf	read_data,c
+	bcf		LATA1					; Write port (LATA:ACCESS)
+    clrf	read_data,c
 read_end:
 	goto	loop
 
