@@ -1,7 +1,7 @@
 
 
 Microchip MPLAB XC8 Assembler V2.45 build 20230818022343 
-                                                                                                           Mon Apr 08 23:18:08 2024
+                                                                                                           Tue Apr 09 05:30:37 2024
 
 
      1                           	processor	18F47Q43
@@ -49,36 +49,36 @@ Microchip MPLAB XC8 Assembler V2.45 build 20230818022343
     43   000000                     
     44                           	psect	code
     45   01FF9A                     add:
-    46   01FF9A  5006               	movf	?pa_add+2,w,c
-    47   01FF9C  2604               	addwf	?pa_add,f,c
-    48   01FF9E  5007               	movf	?pa_add+3,w,c
-    49   01FFA0  2205               	addwfc	?pa_add+1,f,c
+    46   01FF9A  500A               	movf	?pa_add+2,w,c
+    47   01FF9C  2608               	addwf	?pa_add,f,c
+    48   01FF9E  500B               	movf	?pa_add+3,w,c
+    49   01FFA0  2209               	addwfc	?pa_add+1,f,c
     50   01FFA2  0012               	return	
     51   01FFA4                     incr:
-    52   01FFA4  2604               	addwf	?pa_incr,f,c
+    52   01FFA4  2608               	addwf	?pa_incr,f,c
     53   01FFA6  0E00               	movlw	0
-    54   01FFA8  2205               	addwfc	?pa_incr+1,f,c
+    54   01FFA8  2209               	addwfc	?pa_incr+1,f,c
     55   01FFAA  0012               	return	
     56   01FFAC                     main:
-    57   01FFAC  6A00               	clrf	?au_main,c
-    58   01FFAE  6A01               	clrf	?au_main+1,c
+    57   01FFAC  6A04               	clrf	?au_main,c
+    58   01FFAE  6A05               	clrf	?au_main+1,c
     59   01FFB0  0E02               	movlw	2	;increment amount
-    60   01FFB2  6E02               	movwf	?au_main+2,c
-    61   01FFB4  6A03               	clrf	?au_main+3,c
+    60   01FFB2  6E06               	movwf	?au_main+2,c
+    61   01FFB4  6A07               	clrf	?au_main+3,c
     62   01FFB6                     loop:
-    63   01FFB6  0060  F000  F004   	movff	?au_main,?pa_add	;load 1st parameter for add routine
-    64   01FFBC  0060  F004  F005   	movff	?au_main+1,?pa_add+1
-    65   01FFC2  0060  F008  F006   	movff	?au_main+2,?pa_add+2	;load 2nd parameter for add routine
-    66   01FFC8  0060  F00C  F007   	movff	?au_main+3,?pa_add+3
+    63   01FFB6  0060  F010  F008   	movff	?au_main,?pa_add	;load 1st parameter for add routine
+    64   01FFBC  0060  F014  F009   	movff	?au_main+1,?pa_add+1
+    65   01FFC2  0060  F018  F00A   	movff	?au_main+2,?pa_add+2	;load 2nd parameter for add routine
+    66   01FFC8  0060  F01C  F00B   	movff	?au_main+3,?pa_add+3
     67   01FFCE  ECCD  F0FF         	call	add	;add result and incval
-    68   01FFD2  0060  F010  F000   	movff	?pa_add,?au_main	;store add's return value back to result
-    69   01FFD8  0060  F014  F001   	movff	?pa_add+1,?au_main+1
-    70   01FFDE  0060  F008  F004   	movff	?au_main+2,?pa_incr	;load the parameter for incr routine
-    71   01FFE4  0060  F00C  F005   	movff	?au_main+3,?pa_incr+1
+    68   01FFD2  0060  F020  F004   	movff	?pa_add,?au_main	;store add's return value back to result
+    69   01FFD8  0060  F024  F005   	movff	?pa_add+1,?au_main+1
+    70   01FFDE  0060  F018  F008   	movff	?au_main+2,?pa_incr	;load the parameter for incr routine
+    71   01FFE4  0060  F01C  F009   	movff	?au_main+3,?pa_incr+1
     72   01FFEA  0E02               	movlw	2
     73   01FFEC  ECD2  F0FF         	call	incr	;add 2 to incval
-    74   01FFF0  0060  F010  F002   	movff	?pa_incr,?au_main+2	;store the result of incr back to incval
-    75   01FFF6  0060  F014  F003   	movff	?pa_incr+1,?au_main+3
+    74   01FFF0  0060  F020  F006   	movff	?pa_incr,?au_main+2	;store the result of incr back to incval
+    75   01FFF6  0060  F024  F007   	movff	?pa_incr+1,?au_main+3
     76   01FFFC  EFDB  F0FF         	goto	loop
     77                           
     78                           	psect	edata
@@ -101,8 +101,8 @@ Microchip MPLAB XC8 Assembler V2.45 build 20230818022343
     95                           ;use the ?au_ prefix for autos, the ?pa_ prefix for parameters
     96                           
     97                           	psect	resetVec
-    98   01FF96                     resetVec:
-    99   01FF96  EFD6  F0FF         	goto	main	;two 2-byte parameters
+    98   000000                     resetVec:
+    99   000000  EFD6  F0FF         	goto	main	;two 2-byte parameters
    100                           
    101                           	psect	config
    102                           
@@ -247,9 +247,9 @@ Microchip MPLAB XC8 Assembler V2.45 build 20230818022343
 
 
 Microchip Technology PIC18 Macro Assembler V2.45 build 20230818022343 
-Symbol Table                                                                                               Mon Apr 08 23:18:08 2024
+Symbol Table                                                                                               Tue Apr 09 05:30:37 2024
 
                             add FF9A                             main FFAC                             incr FFA4  
-                           loop FFB6                           incval 0002                           result 0000  
-                        ?pa_add 0004                          isa$std 0001                         ?au_main 0000  
-                       ?pa_incr 0004                         resetVec FF96                        isa$xinst 0000  
+                           loop FFB6                           incval 0006                           result 0004  
+                        ?pa_add 0008                          isa$std 0001                         ?au_main 0004  
+                       ?pa_incr 0008                         resetVec 0000                        isa$xinst 0000  
