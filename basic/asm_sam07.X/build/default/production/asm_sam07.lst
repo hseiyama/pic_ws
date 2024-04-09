@@ -1,0 +1,185 @@
+
+
+Microchip MPLAB XC8 Assembler V2.45 build 20230818022343 
+                                                                                                           Wed Apr 10 04:11:19 2024
+
+
+     1                           	processor	18F47Q43
+     2                           	fnconf	udata_acs,?auto_,?param_,0
+     3                           	pagewidth 132
+     4                           	psect	udata_acs,global,class=COMRAM,space=1,delta=1,lowdata,noexec
+     5                           	psect	udata_bank5,global,class=BANK5,space=1,delta=1,lowdata,noexec
+     6                           	psect	udata_bank6,global,class=BANK6,space=1,delta=1,lowdata,noexec
+     7                           	psect	udata_bank7,global,class=BANK7,space=1,delta=1,lowdata,noexec
+     8                           	psect	udata_bank8,global,class=BANK8,space=1,delta=1,lowdata,noexec
+     9                           	psect	udata_bank9,global,class=BANK9,space=1,delta=1,lowdata,noexec
+    10                           	psect	udata_bank10,global,class=BANK10,space=1,delta=1,lowdata,noexec
+    11                           	psect	udata_bank11,global,class=BANK11,space=1,delta=1,lowdata,noexec
+    12                           	psect	udata_bank12,global,class=BANK12,space=1,delta=1,lowdata,noexec
+    13                           	psect	udata_bank13,global,class=BANK13,space=1,delta=1,lowdata,noexec
+    14                           	psect	udata_bank14,global,class=BANK14,space=1,delta=1,lowdata,noexec
+    15                           	psect	udata_bank15,global,class=BANK15,space=1,delta=1,lowdata,noexec
+    16                           	psect	udata_bank16,global,class=BANK16,space=1,delta=1,noexec
+    17                           	psect	udata_bank17,global,class=BANK17,space=1,delta=1,noexec
+    18                           	psect	udata_bank18,global,class=BANK18,space=1,delta=1,noexec
+    19                           	psect	udata_bank19,global,class=BANK19,space=1,delta=1,noexec
+    20                           	psect	udata_bank20,global,class=BANK20,space=1,delta=1,noexec
+    21                           	psect	udata_bank21,global,class=BANK21,space=1,delta=1,noexec
+    22                           	psect	udata_bank22,global,class=BANK22,space=1,delta=1,noexec
+    23                           	psect	udata_bank23,global,class=BANK23,space=1,delta=1,noexec
+    24                           	psect	udata_bank24,global,class=BANK24,space=1,delta=1,noexec
+    25                           	psect	udata_bank25,global,class=BANK25,space=1,delta=1,noexec
+    26                           	psect	udata_bank26,global,class=BANK26,space=1,delta=1,noexec
+    27                           	psect	udata_bank27,global,class=BANK27,space=1,delta=1,noexec
+    28                           	psect	udata_bank28,global,class=BANK28,space=1,delta=1,noexec
+    29                           	psect	udata_bank29,global,class=BANK29,space=1,delta=1,noexec
+    30                           	psect	udata_bank30,global,class=BANK30,space=1,delta=1,noexec
+    31                           	psect	udata_bank31,global,class=BANK31,space=1,delta=1,noexec
+    32                           	psect	udata_bank32,global,class=BANK32,space=1,delta=1,noexec
+    33                           	psect	udata_bank33,global,class=BANK33,space=1,delta=1,noexec
+    34                           	psect	udata_bank34,global,class=BANK34,space=1,delta=1,noexec
+    35                           	psect	udata_bank35,global,class=BANK35,space=1,delta=1,noexec
+    36                           	psect	udata_bank36,global,class=BANK36,space=1,delta=1,noexec
+    37                           	psect	udata,global,class=RAM,space=1,delta=1,noexec
+    38                           	psect	code,global,reloc=2,class=CODE,delta=1
+    39                           	psect	data,global,reloc=2,class=CONST,delta=1,noexec
+    40                           	psect	edata,global,class=EEDATA,space=3,delta=1,noexec
+    41                           	psect	resetVec,global,reloc=2,class=CODE,delta=1
+    42   000000                     
+    43                           ; ***** call graph *****************
+    44                           ; ***** ram ************************
+    45                           
+    46                           ; ***** func1 **********************
+    47                           
+    48                           	psect	udata_acs
+    49   000500                     count_static:
+    50   000500                     	ds	1
+    51                           
+    52                           ; ***** func2 **********************
+    53                           
+    54                           ; ***** main ***********************
+    55                           
+    56                           	psect	code
+    57   01FFB8                     func1:
+    58                           
+    59                           ; movff ?param_func1+0,?auto_func1 ; param0 -> auto
+    60   01FFB8  5006               	movf	?param_func1,w,c
+    61   01FFBA  6E08               	movwf	?auto_func1,c
+    62   01FFBC  0E12               	movlw	18	; 12h -> w
+    63   01FFBE  2608               	addwf	?auto_func1,f,c	; w + auto -> auto
+    64                           
+    65                           ; movff ?auto_func1,?param_func1+1 ; auto -> param1
+    66   01FFC0  5008               	movf	?auto_func1,w,c
+    67   01FFC2  6E07               	movwf	?param_func1+1,c
+    68   01FFC4  0012               	return		; param=3
+    69   01FFC6                     func2:
+    70   01FFC6  5006               	movf	?param_func2,w,c	; param0 -> w
+    71   01FFC8  2407               	addwf	?param_func2+1,w,c	; w + param1 -> w
+    72   01FFCA  6E08               	movwf	?param_func2+2,c	; w -> param2
+    73   01FFCC  0012               	return		; auto=2
+    74   01FFCE                     main:
+    75   01FFCE  6A00               	clrf	count_static,c	; 0 -> count_static
+    76   01FFD0  0E02               	movlw	2
+    77   01FFD2  6E04               	movwf	?auto_main,c	; 2 -> auto0
+    78   01FFD4  0E03               	movlw	3
+    79   01FFD6  6E05               	movwf	?auto_main+1,c	; 3 -> auto1
+    80   01FFD8                     loop:
+    81                           
+    82                           ; Call func1
+    83                           ; movff ?auto_main+0,?param_func1+0 ; auto0 -> func1.param0
+    84   01FFD8  5004               	movf	?auto_main,w,c
+    85   01FFDA  6E06               	movwf	?param_func1,c
+    86   01FFDC  ECDC  F0FF         	call	func1
+    87                           
+    88                           ; movff ?param_func1+1,?auto_main+0 ; func1.param1 -> auto0
+    89   01FFE0  5007               	movf	?param_func1+1,w,c
+    90   01FFE2  6E04               	movwf	?auto_main,c
+    91                           
+    92                           ; Call func2
+    93                           ; movff ?auto_main+0,?param_func2+0 ; auto0 -> func2.param0
+    94   01FFE4  5004               	movf	?auto_main,w,c
+    95   01FFE6  6E06               	movwf	?param_func2,c
+    96                           
+    97                           ; movff ?auto_main+1,?param_func2+1 ; auto1 -> func2.param1
+    98   01FFE8  5005               	movf	?auto_main+1,w,c
+    99   01FFEA  6E07               	movwf	?param_func2+1,c
+   100   01FFEC  ECE3  F0FF         	call	func2
+   101                           
+   102                           ; movff ?param_func2+2,?auto_main+1 ; func2.param2 -> auto1
+   103   01FFF0  5008               	movf	?param_func2+2,w,c
+   104   01FFF2  6E05               	movwf	?auto_main+1,c
+   105                           
+   106                           ; Update count_static
+   107   01FFF4  5004               	movf	?auto_main,w,c	; auto0 -> w
+   108   01FFF6  2405               	addwf	?auto_main+1,w,c	; w + auto1 -> w
+   109   01FFF8  2400               	addwf	count_static,w,c	; w + count_static -> w
+   110   01FFFA  6E00               	movwf	count_static,c	; w -> count_static
+   111   01FFFC  EFEC  F0FF         	goto	loop
+   112                           
+   113                           	psect	edata
+   114   000000                     stk_offset	set	0
+   115   000000                     auto_size	set	0
+   116                           
+   117                           ; stack_auto defines a symbol /name/_offset which equates to the
+   118                           ; stack offset of the auto object in question
+   119   000000                     
+   120                           ; stack_param defines a symbol /name/_offset which equates to the
+   121                           ; stack offset of the parameter object in question
+   122   000000                     
+   123                           ; alloc_stack adjusts the SP to allocate space for auto objects
+   124                           ; it also links in to the btemp symbol so that can be used
+   125   000000                     
+   126                           ; restore_stack adjusts the SP to remove all auto and parameter
+   127                           ; objects from the stack prior to returning from a function
+   128   000000                     
+   129                           ; ***** vector *********************
+   130                           
+   131                           	psect	resetVec
+   132   000000                     resetVec:
+   133   000000  EFE7  F0FF         	goto	main	; auto=1,param=2
+   134                           tosu	equ	0x4FF
+   135                           tosh	equ	0x4FE
+   136                           tosl	equ	0x4FD
+   137                           stkptr	equ	0x4FC
+   138                           pclatu	equ	0x4FB
+   139                           pclath	equ	0x4FA
+   140                           pcl	equ	0x4F9
+   141                           tblptru	equ	0x4F8
+   142                           tblptrh	equ	0x4F7
+   143                           tblptrl	equ	0x4F6
+   144                           tablat	equ	0x4F5
+   145                           prodh	equ	0x4F4
+   146                           prodl	equ	0x4F3
+   147                           indf0	equ	0x4EF
+   148                           postinc0	equ	0x4EE
+   149                           postdec0	equ	0x4ED
+   150                           preinc0	equ	0x4EC
+   151                           plusw0	equ	0x4EB
+   152                           fsr0h	equ	0x4EA
+   153                           fsr0l	equ	0x4E9
+   154                           wreg	equ	0x4E8
+   155                           indf1	equ	0x4E7
+   156                           postinc1	equ	0x4E6
+   157                           postdec1	equ	0x4E5
+   158                           preinc1	equ	0x4E4
+   159                           plusw1	equ	0x4E3
+   160                           fsr1h	equ	0x4E2
+   161                           fsr1l	equ	0x4E1
+   162                           bsr	equ	0x4E0
+   163                           indf2	equ	0x4DF
+   164                           postinc2	equ	0x4DE
+   165                           postdec2	equ	0x4DD
+   166                           preinc2	equ	0x4DC
+   167                           plusw2	equ	0x4DB
+   168                           fsr2h	equ	0x4DA
+   169                           fsr2l	equ	0x4D9
+   170                           status	equ	0x4D8
+
+
+Microchip Technology PIC18 Macro Assembler V2.45 build 20230818022343 
+Symbol Table                                                                                               Wed Apr 10 04:11:19 2024
+
+                           main FFCE                             loop FFD8                            func1 FFB8  
+                          func2 FFC6                     count_static 0500                          isa$std 0001  
+                     ?auto_main 0004                         resetVec 0000                     ?param_func1 0006  
+                   ?param_func2 0006                      ?auto_func1 0008                        isa$xinst 0000  
