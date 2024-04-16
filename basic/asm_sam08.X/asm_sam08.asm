@@ -56,8 +56,11 @@
 // config statements should precede project file includes.
 #include <xc.inc>
 
-TMR0H_VALUE	EQU		11
-TMR0L_VALUE	EQU		220				; 3036=65536-62500(division ratio)
+TMR0H_VALUE		EQU		0Bh			; Clk=16MHz(Fosc/4),Freq=1Hz,PreScale=1:256
+TMR0L_VALUE		EQU		0DCh		; TMR0H/L=65536-(16MHz/1Hz)/256=3036
+
+U3BRGH_VALUE	EQU		01h			; 9600bps @ 64MHz
+U3BRGL_VALUE	EQU		0A0h		; U3BRGH/L=416
 
 ; ***** ram ************************
 PSECT bitBss,bit,class=COMRAM,space=1
@@ -67,6 +70,8 @@ led_state:
 PSECT udata_acs
 count_a:
 	DS		1
+data_uart:
+	DS		1
 
 ; ***** vector *********************
 PSECT resetVec,class=CODE,reloc=2
@@ -75,10 +80,12 @@ resetVec:
 
 PSECT ivecTbl,class=CODE,reloc=2,ovrld
 ivecTbl:
-	ORG		8*2						;interrupt0 vector position
+	ORG		8h*2					;interrupt0 vector position
 	DW		int0Isr shr 2			;interrupt0 ISR address shifted right
-	ORG		31*2					;timer0 vector position
+	ORG		1Fh*2					;timer0 vector position
 	DW		tmr0Isr shr 2			;timer0 ISR address shifted right
+	ORG		48h*2					;uart3rx vector position
+	DW		u3rxIsr shr 2			;uart3rx ISR address shifted right
 
 ; ***** ISR ************************
 PSECT textISR,class=CODE,reloc=4
@@ -104,9 +111,21 @@ tmr0Isr:
 	movwf	TMR0L,b
 	retfie
 
+	ALIGN	4
+u3rxIsr:
+	movff	U3RXB,data_uart
+	btfsc	U3TXIF
+	movff	data_uart,U3TXB
+	retfie
+
 ; ***** main ***********************
 PSECT code
 main:
+	; System initialize
+	BANKSEL	OSCFRQ
+	movlw	08h
+	movwf	OSCFRQ,b				; 64MHz internal OSC
+
 	; RB0(INT0) input pin
 	BANKSEL	ANSELB
 	bcf		ANSELB0					; Disable analog function
@@ -116,6 +135,7 @@ main:
 	bcf		INT0EDG					; INT0 external interrupt falling edge
 	bcf		INT0IF					; Clear INT0 external interrupt flag
 	bsf		INT0IE					; INT0 external interrupt enable
+
 	; RA0-RA03 output pin
 	BANKSEL	ANSELA
 	movlw	0F0h
@@ -123,6 +143,7 @@ main:
 	clrf	LATA,c					; Set low level
 	movlw	0F0h
 	movwf	TRISA,c					; Set as output
+
 	; Timer0(interval 1s) setup
 	BANKSEL	T0CON0
 	movlw	90h
@@ -134,13 +155,44 @@ main:
 	movlw	TMR0H_VALUE
 	movwf	TMR0H,b
 	BANKSEL	TMR0L
-	movlw	TMR0L_VALUE
+	movlw	TMR0L_VALUE				; timer0 count register
 	movwf	TMR0L,b
 	bcf		TMR0IF					; Clear TMR0 timer interrupt flag
 	bsf		TMR0IE					; TMR0 timer interrupt enable
+
+	; UART3 Initialize
+	BANKSEL	U3BRG
+	movlw	U3BRGH_VALUE
+	movwf	U3BRGH,b
+	movlw	U3BRGL_VALUE
+	movwf	U3BRGL,b				; UART baud rate generator
+	BANKSEL	U3CON0
+	bsf		U3RXEN					; Receiver enable
+	bsf		U3TXEN					; Transmitter enable
+	; UART3 Receiver
+	BANKSEL	ANSELA
+	bcf		ANSELA7					; Disable analog function
+	bsf		TRISA7					; RX set as input
+	BANKSEL	U3RXPPS
+	movlw	07h
+	movwf	U3RXPPS,b				; RA7->UART3:RX3
+	; UART3 Transmitter
+	BANKSEL	ANSELA
+	bcf		ANSELA6					; Disable analog function
+	bsf		LATA6					; Default level
+	bcf		TRISA6					; TX set as output
+	BANKSEL	RA6PPS
+	movlw	26h
+	movwf	RA6PPS,b				; RA6->UART3:TX3
+	; UART3 Enable
+	BANKSEL	U3CON1
+	bsf		U3ON					; Serial port enable
+	bsf		U3RXIE					; Enable Receive interrupt
+
 	; Initialize variant
 	clrf	count_a,c
 	bcf		led_state/8,led_state&7,c
+
 	; Global interrupt
 	bsf		GIE						; Global interrupt enable
 loop:

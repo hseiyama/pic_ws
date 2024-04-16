@@ -6,11 +6,11 @@ Linker command line:
   --edf=C:\Program Files\Microchip\xc8\v2.45\pic\dat\20230818022343_en.msgs \
   -cf -h+dist/default/production\asm_sam08.X.production.sym \
   --cmf=dist/default/production\asm_sam08.X.production.cmf -z -Q18F47Q43 \
-  -oC:\Users\hseiyama\AppData\Local\Temp\xcAsl6s.\driver_tmp_3.o \
+  -oC:\Users\hseiyama\AppData\Local\Temp\xcAscrg.\driver_tmp_3.o \
   -presetVec=0h -pivecTbl=08h --fixupoverflow=ignore \
   -ver=XC8 PIC(R) Assembler \
   -Mdist/default/production/asm_sam08.X.production.map -E1 --acfsm=1493 \
-  -ACODE=00h-0Fh,040h-01FFFFh -ACONST=00h-0Fh,040h-01FFFFh \
+  -ACODE=00h-0Fh,092h-01FFFFh -ACONST=00h-0Fh,092h-01FFFFh \
   -ASMALLCONST=02500h-025FFhx475 \
   -AMEDIUMCONST=02500h-0FFFFh,012500h-01FFFFh -ACOMRAM=0500h-055Fh \
   -AABS1=0500h-024FFh -ABIGRAM=0500h-024FFh \
@@ -39,19 +39,19 @@ Machine type is 18F47Q43
                 Name                               Link     Load   Length Selector   Space Scale
 build/default/production/asm_sam08.o
                 config                           300000   300000        A        0       4
-                textISR                           1FF90    1FF90       1C     7FE4       0
-                ivecTbl                               8        8       40        4       0
+                textISR                           1FF50    1FF50       28     7FD4       0
+                ivecTbl                               8        8       92        4       0
                 resetVec                              0        0        4        0       0
-                bitBss                             2808      501        1      500       1     8
-                code                              1FFAE    1FFAE       52     FFD7       0
-                udata_acs                           500      500        1      500       1
+                bitBss                             2810      502        1      500       1     8
+                code                              1FF78    1FF78       88     FFBC       0
+                udata_acs                           500      500        2      500       1
 
 TOTAL           Name                               Link     Load   Length     Space
         CLASS   CODE           
-                textISR                           1FF90    1FF90       1C         0
-                ivecTbl                               8        8       40         0
+                textISR                           1FF50    1FF50       28         0
+                ivecTbl                               8        8       92         0
                 resetVec                              0        0        4         0
-                code                              1FFAE    1FFAE       52         0
+                code                              1FF78    1FF78       88         0
 
         CLASS   CONST          
 
@@ -60,8 +60,8 @@ TOTAL           Name                               Link     Load   Length     Sp
         CLASS   MEDIUMCONST    
 
         CLASS   COMRAM         
-                bitBss                             2808      501        1         1
-                udata_acs                           500      500        1         1
+                bitBss                             2810      502        1         1
+                udata_acs                           500      500        2         1
 
         CLASS   ABS1           
 
@@ -149,10 +149,10 @@ TOTAL           Name                               Link     Load   Length     Sp
 SEGMENTS        Name                           Load    Length   Top    Selector   Space  Class
 
                 resetVec                       000000  000004  000004         0       0  CODE    
-                ivecTbl                        000008  000040  000048         4       0  CODE    
-                udata_acs                      000500  000002  000502       500       1  COMRAM  
-                textISR                        01FF90  00001C  01FFAC      7FE4       0  CODE    
-                code                           01FFAE  000052  020000      FFD7       0  CODE    
+                ivecTbl                        000008  000092  00009A         4       0  CODE    
+                udata_acs                      000500  000003  000503       500       1  COMRAM  
+                textISR                        01FF50  000028  01FF78      7FD4       0  CODE    
+                code                           01FF78  000088  020000      FFBC       0  CODE    
 
 
 UNUSED ADDRESS RANGES
@@ -192,77 +192,73 @@ UNUSED ADDRESS RANGES
         BANK9            000900-0009FF              100
         BIGRAM           000500-0024FF             2000
         BIGSFR           000004-000007                4
-                         000048-0004FF              4B8
+                         00009A-0004FF              466
                          002500-0025FF              100
         CODE             000004-000007                4
-                         000048-01FF8F            1FF48
-                         01FFAC-01FFAD                2
-        COMRAM           000502-00055F               5E
+                         00009A-01FF4F            1FEB6
+        COMRAM           000503-00055F               5D
         CONFIG           30000A-300011                8
         CONST            000004-000007                4
-                         000048-01FF8F            1FF48
-                         01FFAC-01FFAD                2
+                         00009A-01FF4F            1FEB6
         EEDATA           380000-3803FF              400
         IDLOC            200000-20003F               40
         MEDIUMCONST      002500-00FFFF             DB00
-                         012500-01FF8F             DA90
-                         01FFAC-01FFAD                2
+                         012500-01FF4F             DA50
         RAM              000560-0024FF              100
         SFR              000004-000007                4
-                         000048-0004FF              100
+                         00009A-0004FF              100
                          002500-0025FF              100
-        SMALLCONST       002500-01FF8F              100
-                         01FFAC-01FFAD                2
+        SMALLCONST       002500-01FF4F              100
 
                                   Symbol Table
 
-__BbitBss       bitBss       000048  __H__absolute__ __absolute__ 000000
-__HbitBss       bitBss       000240  __Hcode         code         000048
-__Hconfig       config       30000A  __Hdata         data         000048
-__Hedata        edata        000048  __HivecTbl      ivecTbl      000048
+__BbitBss       bitBss       00009A  __H__absolute__ __absolute__ 000000
+__HbitBss       bitBss       0004D0  __Hcode         code         00009A
+__Hconfig       config       30000A  __Hdata         data         00009A
+__Hedata        edata        00009A  __HivecTbl      ivecTbl      00009A
 __HresetVec     resetVec     000004  __Hspace_0      (abs)        020000
-__Hspace_1      (abs)        002809  __Hspace_3      (abs)        000000
-__Hspace_4      (abs)        60000A  __HtextISR      textISR      000048
-__Hudata        udata        000048  __Hudata_acs    udata_acs    000048
-__Hudata_bank10 udata_bank10 000048  __Hudata_bank11 udata_bank11 000048
-__Hudata_bank12 udata_bank12 000048  __Hudata_bank13 udata_bank13 000048
-__Hudata_bank14 udata_bank14 000048  __Hudata_bank15 udata_bank15 000048
-__Hudata_bank16 udata_bank16 000048  __Hudata_bank17 udata_bank17 000048
-__Hudata_bank18 udata_bank18 000048  __Hudata_bank19 udata_bank19 000048
-__Hudata_bank20 udata_bank20 000048  __Hudata_bank21 udata_bank21 000048
-__Hudata_bank22 udata_bank22 000048  __Hudata_bank23 udata_bank23 000048
-__Hudata_bank24 udata_bank24 000048  __Hudata_bank25 udata_bank25 000048
-__Hudata_bank26 udata_bank26 000048  __Hudata_bank27 udata_bank27 000048
-__Hudata_bank28 udata_bank28 000048  __Hudata_bank29 udata_bank29 000048
-__Hudata_bank30 udata_bank30 000048  __Hudata_bank31 udata_bank31 000048
-__Hudata_bank32 udata_bank32 000048  __Hudata_bank33 udata_bank33 000048
-__Hudata_bank34 udata_bank34 000048  __Hudata_bank35 udata_bank35 000048
-__Hudata_bank36 udata_bank36 000048  __Hudata_bank5  udata_bank5  000048
-__Hudata_bank6  udata_bank6  000048  __Hudata_bank7  udata_bank7  000048
-__Hudata_bank8  udata_bank8  000048  __Hudata_bank9  udata_bank9  000048
-__L__absolute__ __absolute__ 000000  __LbitBss       bitBss       000240
-__Lcode         code         000048  __Lconfig       config       000000
-__Ldata         data         000048  __Ledata        edata        000048
+__Hspace_1      (abs)        002811  __Hspace_3      (abs)        000000
+__Hspace_4      (abs)        60000A  __HtextISR      textISR      00009A
+__Hudata        udata        00009A  __Hudata_acs    udata_acs    00009A
+__Hudata_bank10 udata_bank10 00009A  __Hudata_bank11 udata_bank11 00009A
+__Hudata_bank12 udata_bank12 00009A  __Hudata_bank13 udata_bank13 00009A
+__Hudata_bank14 udata_bank14 00009A  __Hudata_bank15 udata_bank15 00009A
+__Hudata_bank16 udata_bank16 00009A  __Hudata_bank17 udata_bank17 00009A
+__Hudata_bank18 udata_bank18 00009A  __Hudata_bank19 udata_bank19 00009A
+__Hudata_bank20 udata_bank20 00009A  __Hudata_bank21 udata_bank21 00009A
+__Hudata_bank22 udata_bank22 00009A  __Hudata_bank23 udata_bank23 00009A
+__Hudata_bank24 udata_bank24 00009A  __Hudata_bank25 udata_bank25 00009A
+__Hudata_bank26 udata_bank26 00009A  __Hudata_bank27 udata_bank27 00009A
+__Hudata_bank28 udata_bank28 00009A  __Hudata_bank29 udata_bank29 00009A
+__Hudata_bank30 udata_bank30 00009A  __Hudata_bank31 udata_bank31 00009A
+__Hudata_bank32 udata_bank32 00009A  __Hudata_bank33 udata_bank33 00009A
+__Hudata_bank34 udata_bank34 00009A  __Hudata_bank35 udata_bank35 00009A
+__Hudata_bank36 udata_bank36 00009A  __Hudata_bank5  udata_bank5  00009A
+__Hudata_bank6  udata_bank6  00009A  __Hudata_bank7  udata_bank7  00009A
+__Hudata_bank8  udata_bank8  00009A  __Hudata_bank9  udata_bank9  00009A
+__L__absolute__ __absolute__ 000000  __LbitBss       bitBss       0004D0
+__Lcode         code         00009A  __Lconfig       config       000000
+__Ldata         data         00009A  __Ledata        edata        00009A
 __LivecTbl      ivecTbl      000008  __LresetVec     resetVec     000000
 __Lspace_0      (abs)        000000  __Lspace_1      (abs)        000000
 __Lspace_3      (abs)        000000  __Lspace_4      (abs)        000000
-__LtextISR      textISR      000048  __Ludata        udata        000048
-__Ludata_acs    udata_acs    000048  __Ludata_bank10 udata_bank10 000048
-__Ludata_bank11 udata_bank11 000048  __Ludata_bank12 udata_bank12 000048
-__Ludata_bank13 udata_bank13 000048  __Ludata_bank14 udata_bank14 000048
-__Ludata_bank15 udata_bank15 000048  __Ludata_bank16 udata_bank16 000048
-__Ludata_bank17 udata_bank17 000048  __Ludata_bank18 udata_bank18 000048
-__Ludata_bank19 udata_bank19 000048  __Ludata_bank20 udata_bank20 000048
-__Ludata_bank21 udata_bank21 000048  __Ludata_bank22 udata_bank22 000048
-__Ludata_bank23 udata_bank23 000048  __Ludata_bank24 udata_bank24 000048
-__Ludata_bank25 udata_bank25 000048  __Ludata_bank26 udata_bank26 000048
-__Ludata_bank27 udata_bank27 000048  __Ludata_bank28 udata_bank28 000048
-__Ludata_bank29 udata_bank29 000048  __Ludata_bank30 udata_bank30 000048
-__Ludata_bank31 udata_bank31 000048  __Ludata_bank32 udata_bank32 000048
-__Ludata_bank33 udata_bank33 000048  __Ludata_bank34 udata_bank34 000048
-__Ludata_bank35 udata_bank35 000048  __Ludata_bank36 udata_bank36 000048
-__Ludata_bank5  udata_bank5  000048  __Ludata_bank6  udata_bank6  000048
-__Ludata_bank7  udata_bank7  000048  __Ludata_bank8  udata_bank8  000048
-__Ludata_bank9  udata_bank9  000048  __S0            (abs)        020000
-__S1            (abs)        000502  __S3            (abs)        000000
+__LtextISR      textISR      00009A  __Ludata        udata        00009A
+__Ludata_acs    udata_acs    00009A  __Ludata_bank10 udata_bank10 00009A
+__Ludata_bank11 udata_bank11 00009A  __Ludata_bank12 udata_bank12 00009A
+__Ludata_bank13 udata_bank13 00009A  __Ludata_bank14 udata_bank14 00009A
+__Ludata_bank15 udata_bank15 00009A  __Ludata_bank16 udata_bank16 00009A
+__Ludata_bank17 udata_bank17 00009A  __Ludata_bank18 udata_bank18 00009A
+__Ludata_bank19 udata_bank19 00009A  __Ludata_bank20 udata_bank20 00009A
+__Ludata_bank21 udata_bank21 00009A  __Ludata_bank22 udata_bank22 00009A
+__Ludata_bank23 udata_bank23 00009A  __Ludata_bank24 udata_bank24 00009A
+__Ludata_bank25 udata_bank25 00009A  __Ludata_bank26 udata_bank26 00009A
+__Ludata_bank27 udata_bank27 00009A  __Ludata_bank28 udata_bank28 00009A
+__Ludata_bank29 udata_bank29 00009A  __Ludata_bank30 udata_bank30 00009A
+__Ludata_bank31 udata_bank31 00009A  __Ludata_bank32 udata_bank32 00009A
+__Ludata_bank33 udata_bank33 00009A  __Ludata_bank34 udata_bank34 00009A
+__Ludata_bank35 udata_bank35 00009A  __Ludata_bank36 udata_bank36 00009A
+__Ludata_bank5  udata_bank5  00009A  __Ludata_bank6  udata_bank6  00009A
+__Ludata_bank7  udata_bank7  00009A  __Ludata_bank8  udata_bank8  00009A
+__Ludata_bank9  udata_bank9  00009A  __S0            (abs)        020000
+__S1            (abs)        000503  __S3            (abs)        000000
 isa$std         (abs)        000001  isa$xinst       (abs)        000000
