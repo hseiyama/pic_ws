@@ -60,7 +60,7 @@ TMR0H_VALUE		EQU		0Bh			; Clk=16MHz(Fosc/4),Freq=1Hz,PreScale=1:256
 TMR0L_VALUE		EQU		0DCh		; TMR0H/L=65536-(16MHz/1Hz)/256=3036
 
 U3BRGH_VALUE	EQU		01h			; 9600bps @ 64MHz
-U3BRGL_VALUE	EQU		0A0h		; U3BRGH/L=416
+U3BRGL_VALUE	EQU		0A0h		; U3BRGH/L=64MHz/(9600bps*16)-1=416
 
 ; ***** ram ************************
 PSECT bitBss,bit,class=COMRAM,space=1
@@ -107,7 +107,7 @@ tmr0Isr:
 	movlw	TMR0H_VALUE
 	movwf	TMR0H,b
 	BANKSEL	TMR0L
-	movlw	220
+	movlw	TMR0L_VALUE
 	movwf	TMR0L,b
 	retfie
 
