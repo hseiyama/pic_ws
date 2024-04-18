@@ -44,7 +44,7 @@ main:
 	movlw	high data_ram
 	movwf	FSR0H,c
 next:
-	; rom table write (low byte)
+	; rom table read (low byte)
 	movlw	low data_rom
 	addwf	index,w,c
 	movwf	TBLPTRL,c
