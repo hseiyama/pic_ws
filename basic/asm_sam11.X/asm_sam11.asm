@@ -60,17 +60,20 @@ DATA_SIZE	EQU		10
 
 ; ***** ram ************************
 PSECT udata_acs						; common ram
-data_ram:
-	DS		DATA_SIZE
 data_work:
 	DS		1
 index:
 	DS		1
 
+; ***** rom ************************
+PSECT data							; const data
+data_rom:
+	DB		1,2,3,4,5,6,7,8,9,10
+
 ; ***** eep ************************
 PSECT edata							; eeprom data
 data_eep:
-	DB		1,2,3,4,5,6,7,8,9,10
+	DB		55h,55h,55h,55h,55h,55h,55h,55h,55h,55h
 
 ; ***** vector *********************
 PSECT resetVec,class=CODE,reloc=2
@@ -82,34 +85,50 @@ PSECT code
 main:
 	; initialize
 	clrf	index,c
-	; eep table read (high byte)
+	; rom table read (high byte)
+	movlw	highword data_rom
+	movwf	TBLPTRU,c
+	movlw	high data_rom
+	movwf	TBLPTRH,c
+	; eep table write (high byte)
 	BANKSEL	NVMADR
 	movlw	highword data_eep
 	movwf	NVMADRU,b
 	movlw	high data_eep
 	movwf	NVMADRH,b
-	; ram table write (high byte)
-	movlw	high data_ram
-	movwf	FSR0H,c
+;	movlw	low data_eep
+;	movwf	NVMADRL,b				; NVMADR = data_eep;
 next:
-	; eep table read (low byte)
+	; rom table read (low byte)
+	movlw	low data_rom
+	addwf	index,w,c
+	movwf	TBLPTRL,c
+	tblrd	*
+	movff	TABLAT,data_work
+	; eep table write (low byte)
 	BANKSEL	NVMADR
 	movlw	low data_eep
 	addwf	index,w,c
 	movwf	NVMADRL,b				; NVMADR = data_eep + index;
+	movff	data_work,NVMDATL		; NVMDATL = data_work;
 	BANKSEL	NVMCON1
-	clrf	NVMCON1,b				; NVMCON1bits.CMD = 0x00;
-	BANKSEL	NVMCON0
+	movlw	03h						; write
+;	movlw	04h						; write and post increment 
+	movwf	NVMCON1,b				; NVMCON1bits.CMD = 0x03;
+	bcf		GIE						; INTCON0bits.GIE = 0;
+	BANKSEL	NVMLOCK
+	movlw	55h
+	movwf	NVMLOCK,b				; NVMLOCK = 0x55;
+	movlw	0AAh
+	movwf	NVMLOCK,b				; NVMLOCK = 0xAA;
+;	BANKSEL	NVMCON0					; (注意)シーケンスには不要な命令
 	bsf		NVMGO					; NVMCON0bits.GO = 1;
 wait:
 	btfsc	NVMGO					; while (NVMCON0bits.GO);
 	goto	wait
-	movff	NVMDATL,data_work		; data_work = NVMDATL;
-	; ram table write (low byte)
-	movlw	low data_ram
-	addwf	index,w,c
-	movwf	FSR0L,c
-	movff	data_work,INDF0
+	bsf		GIE						; INTCON0bits.GIE = 1;
+	BANKSEL	NVMCON1
+	clrf	NVMCON1,b				; NVMCON1bits.CMD = 0;
 	; next index
 	incf	index,f,c
 	movlw	DATA_SIZE
