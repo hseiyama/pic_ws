@@ -26,6 +26,8 @@ asm_sam11.X
 asm_sam12.X
 　・DMA転送（ソフトウェア制御、PFM->GFR）
 　　※シミュレータ未対応
+asm_sam13.X
+　・RESET、SLEEP命令
 
 【Global Option】
 -Wa,-a
