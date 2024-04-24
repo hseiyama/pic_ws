@@ -23,6 +23,9 @@ asm_sam10.X
 　・EEPROM読み出し
 asm_sam11.X
 　・EEPROM書き込み
+asm_sam12.X
+　・DMA転送（ソフトウェア制御、PFM->GFR）
+　　※シミュレータ未対応
 
 【Global Option】
 -Wa,-a
