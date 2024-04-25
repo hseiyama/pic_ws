@@ -121,7 +121,7 @@ next:
 	movwf	NVMLOCK,b				; NVMLOCK = 0x55;
 	movlw	0AAh
 	movwf	NVMLOCK,b				; NVMLOCK = 0xAA;
-;	BANKSEL	NVMCON0					; (注意)シーケンスには不要な命令
+;	BANKSEL	NVMCON0					; (注意)ロック解除後の命令挿入は禁止
 	bsf		NVMGO					; NVMCON0bits.GO = 1;
 wait:
 	btfsc	NVMGO					; while (NVMCON0bits.GO);

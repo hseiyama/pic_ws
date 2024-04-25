@@ -28,6 +28,9 @@ asm_sam12.X
 　　※シミュレータ未対応
 asm_sam13.X
 　・RESET、SLEEP命令
+asm_sam14.X
+　・DMA転送（実機確認、PFM->UART）
+　・RESET、SLEEP命令
 
 【Global Option】
 -Wa,-a

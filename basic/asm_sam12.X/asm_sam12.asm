@@ -110,6 +110,16 @@ main:
 	movwf	DMAnDSAH,b
 	movlw	low data_ram
 	movwf	DMAnDSAL,b				; DMAnDSA = data_ram;
+	; Change arbiter priority
+	BANKSEL	DMA1PR
+	movlw	01h
+	movwf	DMA1PR,b				; DMA1PR = 0x01;
+	BANKSEL	PRLOCK
+	movlw	55h
+	movwf	PRLOCK,b				; PRLOCK = 0x55;
+	movlw	0AAh
+	movwf	PRLOCK,b				; PRLOCK = 0xAA;
+	bsf		PRLOCKED				; PRLOCKbits.PRLOCKED = 1;
 	; Enable the DMA & DGO=1
 	BANKSEL	DMAnCON0
 	movlw	0A0h
