@@ -67,11 +67,22 @@
 #define U3BRG_VALUE		(416)		// 9600bps @ 64MHz
 									// U3BRGH/L=64MHz/(9600bps*16)-1=416
 
-volatile __bit		led_state;
-volatile uint8_t	count_a;
-volatile uint8_t	data_uart;
+#define SIZE_RESET		(sizeof(data_reset) - 1)
+#define SIZE_WAKEUP		(sizeof(data_wakeup) - 1)
 
-static void update(void);
+const uint8_t data_reset[] = "Status is RESET.\r\n";
+const uint8_t data_wakeup[] = "Status is WAKEUP.\r\n";
+
+volatile uint8_t	count_out;
+volatile uint8_t	data_recv;
+volatile uint8_t	data_send;
+
+static void timer0_init(void);
+static void uart3_init(void);
+static void dma1_init(void);
+static void dma1_wakeup(void);
+static void request_in(void);
+static void update_out(void);
 
 void __interrupt(irq(default),base(8)) defaultIsr() {
 }
@@ -79,25 +90,27 @@ void __interrupt(irq(default),base(8)) defaultIsr() {
 void __interrupt(irq(INT0),base(8)) int0Isr() {
 	INT0IF = 0;						// Clear interrupt flag
 	// interrupt process
-	count_a++;
-	led_state = !led_state;
+	count_out++;
 }
 
 void __interrupt(irq(TMR0),base(8)) tmr0Isr() {
 	TMR0IF = 0;						// Clear interrupt flag
 	// interrupt process
-	count_a++;
-	led_state = !led_state;
+	count_out++;
 	// set timer0
 	TMR0H = TMR0H_VALUE;
 	TMR0L = TMR0L_VALUE;
 }
 
 void __interrupt(irq(U3RX),base(8)) u3rxIsr() {
-	data_uart = U3RXB;
-	if (U3TXIF == 1) {
-		U3TXB = data_uart;
-	}
+	// interrupt process
+	data_recv = U3RXB;
+}
+
+void __interrupt(irq(U3TX),base(8)) u3txIsr() {
+	// interrupt process
+	data_send++;
+	U3TXB = data_send;				// Not used Instruction
 }
 
 void main(void) {
@@ -117,6 +130,28 @@ void main(void) {
 	LATA = 0x00;					// Set low level
 	TRISA = 0xF0;					// Set as output
 
+	// Timer0 Initialize
+	timer0_init();
+	// UART3 Initialize
+	uart3_init();
+	// DMA1 Initialize
+	dma1_init();
+
+	// Initialize variant
+	count_out = 0x00;
+	data_recv = 0x00;
+	data_send = 0x00;
+
+	// Global interrupt
+	GIE = 1;						// Global interrupt enable
+
+	while (TRUE) {
+		request_in();
+		update_out();
+	}
+}
+
+static void timer0_init(void) {
 	// Timer0(interval 1s) setup
 	T0CON0 = 0x90;					// timer enable, 16bit timer, 1:1 Postscaler
 	T0CON1 = 0x48;					// sorce clk:FOSC/4, 1:256 Prescaler
@@ -124,7 +159,9 @@ void main(void) {
 	TMR0L = TMR0L_VALUE;			// timer0 count register
 	TMR0IF = 0;						// Clear TMR0 timer interrupt flag
 	TMR0IE = 1;						// TMR0 timer interrupt enable
+}
 
+static void uart3_init(void) {
 	// UART3 Initialize
 	U3BRG = U3BRG_VALUE;			// UART baud rate generator
 	U3RXEN = 1;						// Receiver enable
@@ -141,21 +178,81 @@ void main(void) {
 	// UART3 Enable
 	U3ON = 1;						// Serial port enable
 	U3RXIE = 1;						// Enable Receive interrupt
+	// (情報)DMA転送のトリガに割込み許可は不要
+//	U3TXIE = 1;						// Enable Transmit interrupt
+}
 
-	// Initialize variant
-	count_a = 0x00;
-	led_state = 0;
+static void dma1_init(void) {
+	// Select DMA1 by setting DMASELECT register to 0x00
+	DMASELECT = 0x00;
+	// DMAnCON1 - DPTR remains, DSTP=0, Source Memory Region PFM,
+	//            SPTR increments, SSTP=1,
+	DMAnCON1 = 0x0B;
+	// Source registers
+	// Source size
+	DMAnSSZ = SIZE_RESET;
+	// Source start address, data_reset
+	DMAnSSA = (volatile __uint24)&data_reset;
+	// Destination registers
+	// Destination size
+	DMAnDSZ = 1;
+	// Destination start address, U3TXB
+	DMAnDSA = (volatile uint16_t)&U3TXB;
+	// Start trigger source U3TX
+	DMAnSIRQ = 0x49;
+	// Change arbiter priority
+	// (注意)PFMアクセスはシステム調停が必要(DMA1>MAIN)
+	DMA1PR = 0x01;
+	PRLOCK = 0x55;
+	PRLOCK = 0xAA;
+	PRLOCKbits.PRLOCKED = 1;
+	// Enable the DMA & the trigger to start DMA transfer
+	DMAnCON0 = 0xC0;
+}
 
-	// Global interrupt
-	GIE = 1;						// Global interrupt enable
-
-	while (TRUE) {
-		update();
+static void request_in(void) {
+	// Judge Reset
+	if (data_recv == 'r') {
+		asm("reset");
+	}
+	// Judge Sleep
+	if (data_recv == 's') {
+		TMR0IE = 0;					// TMR0 timer interrupt disable
+		TMR0IF = 0;					// Clear TMR0 timer interrupt flag
+		asm("sleep");
+		TMR0IE = 1;					// TMR0 timer interrupt enable
+		dma1_wakeup();
+		data_recv = 0x00;
+	}
+	// Judge Wakeup
+	if (data_recv == 'w') {
+		dma1_wakeup();
+		data_recv = 0x00;
+	}
+	// Judge Zero
+	if (data_recv == 'z') {
+		count_out = 0x00;
+		data_recv = 0x00;
 	}
 }
 
-static void update(void) {
+static void dma1_wakeup(void) {
+	// Select DMA1 by setting DMASELECT register to 0x00
+	DMASELECT = 0x00;
+	// Disable the DMA
+	// (注意)DMA設定の変更はDMA無効時に実施
+	DMAnCON0 = 0x00;
+	// Source registers
+	// Source size
+	DMAnSSZ = SIZE_WAKEUP;
+	// Source start address, data_wakeup
+	DMAnSSA = (volatile __uint24)&data_wakeup;
+	// Enable the DMA & the trigger to start DMA transfer
+	DMAnCON0 = 0xC0;
+}
+
+static void update_out(void) {
 	GIE = 0;						// Global interrupt disable
-	LATA = count_a & 0x0F;
+	LATA = count_out & 0x0F;
 	GIE = 1;						// Global interrupt enable
 }

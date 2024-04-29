@@ -256,7 +256,7 @@ dma1_init:
 	movlw	high data_reset
 	movwf	DMAnSSAH,b
 	movlw	low data_reset
-	movwf	DMAnSSAL,b				; DMAnSSA = data_reset
+	movwf	DMAnSSAL,b				; DMAnSSA = data_reset;
 	; Destination registers
 	; Destination size
 	BANKSEL	DMAnDSZ
@@ -272,7 +272,7 @@ dma1_init:
 	; Start trigger source U3TX
 	BANKSEL	DMAnSIRQ
 	movlw	49h
-	movwf	DMAnSIRQ,b				; DMAnSIRQ = 0x49
+	movwf	DMAnSIRQ,b				; DMAnSIRQ = 0x49;
 	; Change arbiter priority
 	; (注意)PFMアクセスはシステム調停が必要(DMA1>MAIN)
 	BANKSEL	DMA1PR
@@ -349,7 +349,7 @@ dma1_wakeup:
 	movlw	high data_wakeup
 	movwf	DMAnSSAH,b
 	movlw	low data_wakeup
-	movwf	DMAnSSAL,b				; DMAnSSA = data_wakeup
+	movwf	DMAnSSAL,b				; DMAnSSA = data_wakeup;
 	; Enable the DMA & the trigger to start DMA transfer
 	BANKSEL	DMAnCON0
 	movlw	0C0h
