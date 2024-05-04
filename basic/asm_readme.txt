@@ -31,6 +31,12 @@ asm_sam13.X
 asm_sam14.X
 　・DMA転送（実機確認、PFM->UART）
 　・RESET、SLEEP命令
+asm_sam15.X
+　・DMA転送（PFM->UART）
+　・RESET、SLEEP命令
+　・各種割り込み（INT0、TMR0、UART3）
+　・BITセクション
+　・EEPROM読み出し/書き込み（実機確認）
 
 【Global Option】
 -Wa,-a

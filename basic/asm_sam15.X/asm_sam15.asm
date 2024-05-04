@@ -75,6 +75,16 @@ data_recv:
 	DS		1
 data_send:
 	DS		1
+pa_eep_addr:
+	DS		1
+pa_eep_data:
+	DS		1
+
+PSECT bitBss,bit,class=COMRAM,space=1
+bit_state:
+	DS		1
+bit_flag:
+	DS		1
 
 ; ***** rom ************************
 PSECT data							; const data
@@ -82,6 +92,11 @@ data_reset:
 	DB		"Status is RESET.",CR,LF
 data_wakeup:
 	DB		"Status is WAKEUP.",CR,LF
+
+; ***** eep ************************
+PSECT edata							; eeprom data
+data_eep:
+	DB		00h,00h
 
 ; ***** vector *********************
 PSECT resetVec,class=CODE,reloc=2
@@ -105,13 +120,14 @@ int0Isr:
 	bcf		INT0IF					; Clear interrupt flag
 	; interrupt process
 	incf	count_out,f,c
-	retfie
+	retfie	f
 
 	ALIGN	4
 tmr0Isr:
 	bcf		TMR0IF					; Clear interrupt flag
 	; interrupt process
 	incf	count_out,f,c
+	bsf		bit_flag/8,bit_flag&7,c
 	; set timer0
 	BANKSEL	TMR0H
 	movlw	TMR0H_VALUE
@@ -119,20 +135,20 @@ tmr0Isr:
 	BANKSEL	TMR0L
 	movlw	TMR0L_VALUE
 	movwf	TMR0L,b
-	retfie
+	retfie	f
 
 	ALIGN	4
 u3rxIsr:
 	; interrupt process
 	movff	U3RXB,data_recv
-	retfie
+	retfie	f
 
 	ALIGN	4
 u3txIsr:
 	; interrupt process
 	incf	data_send,f,c
 	movff	data_send,U3TXB			; Not used Instruction
-	retfie
+	retfie	f
 
 ; ***** main ***********************
 PSECT code
@@ -166,10 +182,21 @@ main:
 	call 	uart3_init
 	; DMA1 Initialize
 	call	dma1_init
+	; Read eeprom(count_out)
+	clrf	pa_eep_addr,c
+	call	eep_read
+	movff	pa_eep_data,count_out
+	; Read eeprom(bit_state)
+	movlw	1
+	movwf	pa_eep_addr,c
+	call	eep_read
+	bcf		bit_state/8,bit_state&7,c
+	btfsc	pa_eep_data,bit_state&7,c
+	bsf		bit_state/8,bit_state&7,c
 	; Initialize variant
-	clrf	count_out,c
 	clrf	data_recv,c
 	clrf	data_send,c
+	bcf		bit_flag/8,bit_flag&7,c
 	; Global interrupt
 	bsf		GIE						; Global interrupt enable
 loop:
@@ -297,6 +324,7 @@ request_in:
 	movlw	'r'
 	cpfseq	data_recv,c
 	goto	skip_r
+	; Reset
 	reset
 skip_r:
 	; Judge Sleep
@@ -305,6 +333,18 @@ skip_r:
 	goto	skip_s
 	bcf		TMR0IE					; TMR0 timer interrupt disable
 	bcf		TMR0IF					; Clear TMR0 timer interrupt flag
+	; Write eeprom(count_out)
+	clrf	pa_eep_addr,c
+	movff	count_out,pa_eep_data
+	call	eep_write
+	; Write eeprom(bit_state)
+	movlw	1
+	movwf	pa_eep_addr,c
+	clrf	pa_eep_data,c
+	btfsc	bit_state/8,bit_state&7,c
+	bsf		pa_eep_data,bit_state&7,c
+	call	eep_write
+	; Sleep
 	sleep
 	bsf		TMR0IE					; TMR0 timer interrupt enable
 	call	dma1_wakeup
@@ -324,6 +364,13 @@ skip_w:
 	clrf	count_out,c
 	clrf	data_recv,c
 skip_z:
+	; Judge Uart
+	movlw	'u'
+	cpfseq	data_recv,c
+	goto	skip_u
+	btg	bit_state/8,bit_state&7,c
+	clrf	data_recv,c
+skip_u:
 	return
 
 ; ***** dma1_wakeup ****************
@@ -359,11 +406,74 @@ dma1_wakeup:
 ; ***** update_out *****************
 PSECT code
 update_out:
-	bcf		GIE						; Global interrupt disable
+	; LED output
 	movlw	0Fh
 	andwf	count_out,w,c
 	movwf	LATA,c
-	bsf		GIE						; Global interrupt enable
+	; UART output
+	btfss	bit_flag/8,bit_flag&7,c
+	goto	next_flag
+	btfss	bit_state/8,bit_state&7,c
+	goto	next_state
+	btfss	U3TXIF
+	goto	next_state
+	BANKSEL	U3TXB
+	movlw	'+'
+	movwf	U3TXB,b
+next_state:
+	bcf		bit_flag/8,bit_flag&7,c
+next_flag:
+	return
+
+; ***** eep_read *******************
+PSECT code
+eep_read:
+	BANKSEL	NVMADR
+	movlw	highword data_eep
+	movwf	NVMADRU,b
+	movlw	high data_eep
+	movwf	NVMADRH,b
+	movlw	low data_eep
+	addwf	pa_eep_addr,w,c
+	movwf	NVMADRL,b				; NVMADR = data_eep + pa_eep_addr;
+	BANKSEL	NVMCON1
+	clrf	NVMCON1,b				; NVMCON1bits.CMD = 0x00;(Read)
+	BANKSEL	NVMCON0
+	bsf		NVMGO					; NVMCON0bits.GO = 1;
+wait_read:
+	btfsc	NVMGO					; while (NVMCON0bits.GO);
+	goto	wait_read
+	movff	NVMDATL,pa_eep_data		; pa_eep_data = NVMDATL;
+	return
+
+; ***** eep_write ******************
+PSECT code
+eep_write:
+	BANKSEL	NVMADR
+	movlw	highword data_eep
+	movwf	NVMADRU,b
+	movlw	high data_eep
+	movwf	NVMADRH,b
+	movlw	low data_eep
+	addwf	pa_eep_addr,w,c
+	movwf	NVMADRL,b				; NVMADR = data_eep + pa_eep_addr;
+	movff	pa_eep_data,NVMDATL		; NVMDATL = pa_eep_data;
+	BANKSEL	NVMCON1
+	movlw	03h
+	movwf	NVMCON1,b				; NVMCON1bits.CMD = 0x03;(Write)
+	bcf		GIE						; INTCON0bits.GIE = 0;
+	BANKSEL	NVMLOCK
+	movlw	55h
+	movwf	NVMLOCK,b				; NVMLOCK = 0x55;
+	movlw	0AAh
+	movwf	NVMLOCK,b				; NVMLOCK = 0xAA;
+	bsf		NVMGO					; NVMCON0bits.GO = 1;
+wait_write:
+	btfsc	NVMGO					; while (NVMCON0bits.GO);
+	goto	wait_write
+	bsf		GIE						; INTCON0bits.GIE = 1;
+	BANKSEL	NVMCON1
+	clrf	NVMCON1,b				; NVMCON1bits.CMD = 0;
 	return
 
 	END		resetVec
