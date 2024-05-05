@@ -38,8 +38,7 @@ asm_sam15.X
 　・BITセクション
 　・EEPROM読み出し/書き込み（実機確認）
 asm_sam16.X
-　・割り込み優先度(high/low)
-　　※シミュレータの動きに疑問あり
+　・割り込み優先度(high/low)（実機確認）
 
 【Global Option】
 -Wa,-a

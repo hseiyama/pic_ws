@@ -56,6 +56,20 @@
 // config statements should precede project file includes.
 #include <xc.inc>
 
+#define IPEN	BANKMASK(INTCON0),5,c
+
+U3BRGH_VALUE	EQU		01h			; 9600bps @ 64MHz
+U3BRGL_VALUE	EQU		0A0h		; U3BRGH/L=64MHz/(9600bps*16)-1=416
+
+; ***** ram ************************
+PSECT udata_acs
+data_recv:
+	DS		1
+
+PSECT bitBss,bit,class=COMRAM,space=1
+bit_flag:
+	DS		1
+
 ; ***** vector *********************
 PSECT resetVec,class=CODE,reloc=2
 resetVec:
@@ -67,6 +81,8 @@ ivecTbl:
 	DW		int0Isr shr 2
 	ORG		30h*2					; interrupt1 vector position
 	DW		int1Isr shr 2
+	ORG		48h*2					; uart3rx vector position
+	DW		u3rxIsr shr 2
 	ORG		50h*2					; interrupt2 vector position
 	DW		int2Isr shr 2
 
@@ -76,51 +92,48 @@ int0Isr:
 	bcf		INT0IF					; Clear interrupt flag
 	; interrupt process
 	; (疑問)シミュレータ動作ではWREGとWREG_SHADが連動して変更される
-	;       ⇒変更された値で復帰する。これはシミュレータのバグ？
+	;       ⇒変更された値で復帰する。
+	;       ⇒(結果)ソース変更後は正常に動作。
 	; (疑問)シミュレータ動作ではSHADLO=0(MainContext),1(LowContext)となる
-	;       ⇒DataSheetの記載と差異がある。これはDataSheetの誤記？
-	movlw	22h
-	movlb	12h
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+	;       ⇒DataSheetの記載と差異がある。
+	;       ⇒(結論)これはDataSheetの誤記。
+	call	send_arrow
+	call	send_shad
+	movlw	'0'
+	call	send_wreg
+	bsf		bit_flag/8,bit_flag&7,c
 	retfie	f
 
 	ALIGN	4
 int1Isr:
 	bcf		INT1IF					; Clear interrupt flag
 	; interrupt process
-	movlw	33h
-	movlb	23h
+	call	send_arrow
+	call	send_shad
+	movlw	'1'
+	call	send_wreg
+	bsf		INT2IF					; Set interrupt flag
 	nop
 	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+	call	send_wreg
+	bsf		bit_flag/8,bit_flag&7,c
+	retfie	f
+
+	ALIGN	4
+u3rxIsr:
+	; interrupt process
+	movff	U3RXB,data_recv
 	retfie	f
 
 	ALIGN	4
 int2Isr:
 	bcf		INT2IF					; Clear interrupt flag
 	; interrupt process
-	movlw	44h
-	movlb	34h
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+	call	send_arrow
+	call	send_shad
+	movlw	'2'
+	call	send_wreg
+	bsf		bit_flag/8,bit_flag&7,c
 	retfie	f
 
 ; ***** main ***********************
@@ -150,7 +163,7 @@ main:
 	bsf		WPUB1					; Week pull up
 	bsf		TRISB1					; Set as intput
 	BANKSEL	IPR6
-	bsf		INT1IP					; Set Interrupt Priority as High
+	bcf		INT1IP					; Set Interrupt Priority as Low
 	bcf		INT1EDG					; INT1 external interrupt falling edge
 	bcf		INT1IF					; Clear INT1 external interrupt flag
 	bsf		INT1IE					; INT1 external interrupt enable
@@ -167,21 +180,100 @@ main:
 	bcf		INT2IF					; Clear INT2 external interrupt flag
 	bsf		INT2IE					; INT2 external interrupt enable
 
+	; UART3 Initialize
+	BANKSEL	U3BRG
+	movlw	U3BRGH_VALUE
+	movwf	U3BRGH,b
+	movlw	U3BRGL_VALUE
+	movwf	U3BRGL,b				; UART baud rate generator
+	BANKSEL	U3CON0
+	bsf		U3RXEN					; Receiver enable
+	bsf		U3TXEN					; Transmitter enable
+	; UART3 Receiver
+	BANKSEL	ANSELA
+	bcf		ANSELA7					; Disable analog function
+	bsf		TRISA7					; RX set as input
+	BANKSEL	U3RXPPS
+	movlw	07h
+	movwf	U3RXPPS,b				; RA7->UART3:RX3
+	; UART3 Transmitter
+	BANKSEL	ANSELA
+	bcf		ANSELA6					; Disable analog function
+	bsf		LATA6					; Default level
+	bcf		TRISA6					; TX set as output
+	BANKSEL	RA6PPS
+	movlw	26h
+	movwf	RA6PPS,b				; RA6->UART3:TX3
+	; UART3 Enable
+	BANKSEL	U3CON1
+	bsf		U3ON					; Serial port enable
+	bsf		U3RXIE					; Enable Receive interrupt
+
+	; WREG_SHAD Initialize
+	BANKSEL	SHADCON
+	bcf		SHADLO
+	movlw	'A'
+	movwf	WREG_SHAD,b				; Main context
+	bsf		SHADLO
+	movlw	'B'
+	movwf	WREG_SHAD,b				; Low context
+
+	; Initialize variant
+	clrf	data_recv,c
+	bcf		bit_flag/8,bit_flag&7,c
+
 	; Interrupt Priority(IPEN)
-	bsf		BANKMASK(INTCON0),5,a	; Interrupt priority enable
+	bsf		IPEN					; Interrupt priority enable
 	; Global interrupt(GIE)
 	bsf		GIEH					; Global high-priority interrupt enable
 	bsf		GIEL					; Global low-priority interrupt enable
+
+	movlw	'm'
 loop:
-	movlw	11h
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
+	bcf		GIE						; Global interrupt disable
+	btfss	bit_flag/8,bit_flag&7,c
+	goto	next_flag
+	call	send_wreg
+	bcf		bit_flag/8,bit_flag&7,c
+next_flag:
+	bsf		GIE						; Global interrupt enable
 	goto	loop
+
+; ***** send_wreg ******************
+PSECT code
+send_wreg:
+	btfss	U3TXIF
+	goto	send_wreg
+	BANKSEL	U3TXB
+	movwf	U3TXB,b
+	return
+
+; ***** send_shad ******************
+PSECT code
+send_shad:
+	movlw	'('
+	call	send_wreg
+	BANKSEL	SHADCON
+	bcf		SHADLO
+	movf	WREG_SHAD,w,b			; Main context
+	call	send_wreg
+	movlw	','
+	call	send_wreg
+	BANKSEL	SHADCON
+	bsf		SHADLO
+	movf	WREG_SHAD,w,b			; Low context
+	call	send_wreg
+	movlw	')'
+	call	send_wreg
+	return
+
+; ***** send_arrow *****************
+PSECT code
+send_arrow:
+	movlw	'-'
+	call	send_wreg
+	movlw	'>'
+	call	send_wreg
+	return
 
 	END		resetVec
