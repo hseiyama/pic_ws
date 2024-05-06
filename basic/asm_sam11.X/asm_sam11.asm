@@ -96,8 +96,9 @@ main:
 	movwf	NVMADRU,b
 	movlw	high data_eep
 	movwf	NVMADRH,b
-;	movlw	low data_eep
-;	movwf	NVMADRL,b				; NVMADR = data_eep;
+	; eep table write (low byte)	; (2)
+	movlw	low data_eep			; (2)
+	movwf	NVMADRL,b				; (2)NVMADR = data_eep;
 next:
 	; rom table read (low byte)
 	movlw	low data_rom
@@ -105,16 +106,18 @@ next:
 	movwf	TBLPTRL,c
 	tblrd	*
 	movff	TABLAT,data_work
-	; eep table write (low byte)
-	BANKSEL	NVMADR
-	movlw	low data_eep
-	addwf	index,w,c
-	movwf	NVMADRL,b				; NVMADR = data_eep + index;
+	; eep table write (low byte)	; (1)
+;	BANKSEL	NVMADR					; (1)
+;	movlw	low data_eep			; (1)
+;	addwf	index,w,c				; (1)
+;	movwf	NVMADRL,b				; (1)NVMADR = data_eep + index;
+	BANKSEL	NVMDAT
 	movff	data_work,NVMDATL		; NVMDATL = data_work;
 	BANKSEL	NVMCON1
-	movlw	03h						; write
-;	movlw	04h						; write and post increment 
-	movwf	NVMCON1,b				; NVMCON1bits.CMD = 0x03;
+;	movlw	03h						; (1)write
+;	movwf	NVMCON1,b				; (1)NVMCON1bits.CMD = 0x03;
+	movlw	04h						; (2)write and post increment 
+	movwf	NVMCON1,b				; (2)NVMCON1bits.CMD = 0x04;
 	bcf		GIE						; INTCON0bits.GIE = 0;
 	BANKSEL	NVMLOCK
 	movlw	55h

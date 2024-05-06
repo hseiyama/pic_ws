@@ -22,8 +22,10 @@ asm_sam09.X
 　　※post-incrementを試行
 asm_sam10.X
 　・EEPROM読み出し
+　　※post-incrementを試行
 asm_sam11.X
 　・EEPROM書き込み
+　　※post-incrementを試行
 asm_sam12.X
 　・DMA転送（ソフトウェア制御、PFM->GFR）
 　　※シミュレータ未対応

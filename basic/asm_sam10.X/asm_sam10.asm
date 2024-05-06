@@ -88,17 +88,22 @@ main:
 	movwf	NVMADRU,b
 	movlw	high data_eep
 	movwf	NVMADRH,b
+	; eep table read (low byte)		; (2)
+	movlw	low data_eep			; (2)
+	movwf	NVMADRL,b				; (2)NVMADR = data_eep;
 	; ram table write (high byte)
 	movlw	high data_ram
 	movwf	FSR0H,c
 next:
-	; eep table read (low byte)
-	BANKSEL	NVMADR
-	movlw	low data_eep
-	addwf	index,w,c
-	movwf	NVMADRL,b				; NVMADR = data_eep + index;
+	; eep table read (low byte)		; (1)
+;	BANKSEL	NVMADR					; (1)
+;	movlw	low data_eep			; (1)
+;	addwf	index,w,c				; (1)
+;	movwf	NVMADRL,b				; (1)NVMADR = data_eep + index;
 	BANKSEL	NVMCON1
-	clrf	NVMCON1,b				; NVMCON1bits.CMD = 0x00;
+;	clrf	NVMCON1,b				; (1)NVMCON1bits.CMD = 0x00;(Read)
+	movlw	01h						; (2)Read and Post Increment
+	movwf	NVMCON1,b				; (2)NVMCON1bits.CMD = 0x01;
 	BANKSEL	NVMCON0
 	bsf		NVMGO					; NVMCON0bits.GO = 1;
 wait:
