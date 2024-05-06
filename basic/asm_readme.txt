@@ -19,6 +19,7 @@ asm_sam08.X
 　・各種割り込み（実機確認）
 asm_sam09.X
 　・ROM/RAMテーブルアクセス
+　　※post-incrementを試行
 asm_sam10.X
 　・EEPROM読み出し
 asm_sam11.X

@@ -40,21 +40,31 @@ main:
 	movwf	TBLPTRU,c
 	movlw	high data_rom
 	movwf	TBLPTRH,c
+	; rom table read (low byte)		; (2)
+	movlw	low data_rom			; (2)
+	movwf	TBLPTRL,c				; (2)
 	; ram table write (high byte)
 	movlw	high data_ram
 	movwf	FSR0H,c
+	; ram table write (low byte)	; (2)
+	movlw	low data_ram			; (2)
+	movwf	FSR0L,c					; (2)
 next:
-	; rom table read (low byte)
-	movlw	low data_rom
-	addwf	index,w,c
-	movwf	TBLPTRL,c
-	tblrd	*
+	; rom table read (low byte)		; (1)
+;	movlw	low data_rom			; (1)
+;	addwf	index,w,c				; (1)
+;	movwf	TBLPTRL,c				; (1)
+;	tblrd	*						; (1)Table Read
+	tblrd	*+						; (2)Table Read with post-increment
 	movff	TABLAT,data_work
-	; ram table write (low byte)
-	movlw	low data_ram
-	addwf	index,w,c
-	movwf	FSR0L,c
-	movff	data_work,INDF0
+	; ram table write (low byte)	; (1)
+;	movlw	low data_ram			; (1)
+;	addwf	index,w,c				; (1)
+;	movwf	FSR0L,c					; (1)
+;	movff	data_work,INDF0			; (1)Indirect Data Register
+;	movff	data_work,POSTINC0		; (2)Indirect Data Register with post increment
+	movf	index,w,c				; (3)
+	movff	data_work,PLUSW0		; (3)Indirect Data Register with WREG offset
 	; next index
 	incf	index,f,c
 	movlw	DATA_SIZE
