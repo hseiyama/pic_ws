@@ -42,6 +42,9 @@ asm_sam15.X
 　・EEPROM読み出し/書き込み（実機確認）
 asm_sam16.X
 　・割り込み優先度(high/low)（実機確認）
+asm_sam17.X
+　・Reentrantアセンブラ関数をコール
+　※alloc_stack/restore_stackマクロ
 
 【Global Option】
 -Wa,-a

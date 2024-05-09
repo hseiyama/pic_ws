@@ -1,0 +1,271 @@
+
+
+Microchip MPLAB XC8 Assembler V2.45 build 20230818022343 
+                                                                                                           Thu May 09 03:47:49 2024
+
+
+     1                           	processor	18F47Q43
+     2                           	pagewidth 132
+     3                           	psect	udata_acs,global,class=COMRAM,space=1,delta=1,lowdata,noexec
+     4                           	psect	udata_bank5,global,class=BANK5,space=1,delta=1,lowdata,noexec
+     5                           	psect	udata_bank6,global,class=BANK6,space=1,delta=1,lowdata,noexec
+     6                           	psect	udata_bank7,global,class=BANK7,space=1,delta=1,lowdata,noexec
+     7                           	psect	udata_bank8,global,class=BANK8,space=1,delta=1,lowdata,noexec
+     8                           	psect	udata_bank9,global,class=BANK9,space=1,delta=1,lowdata,noexec
+     9                           	psect	udata_bank10,global,class=BANK10,space=1,delta=1,lowdata,noexec
+    10                           	psect	udata_bank11,global,class=BANK11,space=1,delta=1,lowdata,noexec
+    11                           	psect	udata_bank12,global,class=BANK12,space=1,delta=1,lowdata,noexec
+    12                           	psect	udata_bank13,global,class=BANK13,space=1,delta=1,lowdata,noexec
+    13                           	psect	udata_bank14,global,class=BANK14,space=1,delta=1,lowdata,noexec
+    14                           	psect	udata_bank15,global,class=BANK15,space=1,delta=1,lowdata,noexec
+    15                           	psect	udata_bank16,global,class=BANK16,space=1,delta=1,noexec
+    16                           	psect	udata_bank17,global,class=BANK17,space=1,delta=1,noexec
+    17                           	psect	udata_bank18,global,class=BANK18,space=1,delta=1,noexec
+    18                           	psect	udata_bank19,global,class=BANK19,space=1,delta=1,noexec
+    19                           	psect	udata_bank20,global,class=BANK20,space=1,delta=1,noexec
+    20                           	psect	udata_bank21,global,class=BANK21,space=1,delta=1,noexec
+    21                           	psect	udata_bank22,global,class=BANK22,space=1,delta=1,noexec
+    22                           	psect	udata_bank23,global,class=BANK23,space=1,delta=1,noexec
+    23                           	psect	udata_bank24,global,class=BANK24,space=1,delta=1,noexec
+    24                           	psect	udata_bank25,global,class=BANK25,space=1,delta=1,noexec
+    25                           	psect	udata_bank26,global,class=BANK26,space=1,delta=1,noexec
+    26                           	psect	udata_bank27,global,class=BANK27,space=1,delta=1,noexec
+    27                           	psect	udata_bank28,global,class=BANK28,space=1,delta=1,noexec
+    28                           	psect	udata_bank29,global,class=BANK29,space=1,delta=1,noexec
+    29                           	psect	udata_bank30,global,class=BANK30,space=1,delta=1,noexec
+    30                           	psect	udata_bank31,global,class=BANK31,space=1,delta=1,noexec
+    31                           	psect	udata_bank32,global,class=BANK32,space=1,delta=1,noexec
+    32                           	psect	udata_bank33,global,class=BANK33,space=1,delta=1,noexec
+    33                           	psect	udata_bank34,global,class=BANK34,space=1,delta=1,noexec
+    34                           	psect	udata_bank35,global,class=BANK35,space=1,delta=1,noexec
+    35                           	psect	udata_bank36,global,class=BANK36,space=1,delta=1,noexec
+    36                           	psect	udata,global,class=RAM,space=1,delta=1,noexec
+    37                           	psect	code,global,reloc=2,class=CODE,delta=1
+    38                           	psect	data,global,reloc=2,class=CONST,delta=1,noexec
+    39                           	psect	edata,global,class=EEDATA,space=3,delta=1,noexec
+    40                           	psect	resetVec,global,reloc=2,class=CODE,delta=1
+    41                           	psect	config,global,abs,ovrld,class=CONFIG,space=4,delta=1,noexec
+    42                           
+    43                           ; PIC18F47Q43 Configuration Bit Settings
+    44                           ; Assembly source line config statements
+    45                           ; CONFIG1
+    46                           ; CONFIG2
+    47                           ; CONFIG3
+    48                           ; CONFIG4
+    49                           ; CONFIG5
+    50                           ; CONFIG6
+    51                           ; CONFIG7
+    52                           ; CONFIG8
+    53                           ; CONFIG10
+    54   000000                     
+    55                           ; ***** extern *********************
+    56                           ; ***** ram ************************
+    57                           
+    58                           	psect	udata_acs
+    59   000500                     value1:
+    60   000500                     	ds	2
+    61   000502                     value2:
+    62   000502                     	ds	2
+    63   000504                     btemp:
+    64                           	callstack 0
+    65   000504                     	ds	32
+    66                           
+    67                           ; ***** main ***********************
+    68                           
+    69                           	psect	code
+    70   01FF62                     main:
+    71                           
+    72                           ; FSR1 = 0x560;
+    73   01FF62  EE11 F160          	lfsr	1,1376
+    74                           
+    75                           ; value1 = add(3, 6);
+    76   01FF66  0E06               	movlw	6
+    77   01FF68  6EE6               	movwf	postinc1,c
+    78   01FF6A  0E00               	movlw	0
+    79   01FF6C  6EE6               	movwf	postinc1,c
+    80   01FF6E  0E03               	movlw	3
+    81   01FF70  6EE6               	movwf	postinc1,c
+    82   01FF72  0E00               	movlw	0
+    83   01FF74  6EE6               	movwf	postinc1,c
+    84   01FF76  ECC7  F0FF         	call	_add
+    85   01FF7A  C504  F500         	movff	btemp,value1
+    86   01FF7E  C505  F501         	movff	btemp+1,value1+1
+    87   01FF82                     loop:
+    88                           
+    89                           ; value2 += value1;
+    90   01FF82  5000               	movf	value1,w,c
+    91   01FF84  2602               	addwf	value2,f,c
+    92   01FF86  5001               	movf	value1+1,w,c
+    93   01FF88  2203               	addwfc	value2+1,f,c
+    94   01FF8A  EFC1  F0FF         	goto	loop
+    95                           
+    96                           	psect	edata
+    97   000000                     stk_offset	set	0
+    98   000000                     auto_size	set	0
+    99                           
+   100                           ; stack_auto defines a symbol /name/_offset which equates to the
+   101                           ; stack offset of the auto object in question
+   102   000000                     
+   103                           ; stack_param defines a symbol /name/_offset which equates to the
+   104                           ; stack offset of the parameter object in question
+   105   000000                     
+   106                           ; alloc_stack adjusts the SP to allocate space for auto objects
+   107                           ; it also links in to the btemp symbol so that can be used
+   108   000000                     
+   109                           ; restore_stack adjusts the SP to remove all auto and parameter
+   110                           ; objects from the stack prior to returning from a function
+   111   000000                     
+   112                           ; ***** vector *********************
+   113                           
+   114                           	psect	resetVec
+   115   000000                     resetVec:
+   116   000000  EFB1  F0FF         	goto	main
+   117                           
+   118                           	psect	config
+   119                           
+   120                           ;Config register CONFIG1 @ 0x300000
+   121                           ;	External Oscillator Selection
+   122                           ;	FEXTOSC = OFF, Oscillator not enabled
+   123                           ;	Reset Oscillator Selection
+   124                           ;	RSTOSC = HFINTOSC_64MHZ, HFINTOSC with HFFRQ = 64 MHz and CDIV = 1:1
+   125   300000                     	org	3145728
+   126   300000  8C                 	db	140
+   127                           
+   128                           ;Config register CONFIG2 @ 0x300001
+   129                           ;	Clock out Enable bit
+   130                           ;	CLKOUTEN = OFF, CLKOUT function is disabled
+   131                           ;	PRLOCKED One-Way Set Enable bit
+   132                           ;	PR1WAY = ON, PRLOCKED bit can be cleared and set only once
+   133                           ;	Clock Switch Enable bit
+   134                           ;	CSWEN = ON, Writing to NOSC and NDIV is allowed
+   135                           ;	Fail-Safe Clock Monitor Enable bit
+   136                           ;	FCMEN = ON, Fail-Safe Clock Monitor enabled
+   137   300001                     	org	3145729
+   138   300001  FF                 	db	255
+   139                           
+   140                           ;Config register CONFIG3 @ 0x300002
+   141                           ;	MCLR Enable bit
+   142                           ;	MCLRE = EXTMCLR, If LVP = 0, MCLR pin is MCLR; If LVP = 1, RE3 pin function is MCLR
+   143                           ;	Power-up timer selection bits
+   144                           ;	PWRTS = PWRT_OFF, PWRT is disabled
+   145                           ;	Multi-vector enable bit
+   146                           ;	MVECEN = ON, Multi-vector enabled, Vector table used for interrupts
+   147                           ;	IVTLOCK bit One-way set enable bit
+   148                           ;	IVT1WAY = ON, IVTLOCKED bit can be cleared and set only once
+   149                           ;	Low Power BOR Enable bit
+   150                           ;	LPBOREN = OFF, Low-Power BOR disabled
+   151                           ;	Brown-out Reset Enable bits
+   152                           ;	BOREN = SBORDIS, Brown-out Reset enabled , SBOREN bit is ignored
+   153   300002                     	org	3145730
+   154   300002  FF                 	db	255
+   155                           
+   156                           ;Config register CONFIG4 @ 0x300003
+   157                           ;	Brown-out Reset Voltage Selection bits
+   158                           ;	BORV = VBOR_1P9, Brown-out Reset Voltage (VBOR) set to 1.9V
+   159                           ;	ZCD Disable bit
+   160                           ;	ZCD = OFF, ZCD module is disabled. ZCD can be enabled by setting the ZCDSEN bit of ZCDCON
+   161                           ;	PPSLOCK bit One-Way Set Enable bit
+   162                           ;	PPS1WAY = OFF, PPSLOCKED bit can be set and cleared repeatedly (subject to the unlock sequence)
+   163                           ;	Stack Full/Underflow Reset Enable bit
+   164                           ;	STVREN = ON, Stack full/underflow will cause Reset
+   165                           ;	Low Voltage Programming Enable bit
+   166                           ;	LVP = ON, Low voltage programming enabled. MCLR/VPP pin function is MCLR. MCLRE configuration bit 
+      +                          is ignored
+   167                           ;	Extended Instruction Set Enable bit
+   168                           ;	XINST = OFF, Extended Instruction Set and Indexed Addressing Mode disabled
+   169   300003                     	org	3145731
+   170   300003  F7                 	db	247
+   171                           
+   172                           ;Config register CONFIG5 @ 0x300004
+   173                           ;	WDT Period selection bits
+   174                           ;	WDTCPS = WDTCPS_31, Divider ratio 1:65536; software control of WDTPS
+   175                           ;	WDT operating mode
+   176                           ;	WDTE = OFF, WDT Disabled; SWDTEN is ignored
+   177   300004                     	org	3145732
+   178   300004  9F                 	db	159
+   179                           
+   180                           ;Config register CONFIG6 @ 0x300005
+   181                           ;	WDT Window Select bits
+   182                           ;	WDTCWS = WDTCWS_7, window always open (100%); software control; keyed access not required
+   183                           ;	WDT input clock selector
+   184                           ;	WDTCCS = SC, Software Control
+   185   300005                     	org	3145733
+   186   300005  FF                 	db	255
+   187                           
+   188                           ;Config register CONFIG7 @ 0x300006
+   189                           ;	Boot Block Size selection bits
+   190                           ;	BBSIZE = BBSIZE_512, Boot Block size is 512 words
+   191                           ;	Boot Block enable bit
+   192                           ;	BBEN = OFF, Boot block disabled
+   193                           ;	Storage Area Flash enable bit
+   194                           ;	SAFEN = OFF, SAF disabled
+   195                           ;	Background Debugger
+   196                           ;	DEBUG = OFF, Background Debugger disabled
+   197   300006                     	org	3145734
+   198   300006  FF                 	db	255
+   199                           
+   200                           ;Config register CONFIG8 @ 0x300007
+   201                           ;	Boot Block Write Protection bit
+   202                           ;	WRTB = OFF, Boot Block not Write protected
+   203                           ;	Configuration Register Write Protection bit
+   204                           ;	WRTC = OFF, Configuration registers not Write protected
+   205                           ;	Data EEPROM Write Protection bit
+   206                           ;	WRTD = OFF, Data EEPROM not Write protected
+   207                           ;	SAF Write protection bit
+   208                           ;	WRTSAF = OFF, SAF not Write Protected
+   209                           ;	Application Block write protection bit
+   210                           ;	WRTAPP = OFF, Application Block not write protected
+   211   300007                     	org	3145735
+   212   300007  FF                 	db	255
+   213                           
+   214                           ;Config register CONFIG10 @ 0x300009
+   215                           ;	PFM and Data EEPROM Code Protection bit
+   216                           ;	CP = OFF, PFM and Data EEPROM code protection disabled
+   217   300009                     	org	3145737
+   218   300009  FF                 	db	255
+   219                           tosu	equ	0x4FF
+   220                           tosh	equ	0x4FE
+   221                           tosl	equ	0x4FD
+   222                           stkptr	equ	0x4FC
+   223                           pclatu	equ	0x4FB
+   224                           pclath	equ	0x4FA
+   225                           pcl	equ	0x4F9
+   226                           tblptru	equ	0x4F8
+   227                           tblptrh	equ	0x4F7
+   228                           tblptrl	equ	0x4F6
+   229                           tablat	equ	0x4F5
+   230                           prodh	equ	0x4F4
+   231                           prodl	equ	0x4F3
+   232                           indf0	equ	0x4EF
+   233                           postinc0	equ	0x4EE
+   234                           postdec0	equ	0x4ED
+   235                           preinc0	equ	0x4EC
+   236                           plusw0	equ	0x4EB
+   237                           fsr0h	equ	0x4EA
+   238                           fsr0l	equ	0x4E9
+   239                           wreg	equ	0x4E8
+   240                           indf1	equ	0x4E7
+   241                           postinc1	equ	0x4E6
+   242                           postdec1	equ	0x4E5
+   243                           preinc1	equ	0x4E4
+   244                           plusw1	equ	0x4E3
+   245                           fsr1h	equ	0x4E2
+   246                           fsr1l	equ	0x4E1
+   247                           bsr	equ	0x4E0
+   248                           indf2	equ	0x4DF
+   249                           postinc2	equ	0x4DE
+   250                           postdec2	equ	0x4DD
+   251                           preinc2	equ	0x4DC
+   252                           plusw2	equ	0x4DB
+   253                           fsr2h	equ	0x4DA
+   254                           fsr2l	equ	0x4D9
+   255                           status	equ	0x4D8
+
+
+Microchip Technology PIC18 Macro Assembler V2.45 build 20230818022343 
+Symbol Table                                                                                               Thu May 09 03:47:49 2024
+
+                           _add FF8E                             main FF62                             loop FF82  
+                          btemp 0504                           value1 0500                           value2 0502  
+                        isa$std 0001                         POSTINC1 04E6                         resetVec 0000  
+                      isa$xinst 0000  
