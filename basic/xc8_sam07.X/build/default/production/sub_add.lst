@@ -1,0 +1,148 @@
+
+
+Microchip MPLAB XC8 Assembler V2.45 build 20230818022343 
+                                                                                                           Fri May 10 01:17:31 2024
+
+
+     1                           	processor	18F47Q43
+     2                           	pagewidth 132
+     3                           	opt	flic
+     4                           	psect	udata_acs,global,class=COMRAM,space=1,delta=1,lowdata,noexec
+     5                           	psect	udata_bank5,global,class=BANK5,space=1,delta=1,lowdata,noexec
+     6                           	psect	udata_bank6,global,class=BANK6,space=1,delta=1,lowdata,noexec
+     7                           	psect	udata_bank7,global,class=BANK7,space=1,delta=1,lowdata,noexec
+     8                           	psect	udata_bank8,global,class=BANK8,space=1,delta=1,lowdata,noexec
+     9                           	psect	udata_bank9,global,class=BANK9,space=1,delta=1,lowdata,noexec
+    10                           	psect	udata_bank10,global,class=BANK10,space=1,delta=1,lowdata,noexec
+    11                           	psect	udata_bank11,global,class=BANK11,space=1,delta=1,lowdata,noexec
+    12                           	psect	udata_bank12,global,class=BANK12,space=1,delta=1,lowdata,noexec
+    13                           	psect	udata_bank13,global,class=BANK13,space=1,delta=1,lowdata,noexec
+    14                           	psect	udata_bank14,global,class=BANK14,space=1,delta=1,lowdata,noexec
+    15                           	psect	udata_bank15,global,class=BANK15,space=1,delta=1,lowdata,noexec
+    16                           	psect	udata_bank16,global,class=BANK16,space=1,delta=1,noexec
+    17                           	psect	udata_bank17,global,class=BANK17,space=1,delta=1,noexec
+    18                           	psect	udata_bank18,global,class=BANK18,space=1,delta=1,noexec
+    19                           	psect	udata_bank19,global,class=BANK19,space=1,delta=1,noexec
+    20                           	psect	udata_bank20,global,class=BANK20,space=1,delta=1,noexec
+    21                           	psect	udata_bank21,global,class=BANK21,space=1,delta=1,noexec
+    22                           	psect	udata_bank22,global,class=BANK22,space=1,delta=1,noexec
+    23                           	psect	udata_bank23,global,class=BANK23,space=1,delta=1,noexec
+    24                           	psect	udata_bank24,global,class=BANK24,space=1,delta=1,noexec
+    25                           	psect	udata_bank25,global,class=BANK25,space=1,delta=1,noexec
+    26                           	psect	udata_bank26,global,class=BANK26,space=1,delta=1,noexec
+    27                           	psect	udata_bank27,global,class=BANK27,space=1,delta=1,noexec
+    28                           	psect	udata_bank28,global,class=BANK28,space=1,delta=1,noexec
+    29                           	psect	udata_bank29,global,class=BANK29,space=1,delta=1,noexec
+    30                           	psect	udata_bank30,global,class=BANK30,space=1,delta=1,noexec
+    31                           	psect	udata_bank31,global,class=BANK31,space=1,delta=1,noexec
+    32                           	psect	udata_bank32,global,class=BANK32,space=1,delta=1,noexec
+    33                           	psect	udata_bank33,global,class=BANK33,space=1,delta=1,noexec
+    34                           	psect	udata_bank34,global,class=BANK34,space=1,delta=1,noexec
+    35                           	psect	udata_bank35,global,class=BANK35,space=1,delta=1,noexec
+    36                           	psect	udata_bank36,global,class=BANK36,space=1,delta=1,noexec
+    37                           	psect	udata,global,class=RAM,space=1,delta=1,noexec
+    38                           	psect	code,global,reloc=2,class=CODE,delta=1
+    39                           	psect	data,global,reloc=2,class=CONST,delta=1,noexec
+    40                           	psect	edata,global,class=EEDATA,space=3,delta=1,noexec
+    41   000000                     
+    42                           ; ***** extern *********************
+    43                           ;EXTRN ?_add2
+    44                           ; ***** ram ************************
+    45                           
+    46                           	psect	udata_acs
+    47   00050A                     add2@temp:
+    48   00050A                     	ds	2
+    49                           
+    50                           ; everything following will be placed into the code psect
+    51                           
+    52                           ; ***** add2 ***********************
+    53                           
+    54                           	psect	code
+    55   002540                     _add:
+    56                           	callstack 0
+    57                           
+    58                           ; W is loaded by the calling function;
+    59   002540  0104               	banksel	1231	; select the bank of this object
+    60   002542  25CF               	addwf	207,w,b	; add parameter to port
+    61                           
+    62                           ; the result is already in the required location (W) so we can
+    63                           ; just return immediately
+    64   002544  0012               	return	
+    65   002546                     _add2:
+    66                           	callstack 0
+    67                           
+    68                           ; temp = b + c;
+    69   002546  5008               	movf	_add2$1& (0+255),w,c
+    70   002548  2406               	addwf	_add2$0& (0+255),w,c
+    71   00254A  6E0A               	movwf	add2@temp& (0+255),c
+    72   00254C  5009               	movf	(_add2$1+1)& (0+255),w,c
+    73   00254E  2007               	addwfc	(_add2$0+1)& (0+255),w,c
+    74   002550  6E0B               	movwf	(add2@temp+1)& (0+255),c
+    75                           
+    76                           ; return temp;
+    77                           ; movff add2@temp,?_add2
+    78                           ; movff add2@temp+1,?_add2+1
+    79   002552  0061  F428  F506   	movff	add2@temp,_add2$0
+    80   002558  0061  F42C  F507   	movff	add2@temp+1,_add2$0+1
+    81   00255E  0012               	return	
+    82                           
+    83                           	psect	edata
+    84   000000                     stk_offset	set	0
+    85   000000                     auto_size	set	0
+    86                           
+    87                           ; stack_auto defines a symbol /name/_offset which equates to the
+    88                           ; stack offset of the auto object in question
+    89   000000                     
+    90                           ; stack_param defines a symbol /name/_offset which equates to the
+    91                           ; stack offset of the parameter object in question
+    92   000000                     
+    93                           ; alloc_stack adjusts the SP to allocate space for auto objects
+    94                           ; it also links in to the btemp symbol so that can be used
+    95   000000                     
+    96                           ; restore_stack adjusts the SP to remove all auto and parameter
+    97                           ; objects from the stack prior to returning from a function
+    98   000000                     tosu	equ	0x4FF
+    99                           tosh	equ	0x4FE
+   100                           tosl	equ	0x4FD
+   101                           stkptr	equ	0x4FC
+   102                           pclatu	equ	0x4FB
+   103                           pclath	equ	0x4FA
+   104                           pcl	equ	0x4F9
+   105                           tblptru	equ	0x4F8
+   106                           tblptrh	equ	0x4F7
+   107                           tblptrl	equ	0x4F6
+   108                           tablat	equ	0x4F5
+   109                           prodh	equ	0x4F4
+   110                           prodl	equ	0x4F3
+   111                           indf0	equ	0x4EF
+   112                           postinc0	equ	0x4EE
+   113                           postdec0	equ	0x4ED
+   114                           preinc0	equ	0x4EC
+   115                           plusw0	equ	0x4EB
+   116                           fsr0h	equ	0x4EA
+   117                           fsr0l	equ	0x4E9
+   118                           wreg	equ	0x4E8
+   119                           indf1	equ	0x4E7
+   120                           postinc1	equ	0x4E6
+   121                           postdec1	equ	0x4E5
+   122                           preinc1	equ	0x4E4
+   123                           plusw1	equ	0x4E3
+   124                           fsr1h	equ	0x4E2
+   125                           fsr1l	equ	0x4E1
+   126                           bsr	equ	0x4E0
+   127                           indf2	equ	0x4DF
+   128                           postinc2	equ	0x4DE
+   129                           postdec2	equ	0x4DD
+   130                           preinc2	equ	0x4DC
+   131                           plusw2	equ	0x4DB
+   132                           fsr2h	equ	0x4DA
+   133                           fsr2l	equ	0x4D9
+   134                           status	equ	0x4D8
+
+
+Microchip Technology PIC18 Macro Assembler V2.45 build 20230818022343 
+Symbol Table                                                                                               Fri May 10 01:17:31 2024
+
+                           _add 2540                            PORTB 04CF                            _add2 2546  
+                        _add2$0 0506                          _add2$1 0508                          isa$std 0001  
+                      add2@temp 050A                        isa$xinst 0000  

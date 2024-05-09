@@ -14,3 +14,9 @@ asm_sam04.X
 　・EEPROM読み出し/書き込み（実機確認）
 asm_sam05.X
 　・Compiled/Reentrant Stackの比較
+asm_sam06.X
+　・ReentrantStack
+　・アセンブラ関数をコール
+asm_sam07.X
+　・CompiledStack
+　・アセンブラ関数をコール

@@ -1,0 +1,175 @@
+
+
+Microchip MPLAB XC8 Assembler V2.45 build 20230818022343 
+                                                                                                           Fri May 10 00:57:33 2024
+
+
+     1                           	processor	18F47Q43
+     2                           	pagewidth 132
+     3                           	opt	flic
+     4                           	psect	udata_acs,global,class=COMRAM,space=1,delta=1,lowdata,noexec
+     5                           	psect	udata_bank5,global,class=BANK5,space=1,delta=1,lowdata,noexec
+     6                           	psect	udata_bank6,global,class=BANK6,space=1,delta=1,lowdata,noexec
+     7                           	psect	udata_bank7,global,class=BANK7,space=1,delta=1,lowdata,noexec
+     8                           	psect	udata_bank8,global,class=BANK8,space=1,delta=1,lowdata,noexec
+     9                           	psect	udata_bank9,global,class=BANK9,space=1,delta=1,lowdata,noexec
+    10                           	psect	udata_bank10,global,class=BANK10,space=1,delta=1,lowdata,noexec
+    11                           	psect	udata_bank11,global,class=BANK11,space=1,delta=1,lowdata,noexec
+    12                           	psect	udata_bank12,global,class=BANK12,space=1,delta=1,lowdata,noexec
+    13                           	psect	udata_bank13,global,class=BANK13,space=1,delta=1,lowdata,noexec
+    14                           	psect	udata_bank14,global,class=BANK14,space=1,delta=1,lowdata,noexec
+    15                           	psect	udata_bank15,global,class=BANK15,space=1,delta=1,lowdata,noexec
+    16                           	psect	udata_bank16,global,class=BANK16,space=1,delta=1,noexec
+    17                           	psect	udata_bank17,global,class=BANK17,space=1,delta=1,noexec
+    18                           	psect	udata_bank18,global,class=BANK18,space=1,delta=1,noexec
+    19                           	psect	udata_bank19,global,class=BANK19,space=1,delta=1,noexec
+    20                           	psect	udata_bank20,global,class=BANK20,space=1,delta=1,noexec
+    21                           	psect	udata_bank21,global,class=BANK21,space=1,delta=1,noexec
+    22                           	psect	udata_bank22,global,class=BANK22,space=1,delta=1,noexec
+    23                           	psect	udata_bank23,global,class=BANK23,space=1,delta=1,noexec
+    24                           	psect	udata_bank24,global,class=BANK24,space=1,delta=1,noexec
+    25                           	psect	udata_bank25,global,class=BANK25,space=1,delta=1,noexec
+    26                           	psect	udata_bank26,global,class=BANK26,space=1,delta=1,noexec
+    27                           	psect	udata_bank27,global,class=BANK27,space=1,delta=1,noexec
+    28                           	psect	udata_bank28,global,class=BANK28,space=1,delta=1,noexec
+    29                           	psect	udata_bank29,global,class=BANK29,space=1,delta=1,noexec
+    30                           	psect	udata_bank30,global,class=BANK30,space=1,delta=1,noexec
+    31                           	psect	udata_bank31,global,class=BANK31,space=1,delta=1,noexec
+    32                           	psect	udata_bank32,global,class=BANK32,space=1,delta=1,noexec
+    33                           	psect	udata_bank33,global,class=BANK33,space=1,delta=1,noexec
+    34                           	psect	udata_bank34,global,class=BANK34,space=1,delta=1,noexec
+    35                           	psect	udata_bank35,global,class=BANK35,space=1,delta=1,noexec
+    36                           	psect	udata_bank36,global,class=BANK36,space=1,delta=1,noexec
+    37                           	psect	udata,global,class=RAM,space=1,delta=1,noexec
+    38                           	psect	code,global,reloc=2,class=CODE,delta=1
+    39                           	psect	data,global,reloc=2,class=CONST,delta=1,noexec
+    40                           	psect	edata,global,class=EEDATA,space=3,delta=1,noexec
+    41                           	psect	text1,global,reloc=2,class=CODE,delta=1
+    42   000000                     
+    43                           	psect	edata
+    44   000000                     stk_offset	set	0
+    45   000000                     auto_size	set	0
+    46                           
+    47                           ; stack_auto defines a symbol /name/_offset which equates to the
+    48                           ; stack offset of the auto object in question
+    49   000000                     
+    50                           ; stack_param defines a symbol /name/_offset which equates to the
+    51                           ; stack offset of the parameter object in question
+    52   000000                     
+    53                           ; alloc_stack adjusts the SP to allocate space for auto objects
+    54                           ; it also links in to the btemp symbol so that can be used
+    55   000000                     
+    56                           ; restore_stack adjusts the SP to remove all auto and parameter
+    57                           ; objects from the stack prior to returning from a function
+    58   000000                     
+    59                           	psect	text1
+    60   002502                     _add:
+    61                           	callstack 0
+    62   000000                     auto_size	set	0
+    63   000000                     stk_offset	set	0
+    64   000000                     stk_offset	set	-8
+    65   000000                     stk_offset	set	-6
+    66   000000                     auto_size	set	4
+    67   000000                     stk_offset	set	-4
+    68   000000                     auto_size	set	2
+    69   000000                     stk_offset	set	-2
+    70   002502                     	if	0
+    71   002502                     	elsif	0
+    72   002502                     	elsif	0
+    73   002502                     	elsif	1
+    74   002502  0E04               	movlw	4
+    75   002504  26E1               	addwf	fsr1l,f,c
+    76   002506  0E00               	movlw	0
+    77   002508  22E2               	addwfc	fsr1h,f,c
+    78   00250A                     	endif
+    79   00250A                     	endif
+    80   00250A                     	endif
+    81   00250A                     	endif
+    82                           
+    83                           ;tmp = base + index;
+    84   00250A  0EFA               	movlw	-6
+    85   00250C  0061 F38C  F501    	movff	plusw1,btemp
+    86   002512  0EFB               	movlw	-5
+    87   002514  0061 F38C  F502    	movff	plusw1,btemp+1
+    88   00251A  0EF8               	movlw	-8
+    89   00251C  50E3               	movf	plusw1,w,c
+    90   00251E  2601               	addwf	btemp& (0+255),f,c
+    91   002520  0EF9               	movlw	-7
+    92   002522  50E3               	movf	plusw1,w,c
+    93   002524  2202               	addwfc	(btemp+1)& (0+255),f,c
+    94   002526  0EFE               	movlw	-2
+    95   002528  0061  F404  F4E3   	movff	btemp,plusw1
+    96   00252E  0EFF               	movlw	-1
+    97   002530  0061  F408  F4E3   	movff	btemp+1,plusw1
+    98                           
+    99                           ;result = tmp + 1;
+   100   002536  0EFE               	movlw	-2
+   101   002538  50E3               	movf	plusw1,w,c
+   102   00253A  0F01               	addlw	1
+   103   00253C  6E01               	movwf	btemp& (0+255),c
+   104   00253E  0EFF               	movlw	-1
+   105   002540  0061 F38C  F502    	movff	plusw1,btemp+1
+   106   002546  0E00               	movlw	0
+   107   002548  2202               	addwfc	(btemp+1)& (0+255),f,c
+   108   00254A  0EFC               	movlw	-4
+   109   00254C  0061  F404  F4E3   	movff	btemp,plusw1
+   110   002552  0EFD               	movlw	-3
+   111   002554  0061  F408  F4E3   	movff	btemp+1,plusw1
+   112                           
+   113                           ;return result;
+   114   00255A  0EFC               	movlw	-4
+   115   00255C  0061 F38C  F501    	movff	plusw1,btemp
+   116   002562  0EFD               	movlw	-3
+   117   002564  0061 F38C  F502    	movff	plusw1,btemp+1
+   118   00256A  0EF8               	movlw	248
+   119   00256C  26E1               	addwf	fsr1l,f,c
+   120   00256E  0EFF               	movlw	255
+   121   002570  22E2               	addwfc	fsr1h,f,c
+   122   002572  0012               	return	
+   123                           tosu	equ	0x4FF
+   124                           tosh	equ	0x4FE
+   125                           tosl	equ	0x4FD
+   126                           stkptr	equ	0x4FC
+   127                           pclatu	equ	0x4FB
+   128                           pclath	equ	0x4FA
+   129                           pcl	equ	0x4F9
+   130                           tblptru	equ	0x4F8
+   131                           tblptrh	equ	0x4F7
+   132                           tblptrl	equ	0x4F6
+   133                           tablat	equ	0x4F5
+   134                           prodh	equ	0x4F4
+   135                           prodl	equ	0x4F3
+   136                           indf0	equ	0x4EF
+   137                           postinc0	equ	0x4EE
+   138                           postdec0	equ	0x4ED
+   139                           preinc0	equ	0x4EC
+   140                           plusw0	equ	0x4EB
+   141                           fsr0h	equ	0x4EA
+   142                           fsr0l	equ	0x4E9
+   143                           wreg	equ	0x4E8
+   144                           indf1	equ	0x4E7
+   145                           postinc1	equ	0x4E6
+   146                           postdec1	equ	0x4E5
+   147                           preinc1	equ	0x4E4
+   148                           plusw1	equ	0x4E3
+   149                           fsr1h	equ	0x4E2
+   150                           fsr1l	equ	0x4E1
+   151                           bsr	equ	0x4E0
+   152                           indf2	equ	0x4DF
+   153                           postinc2	equ	0x4DE
+   154                           postdec2	equ	0x4DD
+   155                           preinc2	equ	0x4DC
+   156                           plusw2	equ	0x4DB
+   157                           fsr2h	equ	0x4DA
+   158                           fsr2l	equ	0x4D9
+   159                           status	equ	0x4D8
+
+
+Microchip Technology PIC18 Macro Assembler V2.45 build 20230818022343 
+Symbol Table                                                                                               Fri May 10 00:57:33 2024
+
+                           _add 2502                            FSR1H 04E2                            FSR1L 04E1  
+                          btemp 0501                           PLUSW1 04E3                     index_offset FFFFFFFFFFFFFFF8  
+                        isa$std 0001                         POSTINC1 04E6                      base_offset FFFFFFFFFFFFFFFA  
+                      isa$xinst 0000                        auto_size 0000                       tmp_offset FFFFFFFFFFFFFFFE  
+                     stk_offset 0000                    result_offset FFFFFFFFFFFFFFFC  
