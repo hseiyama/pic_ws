@@ -34,8 +34,8 @@ _add2:
 	addwfc	BANKMASK(_add2$0+1),w,c
 	movwf	BANKMASK(add2@temp+1),c
 	; return temp;
-;	movff	add2@temp,?_add2
-;	movff	add2@temp+1,?_add2+1
+;	movff	add2@temp,?_add2			; (疑問)?_add2を使用すると
+;	movff	add2@temp+1,?_add2+1		; アドレスが「0」となる
 	movff	add2@temp,_add2$0
 	movff	add2@temp+1,_add2$0+1
 	return

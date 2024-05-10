@@ -20,3 +20,8 @@ asm_sam06.X
 asm_sam07.X
 　・CompiledStack
 　・アセンブラ関数をコール
+　　※(疑問)メモリ配置で難点あり
+asm_sam08.X
+　・Compiled/Reentrant Stackの共存
+　　※引数のメモリー配置
+　・シフト演算のアセンブラ展開
