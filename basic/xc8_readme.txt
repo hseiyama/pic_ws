@@ -21,7 +21,11 @@ asm_sam07.X
 　・CompiledStack
 　・アセンブラ関数をコール
 　　※(疑問)メモリ配置で難点あり
+　　　→C言語で別ファイルをリンクした場合は問題なし
 asm_sam08.X
 　・Compiled/Reentrant Stackの共存
 　　※引数のメモリー配置
 　・シフト演算のアセンブラ展開
+asm_sam09.X
+　・ファイル分割でのメモリ配置を確認
+　・Compiled/Reentrant Stackの共存
