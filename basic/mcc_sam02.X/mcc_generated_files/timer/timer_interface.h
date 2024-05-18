@@ -1,14 +1,14 @@
- /*
- * MAIN Generated Driver File
- * 
- * @file main.c
- * 
- * @defgroup main MAIN
- * 
- * @brief This is the generated driver implementation file for the MAIN driver.
+/** 
+ * TMR Generated Driver API Header File
  *
- * @version MAIN Driver Version 1.0.0
-*/
+ * @file timer_interface.h
+ *  
+ * @defgroup timer_interface Timer interface
+ *
+ * @brief This header file provides interfaces to Timer APIs.
+ *
+ * @version TMR_interface Version 1.0.1
+ */
 
 /*
 ? [2024] Microchip Technology Inc. and its subsidiaries.
@@ -30,38 +30,33 @@
     EXCEED AMOUNT OF FEES, IF ANY, YOU PAID DIRECTLY TO MICROCHIP FOR 
     THIS SOFTWARE.
 */
-#include "mcc_generated_files/system/system.h"
 
-/*
-    Main application
-*/
+#ifndef TMR_INTERFACE_H
+#define TMR_INTERFACE_H
 
-#define TRUE	(1)
-#define FALSE	(0)
+/**
+ * @brief This file contains API prototypes and other data types for the Timer interface.
+ * @{
+ */
 
-int main(void)
+#include<stddef.h>
+        
+/**
+ @ingroup timer_interface
+ @struct TMR_INTERFACE
+ @brief This structure contains the interfaces to Timer module
+ */
+ 
+struct TMR_INTERFACE
 {
-    SYSTEM_Initialize();
-
-    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts 
-    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global Interrupts 
-    // Use the following macros to: 
-
-    // Enable the Global Interrupts 
-    //INTERRUPT_GlobalInterruptEnable(); 
-
-    // Disable the Global Interrupts 
-    //INTERRUPT_GlobalInterruptDisable(); 
-
-
-	while (TRUE) {
-		if (IO_RB0_GetValue() == HIGH) {		// Read port (PORTB)
-			// Set high level
-			IO_RA0_SetHigh();					// Write port (LATA)
-		}
-		else {
-			// Set low level
-			IO_RA0_SetLow();					// Write port (LATA)
-		}
-	}    
-}
+    void (*Initialize)(void);
+    void (*Start)(void);
+    void (*Stop)(void);
+    void (*PeriodCountSet)(size_t count);
+    void (*TimeoutCallbackRegister)(void (* CallbackHandler)(void));
+    void (*Tasks)(void);
+};
+/**
+ * @}
+ */
+#endif //TMR_INTERFACE_H

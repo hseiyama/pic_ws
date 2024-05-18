@@ -32,36 +32,58 @@
 */
 #include "mcc_generated_files/system/system.h"
 
+#define TRUE	(1)
+#define FALSE	(0)
+
+volatile uint8_t	count_a;
+volatile uint8_t	data_uart;
+
+static void update(void);
+
+/*
+    Interrupt routine
+*/
+
+void int0Isr() {
+	// interrupt process
+	count_a++;
+}
+
+void tmr0Isr() {
+	// interrupt process
+	count_a++;
+}
+
+void u3rxIsr() {
+	// interrupt process
+	data_uart = UART3_Read();
+	UART3_Write(data_uart);
+}
+
 /*
     Main application
 */
-
-#define TRUE	(1)
-#define FALSE	(0)
 
 int main(void)
 {
     SYSTEM_Initialize();
 
-    // If using interrupts in PIC18 High/Low Priority Mode you need to enable the Global High and Low Interrupts 
-    // If using interrupts in PIC Mid-Range Compatibility Mode you need to enable the Global Interrupts 
-    // Use the following macros to: 
+	// Setting InterruptHandler
+	INT0_SetInterruptHandler(int0Isr);
+	TMR0_OverflowCallbackRegister(tmr0Isr);
+	UART3_RxCompleteCallbackRegister(u3rxIsr);
 
-    // Enable the Global Interrupts 
-    //INTERRUPT_GlobalInterruptEnable(); 
+	// Initialize variant
+	count_a = 0x00;
 
-    // Disable the Global Interrupts 
-    //INTERRUPT_GlobalInterruptDisable(); 
-
+    // Enable the Global High Interrupts 
+	INTERRUPT_GlobalInterruptHighEnable(); 
 
 	while (TRUE) {
-		if (IO_RB0_GetValue() == HIGH) {		// Read port (PORTB)
-			// Set high level
-			IO_RA0_SetHigh();					// Write port (LATA)
-		}
-		else {
-			// Set low level
-			IO_RA0_SetLow();					// Write port (LATA)
-		}
-	}    
+		update();
+	}
+}
+
+static void update(void) {
+	LATA = count_a & 0x0F;
 }
