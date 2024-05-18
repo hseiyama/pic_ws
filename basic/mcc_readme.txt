@@ -5,3 +5,9 @@ mcc_sam02.X
 mcc_sam03.X
 　・DMA転送（実機確認、PFM->UART）
 　・RESET、SLEEP命令
+mcc_sam04.X
+　・DMA転送（PFM->UART）
+　・RESET、SLEEP命令
+　・各種割り込み（INT0、TMR0、UART3）
+　・BITセクション
+　・EEPROM読み出し/書き込み（実機確認）
