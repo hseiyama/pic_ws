@@ -57,15 +57,15 @@
 // Use project enums instead of #define for ON and OFF.
 
 #include <xc.h>
-#include "tmr2.h"
 
 #define TRUE			(1)
 #define FALSE			(0)
 
-#define SYS_MAIN_CYCLE	(5)						// 5ms
+#define SYS_MAIN_CYCLE	(5)							// 5ms
 #define TIME_STOP		(0xFFFF)
 #define TIME_START		(0x0000)
-#define TIME_1S			(1000 / SYS_MAIN_CYCLE)	// 1s
+#define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
+#define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
 
 #define TMR0H_VALUE		(0x0B)		// Clk=16MHz(Fosc/4),Freq=1Hz,PreScale=1:256
 #define TMR0L_VALUE		(0xDC)		// TMR0H/L=65536-(16MHz/1Hz)/256=3036
@@ -77,35 +77,45 @@ volatile uint8_t	u8_sys_counter;
 volatile uint8_t	count_out;
 volatile uint8_t	data_recv;
 uint16_t			u16_timer_1s;
+uint16_t			u16_timer_200m;
+uint8_t				data_adch;
+uint8_t				data_adcl;
 __bit				bit_flag;
 __bit				bit_state;
 
 static void setup(void);
 static void uart3_init(void);
+static void timer2_init(void);
+static void adcc_init(void);
 static void loop(void);
 static void request_in(void);
 static void update_out(void);
-static void timer_start(uint16_t *timer);
-static void timer_stop(uint16_t *timer);
-static uint8_t timer_check(uint16_t *timer, uint16_t time);
+static void adcc_read(void);
+static void timer_start(uint16_t *p_timer);
+static void timer_stop(uint16_t *p_timer);
+static uint8_t timer_check(uint16_t *p_timer, uint16_t time);
+static void uart_send(uint8_t data);
+static void echo_hex(uint8_t hex_data);
+static void echo_str(char *p_data);
 
-void __interrupt(irq(default),base(8)) defaultIsr(void) {
+void __interrupt(irq(default),base(8)) DEFAULT_ISR(void) {
 }
 
-void __interrupt(irq(INT0),base(8)) int0Isr(void) {
-	INT0IF = 0;						// Clear interrupt flag
+void __interrupt(irq(INT0),base(8)) INT0_ISR(void) {
+	// Clear interrupt flag
+	INT0IF = 0;
 	// interrupt process
 	count_out++;
 }
 
 void __interrupt(irq(TMR2),base(8)) TMR2_ISR(void) {
-	// clear the TMR2 interrupt flag
+	// Clear interrupt flag
 	TMR2IF = 0;
 	// interrupt process
 	u8_sys_counter++;
 }
 
-void __interrupt(irq(U3RX),base(8)) u3rxIsr(void) {
+void __interrupt(irq(U3RX),base(8)) U3RX_ISR(void) {
 	// interrupt process
 	data_recv = U3RXB;
 }
@@ -140,13 +150,17 @@ static void setup(void) {
 
 	// UART3 Initialize
 	uart3_init();
-	// Timer2 Initialize
-	TMR2_Initialize();
+	// TIMER2 Initialize
+	timer2_init();
+	// ADCC Initialize
+	adcc_init();
 
 	// Initialize variant
 	u8_sys_counter = 0;
 	count_out = 0x00;
 	data_recv = 0x00;
+	data_adch = 0x00;
+	data_adcl = 0x00;
 	bit_flag = 0;
 	bit_state = 1;
 
@@ -155,6 +169,8 @@ static void setup(void) {
 
 	// start timer_1s
 	timer_start(&u16_timer_1s);
+	// start timer_200ms
+	timer_start(&u16_timer_200m);
 }
 
 static void uart3_init(void) {
@@ -176,35 +192,76 @@ static void uart3_init(void) {
 	U3RXIE = 1;						// Enable Receive interrupt
 }
 
+static void timer2_init(void){
+	// TCS FOSC/4;
+	T2CLKCON = 0x1;
+	// TMODE Software control; TCKSYNC Not Synchronized;
+	// TCKPOL Rising Edge; TPSYNC Not Synchronized;
+	T2HLT = 0x0;
+	// TRSEL T2CKIPPS pin;
+	T2RST = 0x0;
+	// PR 124 (=(64Mz/4)/(1Kz*128)-1);
+	T2PR = 0x7C;
+	// TMR 0x0;
+	T2TMR = 0x0;
+	// Clearing IF flag before enabling the interrupt.
+	PIR3bits.TMR2IF = 0;
+	// Enabling TMR2 interrupt.
+	PIE3bits.TMR2IE = 1;
+	// TCKPS 1:128; TMRON on; TOUTPS 1:1;
+	T2CON = 0xF0;
+}
+
+static void adcc_init(void) {
+	// ADCC Initialize
+	ADCON0bits.FM = 1;				// right justify
+	ADCON0bits.CS = 1;				// ADCRC Clock
+	ADPCH = 0x0C;					// RB4 is Analog channel
+	TRISB4 = 1;						// Set RB4 to input
+	ANSELB4 = 1;					// Set RB4 to analog
+	ADCON0bits.ON = 1;				// Turn ADC On
+}
+
 static void loop(void) {
 	uint8_t chk_val;
 	// check timer_1s
 	chk_val = timer_check(&u16_timer_1s, TIME_1S);
 	if (chk_val) {
 		count_out++;
-		bit_flag = 1;
+		adcc_read();
+		echo_hex(data_adch);
+		echo_hex(data_adcl);
+		echo_str("\r\n");
 		// start timer_1s
 		timer_start(&u16_timer_1s);
+	}
+	// check timer_200ms
+	chk_val = timer_check(&u16_timer_200m, TIME_200MS);
+	if (chk_val) {
+		bit_flag = 1;
+		// start timer_200ms
+		timer_start(&u16_timer_200m);
 	}
 	request_in();
 	update_out();
 }
 
 static void request_in(void) {
-	// Judge Reset
-	if (data_recv == 'r') {
+	switch (data_recv) {
+	case 'r':						// Judge Reset
 		// Reset
 		Reset();
-	}
-	// Judge Zero
-	if (data_recv == 'z') {
+		break;
+	case 'z':						// Judge Zero
 		count_out = 0x00;
 		data_recv = 0x00;
-	}
-	// Judge Uart
-	if (data_recv == 'u') {
+		break;
+	case 'u':						// Judge Uart
 		bit_state = !bit_state;
 		data_recv = 0x00;
+		break;
+	default:
+		break;
 	}
 }
 
@@ -213,31 +270,58 @@ static void update_out(void) {
 	LATA = count_out & 0x0F;
 	// UART output
 	if (bit_flag == 1) {
-		if ((bit_state == 1) && (U3TXIF == 1)) {
-			U3TXB = '+';
+		if (bit_state == 1) {
+			uart_send('+');
 		}
 		bit_flag = 0;
 	}
 }
 
-static void timer_start(uint16_t *timer) {
-	*timer = TIME_START;
+static void adcc_read(void) {
+	ADCON0bits.GO = 1;				// Start conversion
+	while (ADCON0bits.GO == 1);		// Wait for conversion done
+	data_adch = ADRESH;				// Read result
+	data_adcl = ADRESL;				// Read result
 }
 
-static void timer_stop(uint16_t *timer) {
-	*timer = TIME_STOP;
+static void timer_start(uint16_t *p_timer) {
+	*p_timer = TIME_START;
 }
 
-static uint8_t timer_check(uint16_t *timer, uint16_t time) {
+static void timer_stop(uint16_t *p_timer) {
+	*p_timer = TIME_STOP;
+}
+
+static uint8_t timer_check(uint16_t *p_timer, uint16_t time) {
 	uint8_t ret_val = FALSE;
-	if (*timer == TIME_STOP) {
-		ret_val = TRUE;
+	if (*p_timer == TIME_STOP) {
+		// Do nothing
 	} else {
-		(*timer)++;
-		if (*timer >= time) {
-			*timer = TIME_STOP;
+		(*p_timer)++;
+		if (*p_timer >= time) {
+			*p_timer = TIME_STOP;
 			ret_val = TRUE;
 		}
 	}
 	return ret_val;
+}
+
+static void uart_send(uint8_t data) {
+	while (U3TXIF == 0);
+	U3TXB = data;
+}
+
+static void echo_hex(uint8_t hex_data) {
+	static const uint8_t hex_table[] = {
+		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
+	};
+	uart_send(hex_table[(hex_data >> 4) & 0x0F]);
+	uart_send(hex_table[hex_data & 0x0F]);
+}
+
+static void echo_str(char *p_data) {
+	while (*p_data != 0x00) {
+		uart_send(*p_data);
+		p_data++;
+	}
 }
