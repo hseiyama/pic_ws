@@ -87,6 +87,7 @@ static void setup(void);
 static void uart3_init(void);
 static void timer2_init(void);
 static void adcc_init(void);
+static void pwm1_init(void);
 static void loop(void);
 static void request_in(void);
 static void update_out(void);
@@ -154,6 +155,8 @@ static void setup(void) {
 	timer2_init();
 	// ADCC Initialize
 	adcc_init();
+	// PWM1 Initialize
+	pwm1_init();
 
 	// Initialize variant
 	u8_sys_counter = 0;
@@ -180,7 +183,7 @@ static void uart3_init(void) {
 	U3TXEN = 1;						// Transmitter enable
 	// UART3 Receiver
 	ANSELA7 = 0;					// Disable analog function
-	TRISA7	= 1;					// RX set as input
+	TRISA7 = 1;						// RX set as input
 	U3RXPPS = 0x07;					// RA7->UART3:RX3
 	// UART3 Transmitter
 	ANSELA6 = 0;					// Disable analog function
@@ -222,6 +225,57 @@ static void adcc_init(void) {
 	ADCON0bits.ON = 1;				// Turn ADC On
 }
 
+static void pwm1_init(void) {
+    // PPS registers
+	TRISC0 = 0;						// PWM11 set as output
+	TRISC1 = 0;						// PWM12 set as output
+	RC0PPS = 0x18;					// RC0->PWM1_16BIT:PWM11;
+	RC1PPS = 0x19;					// RC1->PWM1_16BIT:PWM12;
+
+	// PWMERS External Reset Disabled;
+	PWM1ERS = 0x0;
+	// PWMCLK FOSC;
+	PWM1CLK = 0x2;
+	// PWMLDS Autoload disabled;
+	PWM1LDS = 0x0;
+	// PWMPRL 63;
+	PWM1PRL = 0x3F;
+	// PWMPRH 6;
+	PWM1PRH = 0x6;
+	// PWMCPRE Prescale by 4;
+	PWM1CPRE = 0x3;
+	// PWMPIPOS No postscale;
+	PWM1PIPOS = 0x0;
+	// PWMS1P1IF PWM1 output match did not occur; PWMS1P2IF PWM2 output match did not occur;
+	PWM1GIR = 0x0;
+	// PWMS1P1IE disabled; PWMS1P2IE disabled;
+	PWM1GIE = 0x0;
+	// PWMPOL1 disabled; PWMPOL2 disabled; PWMPPEN disabled; PWMMODE Left aligned mode;
+	PWM1S1CFG = 0x0;
+	// PWMS1P1L 96;
+	PWM1S1P1L = 0x20;
+	// PWMS1P1H 4;
+	PWM1S1P1H = 0x3;
+	// PWMS1P2L 224;
+	PWM1S1P2L = 0x40;
+	// PWMS1P2H 1;
+	PWM1S1P2H = 0x0;
+	// Clear PWM1_16BIT period interrupt flag
+	PIR4bits.PWM1PIF = 0;
+	// Clear PWM1_16BIT interrupt flag
+	PIR4bits.PWM1IF = 0;
+	// Clear PWM1_16BIT slice 1, output 1 interrupt flag
+	PWM1GIRbits.S1P1IF = 0;
+	// Clear PWM1_16BIT slice 1, output 2 interrupt flag
+	PWM1GIRbits.S1P2IF = 0;
+	// PWM1_16BIT interrupt enable bit
+	PIE4bits.PWM1IE = 0;
+	// PWM1_16BIT period interrupt enable bit
+	PIE4bits.PWM1PIE = 0;
+	// PWMEN enabled; PWMLD disabled; PWMERSPOL disabled; PWMERSNOW disabled;
+	PWM1CON = 0x80;
+}
+
 static void loop(void) {
 	uint8_t chk_val;
 	// check timer_1s
@@ -232,6 +286,11 @@ static void loop(void) {
 		echo_hex(data_adch);
 		echo_hex(data_adcl);
 		echo_str("\r\n");
+		// PWMS1P2
+		PWM1S1P2L = data_adcl;
+		PWM1S1P2H = data_adch;
+		// Load the period and duty cycle registers on the next period event
+		PWM1CONbits.LD = 1;
 		// start timer_1s
 		timer_start(&u16_timer_1s);
 	}
