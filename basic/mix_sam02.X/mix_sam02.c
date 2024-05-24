@@ -73,11 +73,23 @@
 #define U3BRG_VALUE		(416)		// 9600bps @ 64MHz
 									// U3BRGH/L=64MHz/(9600bps*16)-1=416
 
+#define RX_BUFFER_SIZE	(8)			// Rx buffer size should be 2^n
+#define RX_BUFFER_MASK	(RX_BUFFER_SIZE - 1)
+#define TX_BUFFER_SIZE	(8)			// Tx buffer size should be 2^n
+#define TX_BUFFER_MASK	(TX_BUFFER_SIZE - 1)
+
 volatile uint8_t	u8_sys_counter;
-volatile uint8_t	count_out;
-volatile uint8_t	data_recv;
+volatile uint8_t	au8_rx_buffer[RX_BUFFER_SIZE];
+volatile uint8_t	u8_rx_head;
+volatile uint8_t	u8_rx_tail;
+volatile uint8_t	u8_rx_count;
+volatile uint8_t	au8_tx_buffer[TX_BUFFER_SIZE];
+volatile uint8_t	u8_tx_head;
+volatile uint8_t	u8_tx_tail;
+volatile uint8_t	u8_tx_count;
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
+volatile uint8_t	count_out;
 uint8_t				data_adch;
 uint8_t				data_adcl;
 __bit				bit_flag;
@@ -95,6 +107,9 @@ static void adcc_read(void);
 static void timer_start(uint16_t *p_timer);
 static void timer_stop(uint16_t *p_timer);
 static uint8_t timer_check(uint16_t *p_timer, uint16_t time);
+static uint8_t uart_rx_ready(void);
+static uint8_t uart_tx_ready(void);
+static uint8_t uart_read(void);
 static void uart_send(uint8_t data);
 static void echo_hex(uint8_t hex_data);
 static void echo_str(char *p_data);
@@ -105,20 +120,38 @@ void __interrupt(irq(default),base(8)) DEFAULT_ISR(void) {
 void __interrupt(irq(INT0),base(8)) INT0_ISR(void) {
 	// Clear interrupt flag
 	INT0IF = 0;
-	// interrupt process
+	// Interrupt process
 	count_out++;
 }
 
 void __interrupt(irq(TMR2),base(8)) TMR2_ISR(void) {
 	// Clear interrupt flag
 	TMR2IF = 0;
-	// interrupt process
+	// Interrupt process
 	u8_sys_counter++;
 }
 
 void __interrupt(irq(U3RX),base(8)) U3RX_ISR(void) {
-	// interrupt process
-	data_recv = U3RXB;
+	uint8_t data;
+	// Interrupt process
+	data = U3RXB;
+	if (u8_rx_count < RX_BUFFER_SIZE) {
+		au8_rx_buffer[u8_rx_head] = data;
+		u8_rx_head = (u8_rx_head + 1) & RX_BUFFER_MASK;
+		u8_rx_count++;
+	}
+}
+
+void __interrupt(irq(U3TX),base(8)) U3TX_ISR(void) {
+	// Interrupt process
+	if (u8_tx_count > 0) {
+		U3TXB = au8_tx_buffer[u8_tx_tail];
+		u8_tx_tail = (u8_tx_tail + 1) & TX_BUFFER_MASK;
+		u8_tx_count--;
+	}
+	else {
+		U3TXIE = 0;
+	}
 }
 
 void main(void) {
@@ -161,7 +194,6 @@ static void setup(void) {
 	// Initialize variant
 	u8_sys_counter = 0;
 	count_out = 0x00;
-	data_recv = 0x00;
 	data_adch = 0x00;
 	data_adcl = 0x00;
 	bit_flag = 0;
@@ -193,6 +225,14 @@ static void uart3_init(void) {
 	// UART3 Enable
 	U3ON = 1;						// Serial port enable
 	U3RXIE = 1;						// Enable Receive interrupt
+
+	// Initialize variant
+	u8_rx_head = 0;
+	u8_rx_tail = 0;
+	u8_rx_count = 0;
+	u8_tx_head = 0;
+	u8_tx_tail = 0;
+	u8_tx_count = 0;
 }
 
 static void timer2_init(void){
@@ -306,6 +346,8 @@ static void loop(void) {
 }
 
 static void request_in(void) {
+	uint8_t data_recv;
+	data_recv = uart_read();
 	switch (data_recv) {
 	case 'r':						// Judge Reset
 		// Reset
@@ -313,11 +355,9 @@ static void request_in(void) {
 		break;
 	case 'z':						// Judge Zero
 		count_out = 0x00;
-		data_recv = 0x00;
 		break;
 	case 'u':						// Judge Uart
 		bit_state = !bit_state;
-		data_recv = 0x00;
 		break;
 	default:
 		break;
@@ -365,9 +405,34 @@ static uint8_t timer_check(uint16_t *p_timer, uint16_t time) {
 	return ret_val;
 }
 
+static uint8_t uart_rx_ready(void) {
+	return ((u8_rx_count > 0) ? TRUE : FALSE);
+}
+
+static uint8_t uart_tx_ready(void) {
+	return ((u8_tx_count < TX_BUFFER_SIZE) ? TRUE : FALSE);
+}
+
+static uint8_t uart_read(void) {
+	uint8_t data = 0x00;
+	if (u8_rx_count > 0) {
+		data = au8_rx_buffer[u8_rx_tail];
+		u8_rx_tail = (u8_rx_tail + 1) & RX_BUFFER_MASK;
+		U3RXIE = 0;					// Critical value decrement
+		u8_rx_count--;
+		U3RXIE = 1;
+	}
+	return data;
+}
+
 static void uart_send(uint8_t data) {
-	while (U3TXIF == 0);
-	U3TXB = data;
+	if (u8_tx_count < TX_BUFFER_SIZE) {
+		au8_tx_buffer[u8_tx_head] = data;
+		u8_tx_head = (u8_tx_head + 1) & TX_BUFFER_MASK;
+		U3TXIE = 0;					// Critical value increment
+		u8_tx_count++;
+	}
+	U3TXIE = 1;
 }
 
 static void echo_hex(uint8_t hex_data) {
