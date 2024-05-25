@@ -353,6 +353,10 @@ static void request_in(void) {
 		// Reset
 		Reset();
 		break;
+	case 's':						// Judge Sleep
+		// Sleep
+		Sleep();
+		break;
 	case 'z':						// Judge Zero
 		count_out = 0x00;
 		break;
@@ -378,7 +382,7 @@ static void update_out(void) {
 
 static void adcc_read(void) {
 	ADCON0bits.GO = 1;				// Start conversion
-	while (ADCON0bits.GO == 1);		// Wait for conversion done
+	while (ADCON0bits.GO == 1);		// Wait for conversion done (about 42us)
 	data_adch = ADRESH;				// Read result
 	data_adcl = ADRESL;				// Read result
 }

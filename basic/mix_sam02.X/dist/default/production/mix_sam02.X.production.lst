@@ -1,7 +1,7 @@
 
 
 Microchip MPLAB XC8 Assembler V2.45 build 20230818022343 
-                                                                                               Sat May 25 00:08:40 2024
+                                                                                               Sat May 25 11:29:43 2024
 
 Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9 
      1                           	processor	18F47Q43
@@ -187,40 +187,40 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    173                           ; #config settings
    174                           
    175                           	psect	cinit
-   176   002840                     __pcinit:
+   176   00284C                     __pcinit:
    177                           	callstack 0
-   178   002840                     start_initialization:
+   178   00284C                     start_initialization:
    179                           	callstack 0
-   180   002840                     __initialization:
+   180   00284C                     __initialization:
    181                           	callstack 0
    182                           
    183                           ; Clear objects allocated to BITCOMRAM (1 bytes)
-   184   002840  6A29               	clrf	(__pbitbssCOMRAM/(0+8))& (0+255),c
+   184   00284C  6A29               	clrf	(__pbitbssCOMRAM/(0+8))& (0+255),c
    185                           
    186                           ; Clear objects allocated to COMRAM (30 bytes)
-   187   002842  EE01  F101         	lfsr	0,__pbssCOMRAM
-   188   002846  0E1E               	movlw	30
-   189   002848                     clear_0:
-   190   002848  6AEE               	clrf	postinc0,c
-   191   00284A  06E8               	decf	wreg,f,c
-   192   00284C  E1FD               	bnz	clear_0
+   187   00284E  EE01  F101         	lfsr	0,__pbssCOMRAM
+   188   002852  0E1E               	movlw	30
+   189   002854                     clear_0:
+   190   002854  6AEE               	clrf	postinc0,c
+   191   002856  06E8               	decf	wreg,f,c
+   192   002858  E1FD               	bnz	clear_0
    193                           
    194                           ;
    195                           ; Setup IVTBASE
    196                           ;
-   197   00284E  0104               	movlb	4
-   198   002850  0E08               	movlw	(ivt0x8_base shr 0)& (0+255)
-   199   002852  6F5D               	movwf	93,b
-   200   002854  0E00               	movlw	(ivt0x8_base shr (0+8))& (0+255)
-   201   002856  6F5E               	movwf	94,b
-   202   002858  0E00               	movlw	(ivt0x8_base shr (0+16))& (0+255)
-   203   00285A  6F5F               	movwf	95,b
-   204   00285C                     end_of_initialization:
+   197   00285A  0104               	movlb	4
+   198   00285C  0E08               	movlw	(ivt0x8_base shr 0)& (0+255)
+   199   00285E  6F5D               	movwf	93,b
+   200   002860  0E00               	movlw	(ivt0x8_base shr (0+8))& (0+255)
+   201   002862  6F5E               	movwf	94,b
+   202   002864  0E00               	movlw	(ivt0x8_base shr (0+16))& (0+255)
+   203   002866  6F5F               	movwf	95,b
+   204   002868                     end_of_initialization:
    205                           	callstack 0
-   206   00285C                     __end_of__initialization:
+   206   002868                     __end_of__initialization:
    207                           	callstack 0
-   208   00285C  0100               	movlb	0
-   209   00285E  EF5A  F014         	goto	_main	;jump to C main() function
+   208   002868  0100               	movlb	0
+   209   00286A  EF60  F014         	goto	_main	;jump to C main() function
    210                           
    211                           	psect	bitbssCOMRAM
    212   002948                     __pbitbssCOMRAM:
@@ -372,30 +372,30 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    348 ;;
    349                           
    350                           	psect	text0
-   351   0028B4                     __ptext0:
+   351   0028C0                     __ptext0:
    352                           	callstack 0
-   353   0028B4                     _main:
+   353   0028C0                     _main:
    354                           	callstack 123
    355                           
    356                           ;mix_sam02.c: 158:  setup();
    357                           
    358                           ;incstack = 0
-   359   0028B4  ECCB  F012         	call	_setup	;wreg free
-   360   0028B8                     l1318:
+   359   0028C0  ECCB  F012         	call	_setup	;wreg free
+   360   0028C4                     l1319:
    361                           
    362                           ;mix_sam02.c: 161:   if (u8_sys_counter >= (5)) {
-   363   0028B8  0E04               	movlw	4
-   364   0028BA  641A               	cpfsgt	_u8_sys_counter^(0+1280),c	;volatile
-   365   0028BC  D7FD               	goto	l1318
+   363   0028C4  0E04               	movlw	4
+   364   0028C6  641A               	cpfsgt	_u8_sys_counter^(0+1280),c	;volatile
+   365   0028C8  D7FD               	goto	l1319
    366                           
    367                           ;mix_sam02.c: 162:    u8_sys_counter = 0;
-   368   0028BE  0E00               	movlw	0
-   369   0028C0  6E1A               	movwf	_u8_sys_counter^(0+1280),c	;volatile
+   368   0028CA  0E00               	movlw	0
+   369   0028CC  6E1A               	movwf	_u8_sys_counter^(0+1280),c	;volatile
    370                           
    371                           ;mix_sam02.c: 163:    loop();
-   372   0028C2  EC8B  F012         	call	_loop	;wreg free
-   373   0028C6  D7F8               	goto	l1318
-   374   0028C8                     __end_of_main:
+   372   0028CE  EC8B  F012         	call	_loop	;wreg free
+   373   0028D2  D7F8               	goto	l1319
+   374   0028D4                     __end_of_main:
    375                           	callstack 0
    376                           
    377 ;; *************** function _setup *****************
@@ -494,15 +494,15 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    460                           
    461                           ; BSR set to: 4
    462                           ;mix_sam02.c: 186:  uart3_init();
-   463   0025B6  EC76  F013         	call	_uart3_init	;wreg free
+   463   0025B6  EC9C  F013         	call	_uart3_init	;wreg free
    464                           
    465                           ; BSR set to: 2
    466                           ;mix_sam02.c: 188:  timer2_init();
-   467   0025BA  EC31  F014         	call	_timer2_init	;wreg free
+   467   0025BA  EC37  F014         	call	_timer2_init	;wreg free
    468                           
    469                           ; BSR set to: 3
    470                           ;mix_sam02.c: 190:  adcc_init();
-   471   0025BE  EC41  F014         	call	_adcc_init	;wreg free
+   471   0025BE  EC47  F014         	call	_adcc_init	;wreg free
    472                           
    473                           ; BSR set to: 3
    474                           ;mix_sam02.c: 192:  pwm1_init();
@@ -542,14 +542,14 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    508   0025DE  6E20               	movwf	timer_start@p_timer^(0+1280),c
    509   0025E0  0E05               	movlw	high _u16_timer_1s
    510   0025E2  6E21               	movwf	(timer_start@p_timer+1)^(0+1280),c
-   511   0025E4  EC6D  F014         	call	_timer_start	;wreg free
+   511   0025E4  EC73  F014         	call	_timer_start	;wreg free
    512                           
    513                           ;mix_sam02.c: 208:  timer_start(&u16_timer_200m);
    514   0025E8  0E1B               	movlw	low _u16_timer_200m
    515   0025EA  6E20               	movwf	timer_start@p_timer^(0+1280),c
    516   0025EC  0E05               	movlw	high _u16_timer_200m
    517   0025EE  6E21               	movwf	(timer_start@p_timer+1)^(0+1280),c
-   518   0025F0  EC6D  F014         	call	_timer_start	;wreg free
+   518   0025F0  EC73  F014         	call	_timer_start	;wreg free
    519   0025F4  0012               	return		;funcret
    520   0025F6                     __end_of_setup:
    521                           	callstack 0
@@ -595,96 +595,96 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    551 ;;
    552                           
    553                           	psect	text2
-   554   0026EC                     __ptext2:
+   554   002738                     __ptext2:
    555                           	callstack 0
-   556   0026EC                     _uart3_init:
+   556   002738                     _uart3_init:
    557                           	callstack 124
    558                           
    559                           ; BSR set to: 4
    560                           ;mix_sam02.c: 213:  U3BRG = (416);
    561                           
    562                           ;incstack = 0
-   563   0026EC  0E01               	movlw	1
-   564   0026EE  0102               	movlb	2	; () banked
-   565   0026F0  6FD5               	movwf	213,b	;volatile
-   566   0026F2  0EA0               	movlw	160
-   567   0026F4  6FD4               	movwf	212,b	;volatile
+   563   002738  0E01               	movlw	1
+   564   00273A  0102               	movlb	2	; () banked
+   565   00273C  6FD5               	movwf	213,b	;volatile
+   566   00273E  0EA0               	movlw	160
+   567   002740  6FD4               	movwf	212,b	;volatile
    568                           
    569                           ; BSR set to: 2
    570                           ;mix_sam02.c: 214:  U3RXEN = 1;
-   571   0026F6  89D1               	bsf	209,4,b	;volatile
+   571   002742  89D1               	bsf	209,4,b	;volatile
    572                           
    573                           ; BSR set to: 2
    574                           ;mix_sam02.c: 215:  U3TXEN = 1;
-   575   0026F8  8BD1               	bsf	209,5,b	;volatile
+   575   002744  8BD1               	bsf	209,5,b	;volatile
    576                           
    577                           ; BSR set to: 2
    578                           ;mix_sam02.c: 217:  ANSELA7 = 0;
-   579   0026FA  0104               	movlb	4	; () banked
-   580   0026FC  9F00               	bcf	0,7,b	;volatile
+   579   002746  0104               	movlb	4	; () banked
+   580   002748  9F00               	bcf	0,7,b	;volatile
    581                           
    582                           ; BSR set to: 4
    583                           ;mix_sam02.c: 218:  TRISA7 = 1;
-   584   0026FE  8EC6               	bsf	1222,7,c	;volatile
+   584   00274A  8EC6               	bsf	1222,7,c	;volatile
    585                           
    586                           ;mix_sam02.c: 219:  U3RXPPS = 0x07;
-   587   002700  0E07               	movlw	7
-   588   002702  0102               	movlb	2	; () banked
-   589   002704  6F76               	movwf	118,b	;volatile
+   587   00274C  0E07               	movlw	7
+   588   00274E  0102               	movlb	2	; () banked
+   589   002750  6F76               	movwf	118,b	;volatile
    590                           
    591                           ; BSR set to: 2
    592                           ;mix_sam02.c: 221:  ANSELA6 = 0;
-   593   002706  0104               	movlb	4	; () banked
-   594   002708  9D00               	bcf	0,6,b	;volatile
+   593   002752  0104               	movlb	4	; () banked
+   594   002754  9D00               	bcf	0,6,b	;volatile
    595                           
    596                           ; BSR set to: 4
    597                           ;mix_sam02.c: 222:  LATA6 = 1;
-   598   00270A  8CBE               	bsf	1214,6,c	;volatile
+   598   002756  8CBE               	bsf	1214,6,c	;volatile
    599                           
    600                           ; BSR set to: 4
    601                           ;mix_sam02.c: 223:  TRISA6 = 0;
-   602   00270C  9CC6               	bcf	1222,6,c	;volatile
+   602   002758  9CC6               	bcf	1222,6,c	;volatile
    603                           
    604                           ;mix_sam02.c: 224:  RA6PPS = 0x26;
-   605   00270E  0E26               	movlw	38
-   606   002710  0102               	movlb	2	; () banked
-   607   002712  6F07               	movwf	7,b	;volatile
+   605   00275A  0E26               	movlw	38
+   606   00275C  0102               	movlb	2	; () banked
+   607   00275E  6F07               	movwf	7,b	;volatile
    608                           
    609                           ; BSR set to: 2
    610                           ;mix_sam02.c: 226:  U3ON = 1;
-   611   002714  8FD2               	bsf	210,7,b	;volatile
+   611   002760  8FD2               	bsf	210,7,b	;volatile
    612                           
    613                           ; BSR set to: 2
    614                           ;mix_sam02.c: 227:  U3RXIE = 1;
-   615   002716  80A7               	bsf	1191,0,c	;volatile
+   615   002762  80A7               	bsf	1191,0,c	;volatile
    616                           
    617                           ;mix_sam02.c: 230:  u8_rx_head = 0;
-   618   002718  0E00               	movlw	0
-   619   00271A  6E19               	movwf	_u8_rx_head^(0+1280),c	;volatile
+   618   002764  0E00               	movlw	0
+   619   002766  6E19               	movwf	_u8_rx_head^(0+1280),c	;volatile
    620                           
    621                           ;mix_sam02.c: 231:  u8_rx_tail = 0;
-   622   00271C  0E00               	movlw	0
-   623   00271E  6E18               	movwf	_u8_rx_tail^(0+1280),c	;volatile
+   622   002768  0E00               	movlw	0
+   623   00276A  6E18               	movwf	_u8_rx_tail^(0+1280),c	;volatile
    624                           
    625                           ;mix_sam02.c: 232:  u8_rx_count = 0;
-   626   002720  0E00               	movlw	0
-   627   002722  6E17               	movwf	_u8_rx_count^(0+1280),c	;volatile
+   626   00276C  0E00               	movlw	0
+   627   00276E  6E17               	movwf	_u8_rx_count^(0+1280),c	;volatile
    628                           
    629                           ;mix_sam02.c: 233:  u8_tx_head = 0;
-   630   002724  0E00               	movlw	0
-   631   002726  6E16               	movwf	_u8_tx_head^(0+1280),c	;volatile
+   630   002770  0E00               	movlw	0
+   631   002772  6E16               	movwf	_u8_tx_head^(0+1280),c	;volatile
    632                           
    633                           ;mix_sam02.c: 234:  u8_tx_tail = 0;
-   634   002728  0E00               	movlw	0
-   635   00272A  6E15               	movwf	_u8_tx_tail^(0+1280),c	;volatile
+   634   002774  0E00               	movlw	0
+   635   002776  6E15               	movwf	_u8_tx_tail^(0+1280),c	;volatile
    636                           
    637                           ;mix_sam02.c: 235:  u8_tx_count = 0;
-   638   00272C  0E00               	movlw	0
-   639   00272E  6E14               	movwf	_u8_tx_count^(0+1280),c	;volatile
+   638   002778  0E00               	movlw	0
+   639   00277A  6E14               	movwf	_u8_tx_count^(0+1280),c	;volatile
    640                           
    641                           ; BSR set to: 2
-   642   002730  0012               	return		;funcret
-   643   002732                     __end_of_uart3_init:
+   642   00277C  0012               	return		;funcret
+   643   00277E                     __end_of_uart3_init:
    644                           	callstack 0
    645                           
    646 ;; *************** function _timer2_init *****************
@@ -728,9 +728,9 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    674 ;;
    675                           
    676                           	psect	text3
-   677   002862                     __ptext3:
+   677   00286E                     __ptext3:
    678                           	callstack 0
-   679   002862                     _timer2_init:
+   679   00286E                     _timer2_init:
    680                           	callstack 124
    681                           
    682                           ; BSR set to: 2
@@ -738,41 +738,41 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    684                           
    685                           ; BSR set to: 2
    686                           ;incstack = 0
-   687   002862  0E01               	movlw	1
-   688   002864  0103               	movlb	3	; () banked
-   689   002866  6F26               	movwf	38,b	;volatile
+   687   00286E  0E01               	movlw	1
+   688   002870  0103               	movlb	3	; () banked
+   689   002872  6F26               	movwf	38,b	;volatile
    690                           
    691                           ;mix_sam02.c: 243:  T2HLT = 0x0;
-   692   002868  0E00               	movlw	0
-   693   00286A  6F25               	movwf	37,b	;volatile
+   692   002874  0E00               	movlw	0
+   693   002876  6F25               	movwf	37,b	;volatile
    694                           
    695                           ;mix_sam02.c: 245:  T2RST = 0x0;
-   696   00286C  0E00               	movlw	0
-   697   00286E  6F27               	movwf	39,b	;volatile
+   696   002878  0E00               	movlw	0
+   697   00287A  6F27               	movwf	39,b	;volatile
    698                           
    699                           ;mix_sam02.c: 247:  T2PR = 0x7C;
-   700   002870  0E7C               	movlw	124
-   701   002872  6F23               	movwf	35,b	;volatile
+   700   00287C  0E7C               	movlw	124
+   701   00287E  6F23               	movwf	35,b	;volatile
    702                           
    703                           ;mix_sam02.c: 249:  T2TMR = 0x0;
-   704   002874  0E00               	movlw	0
-   705   002876  6F22               	movwf	34,b	;volatile
+   704   002880  0E00               	movlw	0
+   705   002882  6F22               	movwf	34,b	;volatile
    706                           
    707                           ; BSR set to: 3
    708                           ;mix_sam02.c: 251:  PIR3bits.TMR2IF = 0;
-   709   002878  96B1               	bcf	177,3,c	;volatile
+   709   002884  96B1               	bcf	177,3,c	;volatile
    710                           
    711                           ; BSR set to: 3
    712                           ;mix_sam02.c: 253:  PIE3bits.TMR2IE = 1;
-   713   00287A  86A1               	bsf	161,3,c	;volatile
+   713   002886  86A1               	bsf	161,3,c	;volatile
    714                           
    715                           ;mix_sam02.c: 255:  T2CON = 0xF0;
-   716   00287C  0EF0               	movlw	240
-   717   00287E  6F24               	movwf	36,b	;volatile
+   716   002888  0EF0               	movlw	240
+   717   00288A  6F24               	movwf	36,b	;volatile
    718                           
    719                           ; BSR set to: 3
-   720   002880  0012               	return		;funcret
-   721   002882                     __end_of_timer2_init:
+   720   00288C  0012               	return		;funcret
+   721   00288E                     __end_of_timer2_init:
    722                           	callstack 0
    723                           
    724 ;; *************** function _pwm1_init *****************
@@ -971,9 +971,9 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    897 ;;
    898                           
    899                           	psect	text5
-   900   002882                     __ptext5:
+   900   00288E                     __ptext5:
    901                           	callstack 0
-   902   002882                     _adcc_init:
+   902   00288E                     _adcc_init:
    903                           	callstack 124
    904                           
    905                           ; BSR set to: 3
@@ -981,36 +981,36 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    907                           
    908                           ; BSR set to: 2
    909                           ;incstack = 0
-   910   002882  51F3               	movf	243,w,b	;volatile
-   911   002884  0BF3               	andlw	-13
-   912   002886  0904               	iorlw	4
-   913   002888  6FF3               	movwf	243,b	;volatile
+   910   00288E  51F3               	movf	243,w,b	;volatile
+   911   002890  0BF3               	andlw	-13
+   912   002892  0904               	iorlw	4
+   913   002894  6FF3               	movwf	243,b	;volatile
    914                           
    915                           ; BSR set to: 3
    916                           ;mix_sam02.c: 261:  ADCON0bits.CS = 1;
-   917   00288A  89F3               	bsf	243,4,b	;volatile
+   917   002896  89F3               	bsf	243,4,b	;volatile
    918                           
    919                           ;mix_sam02.c: 262:  ADPCH = 0x0C;
-   920   00288C  0E0C               	movlw	12
-   921   00288E  6FEC               	movwf	236,b	;volatile
+   920   002898  0E0C               	movlw	12
+   921   00289A  6FEC               	movwf	236,b	;volatile
    922                           
    923                           ; BSR set to: 3
    924                           ;mix_sam02.c: 263:  TRISB4 = 1;
-   925   002890  88C7               	bsf	1223,4,c	;volatile
+   925   00289C  88C7               	bsf	1223,4,c	;volatile
    926                           
    927                           ; BSR set to: 3
    928                           ;mix_sam02.c: 264:  ANSELB4 = 1;
-   929   002892  0104               	movlb	4	; () banked
-   930   002894  8908               	bsf	8,4,b	;volatile
+   929   00289E  0104               	movlb	4	; () banked
+   930   0028A0  8908               	bsf	8,4,b	;volatile
    931                           
    932                           ; BSR set to: 4
    933                           ;mix_sam02.c: 265:  ADCON0bits.ON = 1;
-   934   002896  0103               	movlb	3	; () banked
-   935   002898  8FF3               	bsf	243,7,b	;volatile
+   934   0028A2  0103               	movlb	3	; () banked
+   935   0028A4  8FF3               	bsf	243,7,b	;volatile
    936                           
    937                           ; BSR set to: 3
-   938   00289A  0012               	return		;funcret
-   939   00289C                     __end_of_adcc_init:
+   938   0028A6  0012               	return		;funcret
+   939   0028A8                     __end_of_adcc_init:
    940                           	callstack 0
    941                           
    942 ;; *************** function _loop *****************
@@ -1084,13 +1084,13 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
    999                           ;mix_sam02.c: 323:  if (chk_val) {
   1000   00252C  5027               	movf	loop@chk_val^(0+1280),w,c
   1001   00252E  B4D8               	btfsc	status,2,c
-  1002   002530  D018               	goto	l1308
+  1002   002530  D018               	goto	l1309
   1003                           
   1004                           ;mix_sam02.c: 324:   count_out++;
   1005   002532  2A13               	incf	_count_out^(0+1280),f,c	;volatile
   1006                           
   1007                           ;mix_sam02.c: 325:   adcc_read();
-  1008   002534  EC64  F014         	call	_adcc_read	;wreg free
+  1008   002534  EC6A  F014         	call	_adcc_read	;wreg free
   1009                           
   1010                           ; BSR set to: 3
   1011                           ;mix_sam02.c: 326:   echo_hex(data_adch);
@@ -1104,7 +1104,7 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1019                           ;mix_sam02.c: 328:   echo_str("\r\n");
   1020   002544  0E11               	movlw	low STR_1
   1021   002546  6E21               	movwf	echo_str@p_data^(0+1280),c
-  1022   002548  ECBA  F013         	call	_echo_str	;wreg free
+  1022   002548  ECBF  F013         	call	_echo_str	;wreg free
   1023                           
   1024                           ;mix_sam02.c: 330:   PWM1S1P2L = data_adcl;
   1025   00254C  C511  F46D         	movff	_data_adcl,1133	;volatile
@@ -1120,8 +1120,8 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1035   002558  6E20               	movwf	timer_start@p_timer^(0+1280),c
   1036   00255A  0E05               	movlw	high _u16_timer_1s
   1037   00255C  6E21               	movwf	(timer_start@p_timer+1)^(0+1280),c
-  1038   00255E  EC6D  F014         	call	_timer_start	;wreg free
-  1039   002562                     l1308:
+  1038   00255E  EC73  F014         	call	_timer_start	;wreg free
+  1039   002562                     l1309:
   1040                           
   1041                           ;mix_sam02.c: 338:  chk_val = timer_check(&u16_timer_200m, (200 / (5)));
   1042   002562  0E1B               	movlw	low _u16_timer_200m
@@ -1148,21 +1148,21 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1063   002582  6E20               	movwf	timer_start@p_timer^(0+1280),c
   1064   002584  0E05               	movlw	high _u16_timer_200m
   1065   002586  6E21               	movwf	(timer_start@p_timer+1)^(0+1280),c
-  1066   002588  EC6D  F014         	call	_timer_start	;wreg free
+  1066   002588  EC73  F014         	call	_timer_start	;wreg free
   1067   00258C                     l246:
   1068                           
   1069                           ;mix_sam02.c: 344:  request_in();
-  1070   00258C  EC99  F013         	call	_request_in	;wreg free
+  1070   00258C  EC76  F013         	call	_request_in	;wreg free
   1071                           
   1072                           ;mix_sam02.c: 345:  update_out();
-  1073   002590  EC4E  F014         	call	_update_out	;wreg free
+  1073   002590  EC54  F014         	call	_update_out	;wreg free
   1074   002594  0012               	return		;funcret
   1075   002596                     __end_of_loop:
   1076                           	callstack 0
   1077                           
   1078 ;; *************** function _update_out *****************
   1079 ;; Defined at:
-  1080 ;;		line 367 in file "mix_sam02.c"
+  1080 ;;		line 371 in file "mix_sam02.c"
   1081 ;; Parameters:    Size  Location     Type
   1082 ;;		None
   1083 ;; Auto vars:     Size  Location     Type
@@ -1201,40 +1201,40 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1106 ;;
   1107                           
   1108                           	psect	text7
-  1109   00289C                     __ptext7:
+  1109   0028A8                     __ptext7:
   1110                           	callstack 0
-  1111   00289C                     _update_out:
+  1111   0028A8                     _update_out:
   1112                           	callstack 123
   1113                           
-  1114                           ;mix_sam02.c: 369:  LATA = count_out & 0x0F;
+  1114                           ;mix_sam02.c: 373:  LATA = count_out & 0x0F;
   1115                           
   1116                           ;incstack = 0
-  1117   00289C  5013               	movf	_count_out^(0+1280),w,c	;volatile
-  1118   00289E  0B0F               	andlw	15
-  1119   0028A0  6EBE               	movwf	190,c	;volatile
+  1117   0028A8  5013               	movf	_count_out^(0+1280),w,c	;volatile
+  1118   0028AA  0B0F               	andlw	15
+  1119   0028AC  6EBE               	movwf	190,c	;volatile
   1120                           
-  1121                           ;mix_sam02.c: 371:  if (bit_flag == 1) {
-  1122   0028A2  A029               	btfss	(_bit_flag/(0+8))^(0+1280),_bit_flag& (0+7),c
-  1123   0028A4  0012               	return	
+  1121                           ;mix_sam02.c: 375:  if (bit_flag == 1) {
+  1122   0028AE  A029               	btfss	(_bit_flag/(0+8))^(0+1280),_bit_flag& (0+7),c
+  1123   0028B0  0012               	return	
   1124                           
-  1125                           ;mix_sam02.c: 372:   if (bit_state == 1) {
-  1126   0028A6  A028               	btfss	(_bit_state/(0+8))^(0+1280),_bit_state& (0+7),c
-  1127   0028A8  D003               	goto	l1110
+  1125                           ;mix_sam02.c: 376:   if (bit_state == 1) {
+  1126   0028B2  A028               	btfss	(_bit_state/(0+8))^(0+1280),_bit_state& (0+7),c
+  1127   0028B4  D003               	goto	l1111
   1128                           
-  1129                           ;mix_sam02.c: 373:    uart_send('+');
-  1130   0028AA  0E2B               	movlw	43
-  1131   0028AC  ECE7  F013         	call	_uart_send
-  1132   0028B0                     l1110:
+  1129                           ;mix_sam02.c: 377:    uart_send('+');
+  1130   0028B6  0E2B               	movlw	43
+  1131   0028B8  ECEC  F013         	call	_uart_send
+  1132   0028BC                     l1111:
   1133                           
-  1134                           ;mix_sam02.c: 375:   bit_flag = 0;
-  1135   0028B0  9029               	bcf	(_bit_flag/(0+8))^(0+1280),_bit_flag& (0+7),c
-  1136   0028B2  0012               	return		;funcret
-  1137   0028B4                     __end_of_update_out:
+  1134                           ;mix_sam02.c: 379:   bit_flag = 0;
+  1135   0028BC  9029               	bcf	(_bit_flag/(0+8))^(0+1280),_bit_flag& (0+7),c
+  1136   0028BE  0012               	return		;funcret
+  1137   0028C0                     __end_of_update_out:
   1138                           	callstack 0
   1139                           
   1140 ;; *************** function _timer_start *****************
   1141 ;; Defined at:
-  1142 ;;		line 386 in file "mix_sam02.c"
+  1142 ;;		line 390 in file "mix_sam02.c"
   1143 ;; Parameters:    Size  Location     Type
   1144 ;;  p_timer         2    1[COMRAM] PTR unsigned short 
   1145 ;;		 -> u16_timer_200m(2), u16_timer_1s(2), 
@@ -1275,25 +1275,25 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1170 ;;
   1171                           
   1172                           	psect	text8
-  1173   0028DA                     __ptext8:
+  1173   0028E6                     __ptext8:
   1174                           	callstack 0
-  1175   0028DA                     _timer_start:
+  1175   0028E6                     _timer_start:
   1176                           	callstack 124
   1177                           
-  1178                           ;mix_sam02.c: 387:  *p_timer = (0x0000);
+  1178                           ;mix_sam02.c: 391:  *p_timer = (0x0000);
   1179                           
   1180                           ;incstack = 0
-  1181   0028DA  C520  F4D9         	movff	timer_start@p_timer,fsr2l
-  1182   0028DE  C521  F4DA         	movff	timer_start@p_timer+1,fsr2h
-  1183   0028E2  6ADE               	clrf	postinc2,c
-  1184   0028E4  6ADD               	clrf	postdec2,c
-  1185   0028E6  0012               	return		;funcret
-  1186   0028E8                     __end_of_timer_start:
+  1181   0028E6  C520  F4D9         	movff	timer_start@p_timer,fsr2l
+  1182   0028EA  C521  F4DA         	movff	timer_start@p_timer+1,fsr2h
+  1183   0028EE  6ADE               	clrf	postinc2,c
+  1184   0028F0  6ADD               	clrf	postdec2,c
+  1185   0028F2  0012               	return		;funcret
+  1186   0028F4                     __end_of_timer_start:
   1187                           	callstack 0
   1188                           
   1189 ;; *************** function _timer_check *****************
   1190 ;; Defined at:
-  1191 ;;		line 394 in file "mix_sam02.c"
+  1191 ;;		line 398 in file "mix_sam02.c"
   1192 ;; Parameters:    Size  Location     Type
   1193 ;;  p_timer         2    1[COMRAM] PTR unsigned short 
   1194 ;;		 -> u16_timer_200m(2), u16_timer_1s(2), 
@@ -1339,30 +1339,30 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1224   00264E                     _timer_check:
   1225                           	callstack 124
   1226                           
-  1227                           ;mix_sam02.c: 395:  uint8_t ret_val = (0);
+  1227                           ;mix_sam02.c: 399:  uint8_t ret_val = (0);
   1228                           
   1229                           ;incstack = 0
   1230   00264E  0E00               	movlw	0
   1231   002650  6E26               	movwf	timer_check@ret_val^(0+1280),c
   1232                           
-  1233                           ;mix_sam02.c: 396:  if (*p_timer == (0xFFFF)) {
+  1233                           ;mix_sam02.c: 400:  if (*p_timer == (0xFFFF)) {
   1234   002652  C520  F4D9         	movff	timer_check@p_timer,fsr2l
   1235   002656  C521  F4DA         	movff	timer_check@p_timer+1,fsr2h
   1236   00265A  28DE               	incf	postinc2,w,c
-  1237   00265C  E103               	bnz	l1236
+  1237   00265C  E103               	bnz	l1237
   1238   00265E  28DE               	incf	postinc2,w,c
   1239   002660  B4D8               	btfsc	status,2,c
-  1240   002662  D01B               	goto	l1242
-  1241   002664                     l1236:
+  1240   002662  D01B               	goto	l1243
+  1241   002664                     l1237:
   1242                           
-  1243                           ;mix_sam02.c: 399:   (*p_timer)++;
+  1243                           ;mix_sam02.c: 403:   (*p_timer)++;
   1244   002664  C520  F4D9         	movff	timer_check@p_timer,fsr2l
   1245   002668  C521  F4DA         	movff	timer_check@p_timer+1,fsr2h
   1246   00266C  2ADE               	incf	postinc2,f,c
   1247   00266E  0E00               	movlw	0
   1248   002670  22DD               	addwfc	postdec2,f,c
   1249                           
-  1250                           ;mix_sam02.c: 400:   if (*p_timer >= time) {
+  1250                           ;mix_sam02.c: 404:   if (*p_timer >= time) {
   1251   002672  C520  F4D9         	movff	timer_check@p_timer,fsr2l
   1252   002676  C521  F4DA         	movff	timer_check@p_timer+1,fsr2h
   1253   00267A  5022               	movf	timer_check@time^(0+1280),w,c
@@ -1370,9 +1370,9 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1255   00267E  5023               	movf	(timer_check@time+1)^(0+1280),w,c
   1256   002680  58DE               	subwfb	postinc2,w,c
   1257   002682  A0D8               	btfss	status,0,c
-  1258   002684  D00A               	goto	l1242
+  1258   002684  D00A               	goto	l1243
   1259                           
-  1260                           ;mix_sam02.c: 401:    *p_timer = (0xFFFF);
+  1260                           ;mix_sam02.c: 405:    *p_timer = (0xFFFF);
   1261   002686  C520  F4D9         	movff	timer_check@p_timer,fsr2l
   1262   00268A  C521  F4DA         	movff	timer_check@p_timer+1,fsr2h
   1263   00268E  0EFF               	movlw	255
@@ -1380,12 +1380,12 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1265   002692  0EFF               	movlw	255
   1266   002694  6EDD               	movwf	postdec2,c
   1267                           
-  1268                           ;mix_sam02.c: 402:    ret_val = (1);
+  1268                           ;mix_sam02.c: 406:    ret_val = (1);
   1269   002696  0E01               	movlw	1
   1270   002698  6E26               	movwf	timer_check@ret_val^(0+1280),c
-  1271   00269A                     l1242:
+  1271   00269A                     l1243:
   1272                           
-  1273                           ;mix_sam02.c: 405:  return ret_val;
+  1273                           ;mix_sam02.c: 409:  return ret_val;
   1274   00269A  5026               	movf	timer_check@ret_val^(0+1280),w,c
   1275   00269C  0012               	return		;funcret
   1276   00269E                     __end_of_timer_check:
@@ -1432,1368 +1432,1376 @@ Microchip MPLAB XC8 C Compiler v2.45 (Free license) build 20230818022343 Og9
   1307 ;;
   1308                           
   1309                           	psect	text10
-  1310   002732                     __ptext10:
+  1310   0026EC                     __ptext10:
   1311                           	callstack 0
-  1312   002732                     _request_in:
+  1312   0026EC                     _request_in:
   1313                           	callstack 123
   1314                           
   1315                           ;mix_sam02.c: 349:  uint8_t data_recv;;mix_sam02.c: 350:  data_recv = uart_read();
   1316                           
   1317                           ;incstack = 0
-  1318   002732  ECD2  F013         	call	_uart_read	;wreg free
-  1319   002736  6E23               	movwf	request_in@data_recv^(0+1280),c
+  1318   0026EC  ECD7  F013         	call	_uart_read	;wreg free
+  1319   0026F0  6E23               	movwf	request_in@data_recv^(0+1280),c
   1320                           
   1321                           ;mix_sam02.c: 351:  switch (data_recv) {
-  1322   002738  D00B               	goto	l1096
-  1323   00273A                     l251:
-  1324   00273A  00FF               	reset		;# 
+  1322   0026F2  D00D               	goto	l1097
+  1323   0026F4                     l251:
+  1324   0026F4  00FF               	reset		;# 
   1325                           
   1326                           ;mix_sam02.c: 355:   break;
-  1327   00273C  0012               	return	
-  1328   00273E                     l1092:
-  1329                           
-  1330                           ;mix_sam02.c: 357:   count_out = 0x00;
-  1331   00273E  0E00               	movlw	0
-  1332   002740  6E13               	movwf	_count_out^(0+1280),c	;volatile
-  1333                           
-  1334                           ;mix_sam02.c: 358:   break;
-  1335   002742  0012               	return	
-  1336   002744                     l254:
-  1337                           
-  1338                           ;mix_sam02.c: 360:   bit_state = !bit_state;
-  1339   002744  B028               	btfsc	(_bit_state/(0+8))^(0+1280),_bit_state& (0+7),c
-  1340   002746  D002               	goto	u70
-  1341   002748  8028               	bsf	(_bit_state/(0+8))^(0+1280),_bit_state& (0+7),c
-  1342   00274A  0012               	return	
-  1343   00274C                     u70:
-  1344   00274C  9028               	bcf	(_bit_state/(0+8))^(0+1280),_bit_state& (0+7),c
-  1345                           
-  1346                           ;mix_sam02.c: 361:   break;
-  1347   00274E  0012               	return	
-  1348   002750                     l1096:
-  1349   002750  5023               	movf	request_in@data_recv^(0+1280),w,c
-  1350   002752  6E21               	movwf	??_request_in^(0+1280),c
-  1351   002754  6A22               	clrf	(??_request_in+1)^(0+1280),c
-  1352                           
-  1353                           ; Switch on 2 bytes has been partitioned into a top level switch of size 1, and 1 sub-sw
+  1327   0026F6  0012               	return	
+  1328   0026F8                     l253:
+  1329   0026F8  0003               	sleep		;# 
+  1330                           
+  1331                           ;mix_sam02.c: 359:   break;
+  1332   0026FA  0012               	return	
+  1333   0026FC                     l1093:
+  1334                           
+  1335                           ;mix_sam02.c: 361:   count_out = 0x00;
+  1336   0026FC  0E00               	movlw	0
+  1337   0026FE  6E13               	movwf	_count_out^(0+1280),c	;volatile
+  1338                           
+  1339                           ;mix_sam02.c: 362:   break;
+  1340   002700  0012               	return	
+  1341   002702                     l255:
+  1342                           
+  1343                           ;mix_sam02.c: 364:   bit_state = !bit_state;
+  1344   002702  B028               	btfsc	(_bit_state/(0+8))^(0+1280),_bit_state& (0+7),c
+  1345   002704  D002               	goto	u70
+  1346   002706  8028               	bsf	(_bit_state/(0+8))^(0+1280),_bit_state& (0+7),c
+  1347   002708  0012               	return	
+  1348   00270A                     u70:
+  1349   00270A  9028               	bcf	(_bit_state/(0+8))^(0+1280),_bit_state& (0+7),c
+  1350                           
+  1351                           ;mix_sam02.c: 365:   break;
+  1352   00270C  0012               	return	
+  1353   00270E                     l1097:
+  1354   00270E  5023               	movf	request_in@data_recv^(0+1280),w,c
+  1355   002710  6E21               	movwf	??_request_in^(0+1280),c
+  1356   002712  6A22               	clrf	(??_request_in+1)^(0+1280),c
+  1357                           
+  1358                           ; Switch on 2 bytes has been partitioned into a top level switch of size 1, and 1 sub-sw
       +                          itches
-  1354                           ; Switch size 1, requested type "simple"
-  1355                           ; Number of cases is 1, Range of values is 0 to 0
-  1356                           ; switch strategies available:
-  1357                           ; Name         Instructions Cycles
-  1358                           ; simple_byte            4     3 (average)
-  1359                           ;	Chosen strategy is simple_byte
-  1360   002756  5022               	movf	(??_request_in+1)^(0+1280),w,c
-  1361   002758  0A00               	xorlw	0	; case 0
-  1362   00275A  A4D8               	btfss	status,2,c
-  1363   00275C  0012               	return	
-  1364                           
-  1365                           ; Switch size 1, requested type "simple"
-  1366                           ; Number of cases is 3, Range of values is 114 to 122
-  1367                           ; switch strategies available:
-  1368                           ; Name         Instructions Cycles
-  1369                           ; simple_byte           10     6 (average)
-  1370                           ;	Chosen strategy is simple_byte
-  1371   00275E  5021               	movf	??_request_in^(0+1280),w,c
-  1372   002760  0A72               	xorlw	114	; case 114
-  1373   002762  B4D8               	btfsc	status,2,c
-  1374   002764  D7EA               	goto	l251
-  1375   002766  0A07               	xorlw	7	; case 117
-  1376   002768  B4D8               	btfsc	status,2,c
-  1377   00276A  D7EC               	goto	l254
-  1378   00276C  0A0F               	xorlw	15	; case 122
-  1379   00276E  A4D8               	btfss	status,2,c
-  1380   002770  0012               	return	
-  1381   002772  D7E5               	goto	l1092
-  1382   002774                     __end_of_request_in:
-  1383                           	callstack 0
-  1384                           
-  1385 ;; *************** function _uart_read *****************
-  1386 ;; Defined at:
-  1387 ;;		line 416 in file "mix_sam02.c"
-  1388 ;; Parameters:    Size  Location     Type
-  1389 ;;		None
-  1390 ;; Auto vars:     Size  Location     Type
-  1391 ;;  data            1    1[COMRAM] unsigned char 
-  1392 ;; Return value:  Size  Location     Type
-  1393 ;;                  1    wreg      unsigned char 
-  1394 ;; Registers used:
-  1395 ;;		wreg, fsr2l, fsr2h, status,2, status,0
-  1396 ;; Tracked objects:
-  1397 ;;		On entry : 0/0
-  1398 ;;		On exit  : 0/0
-  1399 ;;		Unchanged: 0/0
-  1400 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1359                           ; Switch size 1, requested type "simple"
+  1360                           ; Number of cases is 1, Range of values is 0 to 0
+  1361                           ; switch strategies available:
+  1362                           ; Name         Instructions Cycles
+  1363                           ; simple_byte            4     3 (average)
+  1364                           ;	Chosen strategy is simple_byte
+  1365   002714  5022               	movf	(??_request_in+1)^(0+1280),w,c
+  1366   002716  0A00               	xorlw	0	; case 0
+  1367   002718  A4D8               	btfss	status,2,c
+  1368   00271A  0012               	return	
+  1369                           
+  1370                           ; Switch size 1, requested type "simple"
+  1371                           ; Number of cases is 4, Range of values is 114 to 122
+  1372                           ; switch strategies available:
+  1373                           ; Name         Instructions Cycles
+  1374                           ; simple_byte           13     7 (average)
+  1375                           ;	Chosen strategy is simple_byte
+  1376   00271C  5021               	movf	??_request_in^(0+1280),w,c
+  1377   00271E  0A72               	xorlw	114	; case 114
+  1378   002720  B4D8               	btfsc	status,2,c
+  1379   002722  D7E8               	goto	l251
+  1380   002724  0A01               	xorlw	1	; case 115
+  1381   002726  B4D8               	btfsc	status,2,c
+  1382   002728  D7E7               	goto	l253
+  1383   00272A  0A06               	xorlw	6	; case 117
+  1384   00272C  B4D8               	btfsc	status,2,c
+  1385   00272E  D7E9               	goto	l255
+  1386   002730  0A0F               	xorlw	15	; case 122
+  1387   002732  A4D8               	btfss	status,2,c
+  1388   002734  0012               	return	
+  1389   002736  D7E2               	goto	l1093
+  1390   002738                     __end_of_request_in:
+  1391                           	callstack 0
+  1392                           
+  1393 ;; *************** function _uart_read *****************
+  1394 ;; Defined at:
+  1395 ;;		line 420 in file "mix_sam02.c"
+  1396 ;; Parameters:    Size  Location     Type
+  1397 ;;		None
+  1398 ;; Auto vars:     Size  Location     Type
+  1399 ;;  data            1    1[COMRAM] unsigned char 
+  1400 ;; Return value:  Size  Location     Type
+  1401 ;;                  1    wreg      unsigned char 
+  1402 ;; Registers used:
+  1403 ;;		wreg, fsr2l, fsr2h, status,2, status,0
+  1404 ;; Tracked objects:
+  1405 ;;		On entry : 0/0
+  1406 ;;		On exit  : 0/0
+  1407 ;;		Unchanged: 0/0
+  1408 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1401 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1409 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1402 ;;      Locals:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1410 ;;      Locals:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1403 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1411 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1404 ;;      Totals:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1412 ;;      Totals:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1405 ;;Total ram usage:        1 bytes
-  1406 ;; Hardware stack levels used: 1
-  1407 ;; Hardware stack levels required when called: 1
-  1408 ;; This function calls:
-  1409 ;;		Nothing
-  1410 ;; This function is called by:
-  1411 ;;		_request_in
-  1412 ;; This function uses a non-reentrant model
-  1413 ;;
-  1414                           
-  1415                           	psect	text11
-  1416   0027A4                     __ptext11:
-  1417                           	callstack 0
-  1418   0027A4                     _uart_read:
-  1419                           	callstack 123
-  1420                           
-  1421                           ;mix_sam02.c: 417:  uint8_t data = 0x00;
+  1413 ;;Total ram usage:        1 bytes
+  1414 ;; Hardware stack levels used: 1
+  1415 ;; Hardware stack levels required when called: 1
+  1416 ;; This function calls:
+  1417 ;;		Nothing
+  1418 ;; This function is called by:
+  1419 ;;		_request_in
+  1420 ;; This function uses a non-reentrant model
+  1421 ;;
   1422                           
-  1423                           ;incstack = 0
-  1424   0027A4  0E00               	movlw	0
-  1425   0027A6  6E20               	movwf	uart_read@data^(0+1280),c
-  1426                           
-  1427                           ;mix_sam02.c: 418:  if (u8_rx_count > 0) {
-  1428   0027A8  5017               	movf	_u8_rx_count^(0+1280),w,c	;volatile
-  1429   0027AA  B4D8               	btfsc	status,2,c
-  1430   0027AC  D00E               	goto	l992
-  1431                           
-  1432                           ;mix_sam02.c: 419:   data = au8_rx_buffer[u8_rx_tail];
-  1433   0027AE  0E09               	movlw	low _au8_rx_buffer
-  1434   0027B0  2418               	addwf	_u8_rx_tail^(0+1280),w,c	;volatile
-  1435   0027B2  6ED9               	movwf	fsr2l,c
-  1436   0027B4  6ADA               	clrf	fsr2h,c
-  1437   0027B6  0E05               	movlw	high _au8_rx_buffer
-  1438   0027B8  22DA               	addwfc	fsr2h,f,c
-  1439   0027BA  50DF               	movf	indf2,w,c
-  1440   0027BC  6E20               	movwf	uart_read@data^(0+1280),c
-  1441                           
-  1442                           ;mix_sam02.c: 420:   u8_rx_tail = (u8_rx_tail + 1) & ((8) - 1);
-  1443   0027BE  2818               	incf	_u8_rx_tail^(0+1280),w,c	;volatile
-  1444   0027C0  0B07               	andlw	7
-  1445   0027C2  6E18               	movwf	_u8_rx_tail^(0+1280),c	;volatile
-  1446                           
-  1447                           ;mix_sam02.c: 421:   U3RXIE = 0;
-  1448   0027C4  90A7               	bcf	1191,0,c	;volatile
+  1423                           	psect	text11
+  1424   0027AE                     __ptext11:
+  1425                           	callstack 0
+  1426   0027AE                     _uart_read:
+  1427                           	callstack 123
+  1428                           
+  1429                           ;mix_sam02.c: 421:  uint8_t data = 0x00;
+  1430                           
+  1431                           ;incstack = 0
+  1432   0027AE  0E00               	movlw	0
+  1433   0027B0  6E20               	movwf	uart_read@data^(0+1280),c
+  1434                           
+  1435                           ;mix_sam02.c: 422:  if (u8_rx_count > 0) {
+  1436   0027B2  5017               	movf	_u8_rx_count^(0+1280),w,c	;volatile
+  1437   0027B4  B4D8               	btfsc	status,2,c
+  1438   0027B6  D00E               	goto	l993
+  1439                           
+  1440                           ;mix_sam02.c: 423:   data = au8_rx_buffer[u8_rx_tail];
+  1441   0027B8  0E09               	movlw	low _au8_rx_buffer
+  1442   0027BA  2418               	addwf	_u8_rx_tail^(0+1280),w,c	;volatile
+  1443   0027BC  6ED9               	movwf	fsr2l,c
+  1444   0027BE  6ADA               	clrf	fsr2h,c
+  1445   0027C0  0E05               	movlw	high _au8_rx_buffer
+  1446   0027C2  22DA               	addwfc	fsr2h,f,c
+  1447   0027C4  50DF               	movf	indf2,w,c
+  1448   0027C6  6E20               	movwf	uart_read@data^(0+1280),c
   1449                           
-  1450                           ;mix_sam02.c: 422:   u8_rx_count--;
-  1451   0027C6  0617               	decf	_u8_rx_count^(0+1280),f,c	;volatile
-  1452                           
-  1453                           ;mix_sam02.c: 423:   U3RXIE = 1;
-  1454   0027C8  80A7               	bsf	1191,0,c	;volatile
-  1455   0027CA                     l992:
-  1456                           
-  1457                           ;mix_sam02.c: 425:  return data;
-  1458   0027CA  5020               	movf	uart_read@data^(0+1280),w,c
-  1459   0027CC  0012               	return		;funcret
-  1460   0027CE                     __end_of_uart_read:
-  1461                           	callstack 0
-  1462                           
-  1463 ;; *************** function _echo_str *****************
-  1464 ;; Defined at:
-  1465 ;;		line 446 in file "mix_sam02.c"
-  1466 ;; Parameters:    Size  Location     Type
-  1467 ;;  p_data          1    2[COMRAM] PTR unsigned char 
-  1468 ;;		 -> STR_1(3), 
-  1469 ;; Auto vars:     Size  Location     Type
-  1470 ;;		None
-  1471 ;; Return value:  Size  Location     Type
-  1472 ;;                  1    wreg      void 
-  1473 ;; Registers used:
-  1474 ;;		wreg, fsr2l, fsr2h, status,2, status,0, tblptrl, tblptrh, tblptru, cstack
-  1475 ;; Tracked objects:
-  1476 ;;		On entry : 0/3
-  1477 ;;		On exit  : 0/0
-  1478 ;;		Unchanged: 0/0
-  1479 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1450                           ;mix_sam02.c: 424:   u8_rx_tail = (u8_rx_tail + 1) & ((8) - 1);
+  1451   0027C8  2818               	incf	_u8_rx_tail^(0+1280),w,c	;volatile
+  1452   0027CA  0B07               	andlw	7
+  1453   0027CC  6E18               	movwf	_u8_rx_tail^(0+1280),c	;volatile
+  1454                           
+  1455                           ;mix_sam02.c: 425:   U3RXIE = 0;
+  1456   0027CE  90A7               	bcf	1191,0,c	;volatile
+  1457                           
+  1458                           ;mix_sam02.c: 426:   u8_rx_count--;
+  1459   0027D0  0617               	decf	_u8_rx_count^(0+1280),f,c	;volatile
+  1460                           
+  1461                           ;mix_sam02.c: 427:   U3RXIE = 1;
+  1462   0027D2  80A7               	bsf	1191,0,c	;volatile
+  1463   0027D4                     l993:
+  1464                           
+  1465                           ;mix_sam02.c: 429:  return data;
+  1466   0027D4  5020               	movf	uart_read@data^(0+1280),w,c
+  1467   0027D6  0012               	return		;funcret
+  1468   0027D8                     __end_of_uart_read:
+  1469                           	callstack 0
+  1470                           
+  1471 ;; *************** function _echo_str *****************
+  1472 ;; Defined at:
+  1473 ;;		line 450 in file "mix_sam02.c"
+  1474 ;; Parameters:    Size  Location     Type
+  1475 ;;  p_data          1    2[COMRAM] PTR unsigned char 
+  1476 ;;		 -> STR_1(3), 
+  1477 ;; Auto vars:     Size  Location     Type
+  1478 ;;		None
+  1479 ;; Return value:  Size  Location     Type
+  1480 ;;                  1    wreg      void 
+  1481 ;; Registers used:
+  1482 ;;		wreg, fsr2l, fsr2h, status,2, status,0, tblptrl, tblptrh, tblptru, cstack
+  1483 ;; Tracked objects:
+  1484 ;;		On entry : 0/3
+  1485 ;;		On exit  : 0/0
+  1486 ;;		Unchanged: 0/0
+  1487 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1480 ;;      Params:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1488 ;;      Params:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1481 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1489 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1482 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1490 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1483 ;;      Totals:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1491 ;;      Totals:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1484 ;;Total ram usage:        1 bytes
-  1485 ;; Hardware stack levels used: 1
-  1486 ;; Hardware stack levels required when called: 2
-  1487 ;; This function calls:
-  1488 ;;		_uart_send
-  1489 ;; This function is called by:
-  1490 ;;		_loop
-  1491 ;; This function uses a non-reentrant model
-  1492 ;;
-  1493                           
-  1494                           	psect	text12
-  1495   002774                     __ptext12:
-  1496                           	callstack 0
-  1497   002774                     _echo_str:
-  1498                           	callstack 123
-  1499                           
-  1500                           ;mix_sam02.c: 447:  while (*p_data != 0x00) {
+  1492 ;;Total ram usage:        1 bytes
+  1493 ;; Hardware stack levels used: 1
+  1494 ;; Hardware stack levels required when called: 2
+  1495 ;; This function calls:
+  1496 ;;		_uart_send
+  1497 ;; This function is called by:
+  1498 ;;		_loop
+  1499 ;; This function uses a non-reentrant model
+  1500 ;;
   1501                           
-  1502                           ;incstack = 0
-  1503   002774  D00B               	goto	l1252
-  1504   002776                     l1248:
-  1505                           
-  1506                           ;mix_sam02.c: 448:   uart_send(*p_data);
-  1507   002776  C521  F4F6         	movff	echo_str@p_data,tblptrl
-  1508   00277A                     	if	1	;There is more than 1 active tblptr byte
-  1509   00277A  0E25               	movlw	high __smallconst
-  1510   00277C  6EF7               	movwf	tblptrh,c
-  1511   00277E                     	endif
-  1512   00277E                     	if	0	;tblptru may be non-zero
-  1513   00277E                     	endif
-  1514   00277E                     	if	1	;Program memory is > 0xFFFF, there are 3 active tblptr bytes
-  1515   00277E  0E00               	movlw	low (__smallconst shr (0+16))
-  1516   002780  6EF8               	movwf	tblptru,c
-  1517   002782                     	endif
-  1518   002782  0008               	tblrd		*
-  1519   002784  50F5               	movf	tablat,w,c
-  1520   002786  ECE7  F013         	call	_uart_send
-  1521                           
-  1522                           ;mix_sam02.c: 449:   p_data++;
-  1523   00278A  2A21               	incf	echo_str@p_data^(0+1280),f,c
-  1524   00278C                     l1252:
-  1525                           
-  1526                           ;mix_sam02.c: 447:  while (*p_data != 0x00) {
-  1527   00278C  C521  F4F6         	movff	echo_str@p_data,tblptrl
-  1528   002790                     	if	1	;There is more than 1 active tblptr byte
-  1529   002790  0E25               	movlw	high __smallconst
-  1530   002792  6EF7               	movwf	tblptrh,c
-  1531   002794                     	endif
-  1532   002794                     	if	0	;tblptru may be non-zero
-  1533   002794                     	endif
-  1534   002794                     	if	1	;Program memory is > 0xFFFF, there are 3 active tblptr bytes
-  1535   002794  0E00               	movlw	low (__smallconst shr (0+16))
-  1536   002796  6EF8               	movwf	tblptru,c
-  1537   002798                     	endif
-  1538   002798  0008               	tblrd		*
-  1539   00279A  50F5               	movf	tablat,w,c
-  1540   00279C  0900               	iorlw	0
-  1541   00279E  B4D8               	btfsc	status,2,c
-  1542   0027A0  0012               	return	
-  1543   0027A2  D7E9               	goto	l1248
-  1544   0027A4                     __end_of_echo_str:
-  1545                           	callstack 0
-  1546                           
-  1547 ;; *************** function _echo_hex *****************
-  1548 ;; Defined at:
-  1549 ;;		line 438 in file "mix_sam02.c"
-  1550 ;; Parameters:    Size  Location     Type
-  1551 ;;  hex_data        1    wreg     unsigned char 
-  1552 ;; Auto vars:     Size  Location     Type
-  1553 ;;  hex_data        1    4[COMRAM] unsigned char 
-  1554 ;; Return value:  Size  Location     Type
-  1555 ;;                  1    wreg      void 
-  1556 ;; Registers used:
-  1557 ;;		wreg, fsr2l, fsr2h, status,2, status,0, tblptrl, tblptrh, tblptru, cstack
-  1558 ;; Tracked objects:
-  1559 ;;		On entry : 0/3
-  1560 ;;		On exit  : 0/0
-  1561 ;;		Unchanged: 0/0
-  1562 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1502                           	psect	text12
+  1503   00277E                     __ptext12:
+  1504                           	callstack 0
+  1505   00277E                     _echo_str:
+  1506                           	callstack 123
+  1507                           
+  1508                           ;mix_sam02.c: 451:  while (*p_data != 0x00) {
+  1509                           
+  1510                           ;incstack = 0
+  1511   00277E  D00B               	goto	l1253
+  1512   002780                     l1249:
+  1513                           
+  1514                           ;mix_sam02.c: 452:   uart_send(*p_data);
+  1515   002780  C521  F4F6         	movff	echo_str@p_data,tblptrl
+  1516   002784                     	if	1	;There is more than 1 active tblptr byte
+  1517   002784  0E25               	movlw	high __smallconst
+  1518   002786  6EF7               	movwf	tblptrh,c
+  1519   002788                     	endif
+  1520   002788                     	if	0	;tblptru may be non-zero
+  1521   002788                     	endif
+  1522   002788                     	if	1	;Program memory is > 0xFFFF, there are 3 active tblptr bytes
+  1523   002788  0E00               	movlw	low (__smallconst shr (0+16))
+  1524   00278A  6EF8               	movwf	tblptru,c
+  1525   00278C                     	endif
+  1526   00278C  0008               	tblrd		*
+  1527   00278E  50F5               	movf	tablat,w,c
+  1528   002790  ECEC  F013         	call	_uart_send
+  1529                           
+  1530                           ;mix_sam02.c: 453:   p_data++;
+  1531   002794  2A21               	incf	echo_str@p_data^(0+1280),f,c
+  1532   002796                     l1253:
+  1533                           
+  1534                           ;mix_sam02.c: 451:  while (*p_data != 0x00) {
+  1535   002796  C521  F4F6         	movff	echo_str@p_data,tblptrl
+  1536   00279A                     	if	1	;There is more than 1 active tblptr byte
+  1537   00279A  0E25               	movlw	high __smallconst
+  1538   00279C  6EF7               	movwf	tblptrh,c
+  1539   00279E                     	endif
+  1540   00279E                     	if	0	;tblptru may be non-zero
+  1541   00279E                     	endif
+  1542   00279E                     	if	1	;Program memory is > 0xFFFF, there are 3 active tblptr bytes
+  1543   00279E  0E00               	movlw	low (__smallconst shr (0+16))
+  1544   0027A0  6EF8               	movwf	tblptru,c
+  1545   0027A2                     	endif
+  1546   0027A2  0008               	tblrd		*
+  1547   0027A4  50F5               	movf	tablat,w,c
+  1548   0027A6  0900               	iorlw	0
+  1549   0027A8  B4D8               	btfsc	status,2,c
+  1550   0027AA  0012               	return	
+  1551   0027AC  D7E9               	goto	l1249
+  1552   0027AE                     __end_of_echo_str:
+  1553                           	callstack 0
+  1554                           
+  1555 ;; *************** function _echo_hex *****************
+  1556 ;; Defined at:
+  1557 ;;		line 442 in file "mix_sam02.c"
+  1558 ;; Parameters:    Size  Location     Type
+  1559 ;;  hex_data        1    wreg     unsigned char 
+  1560 ;; Auto vars:     Size  Location     Type
+  1561 ;;  hex_data        1    4[COMRAM] unsigned char 
+  1562 ;; Return value:  Size  Location     Type
+  1563 ;;                  1    wreg      void 
+  1564 ;; Registers used:
+  1565 ;;		wreg, fsr2l, fsr2h, status,2, status,0, tblptrl, tblptrh, tblptru, cstack
+  1566 ;; Tracked objects:
+  1567 ;;		On entry : 0/3
+  1568 ;;		On exit  : 0/0
+  1569 ;;		Unchanged: 0/0
+  1570 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1563 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1571 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1564 ;;      Locals:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1572 ;;      Locals:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1565 ;;      Temps:          2       0       0       0       0       0       0       0       0       0       0       0       
+  1573 ;;      Temps:          2       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1566 ;;      Totals:         3       0       0       0       0       0       0       0       0       0       0       0       
+  1574 ;;      Totals:         3       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1567 ;;Total ram usage:        3 bytes
-  1568 ;; Hardware stack levels used: 1
-  1569 ;; Hardware stack levels required when called: 2
-  1570 ;; This function calls:
-  1571 ;;		_uart_send
-  1572 ;; This function is called by:
-  1573 ;;		_loop
-  1574 ;; This function uses a non-reentrant model
-  1575 ;;
-  1576                           
-  1577                           	psect	text13
-  1578   00269E                     __ptext13:
-  1579                           	callstack 0
-  1580   00269E                     _echo_hex:
-  1581                           	callstack 123
-  1582                           
-  1583                           ;incstack = 0
-  1584                           ;echo_hex@hex_data stored from wreg
-  1585   00269E  6E23               	movwf	echo_hex@hex_data^(0+1280),c
-  1586                           
-  1587                           ;mix_sam02.c: 439:  static const uint8_t hex_table[] = {;mix_sam02.c: 442:  uart_send(he
+  1575 ;;Total ram usage:        3 bytes
+  1576 ;; Hardware stack levels used: 1
+  1577 ;; Hardware stack levels required when called: 2
+  1578 ;; This function calls:
+  1579 ;;		_uart_send
+  1580 ;; This function is called by:
+  1581 ;;		_loop
+  1582 ;; This function uses a non-reentrant model
+  1583 ;;
+  1584                           
+  1585                           	psect	text13
+  1586   00269E                     __ptext13:
+  1587                           	callstack 0
+  1588   00269E                     _echo_hex:
+  1589                           	callstack 123
+  1590                           
+  1591                           ;incstack = 0
+  1592                           ;echo_hex@hex_data stored from wreg
+  1593   00269E  6E23               	movwf	echo_hex@hex_data^(0+1280),c
+  1594                           
+  1595                           ;mix_sam02.c: 443:  static const uint8_t hex_table[] = {;mix_sam02.c: 446:  uart_send(he
       +                          x_table[(hex_data >> 4) & 0x0F]);
-  1588   0026A0  C523  F521         	movff	echo_hex@hex_data,??_echo_hex
-  1589   0026A4  3A21               	swapf	??_echo_hex^(0+1280),f,c
-  1590   0026A6  0E0F               	movlw	15
-  1591   0026A8  1621               	andwf	??_echo_hex^(0+1280),f,c
-  1592   0026AA  0E0F               	movlw	15
-  1593   0026AC  1621               	andwf	??_echo_hex^(0+1280),f,c
-  1594   0026AE  5021               	movf	??_echo_hex^(0+1280),w,c
-  1595   0026B0  0F01               	addlw	low echo_hex@hex_table
-  1596   0026B2  6E22               	movwf	(??_echo_hex+1)^(0+1280),c
-  1597   0026B4  C522  F4F6         	movff	??_echo_hex+1,tblptrl
-  1598   0026B8                     	if	1	;There is more than 1 active tblptr byte
-  1599   0026B8  0E25               	movlw	high __smallconst
-  1600   0026BA  6EF7               	movwf	tblptrh,c
-  1601   0026BC                     	endif
-  1602   0026BC                     	if	0	;tblptru may be non-zero
-  1603   0026BC                     	endif
-  1604   0026BC                     	if	1	;Program memory is > 0xFFFF, there are 3 active tblptr bytes
-  1605   0026BC  0E00               	movlw	low (__smallconst shr (0+16))
-  1606   0026BE  6EF8               	movwf	tblptru,c
-  1607   0026C0                     	endif
-  1608   0026C0  0008               	tblrd		*
-  1609   0026C2  50F5               	movf	tablat,w,c
-  1610   0026C4  ECE7  F013         	call	_uart_send
-  1611                           
-  1612                           ;mix_sam02.c: 443:  uart_send(hex_table[hex_data & 0x0F]);
-  1613   0026C8  C523  F521         	movff	echo_hex@hex_data,??_echo_hex
-  1614   0026CC  0E0F               	movlw	15
-  1615   0026CE  1621               	andwf	??_echo_hex^(0+1280),f,c
-  1616   0026D0  5021               	movf	??_echo_hex^(0+1280),w,c
-  1617   0026D2  0F01               	addlw	low echo_hex@hex_table
-  1618   0026D4  6E22               	movwf	(??_echo_hex+1)^(0+1280),c
-  1619   0026D6  C522  F4F6         	movff	??_echo_hex+1,tblptrl
-  1620   0026DA                     	if	1	;There is more than 1 active tblptr byte
-  1621   0026DA  0E25               	movlw	high __smallconst
-  1622   0026DC  6EF7               	movwf	tblptrh,c
-  1623   0026DE                     	endif
-  1624   0026DE                     	if	0	;tblptru may be non-zero
-  1625   0026DE                     	endif
-  1626   0026DE                     	if	1	;Program memory is > 0xFFFF, there are 3 active tblptr bytes
-  1627   0026DE  0E00               	movlw	low (__smallconst shr (0+16))
-  1628   0026E0  6EF8               	movwf	tblptru,c
-  1629   0026E2                     	endif
-  1630   0026E2  0008               	tblrd		*
-  1631   0026E4  50F5               	movf	tablat,w,c
-  1632   0026E6  ECE7  F013         	call	_uart_send
-  1633   0026EA  0012               	return		;funcret
-  1634   0026EC                     __end_of_echo_hex:
-  1635                           	callstack 0
-  1636                           
-  1637 ;; *************** function _uart_send *****************
-  1638 ;; Defined at:
-  1639 ;;		line 428 in file "mix_sam02.c"
-  1640 ;; Parameters:    Size  Location     Type
-  1641 ;;  data            1    wreg     unsigned char 
-  1642 ;; Auto vars:     Size  Location     Type
-  1643 ;;  data            1    1[COMRAM] unsigned char 
-  1644 ;; Return value:  Size  Location     Type
-  1645 ;;                  1    wreg      void 
-  1646 ;; Registers used:
-  1647 ;;		wreg, fsr2l, fsr2h, status,2, status,0
-  1648 ;; Tracked objects:
-  1649 ;;		On entry : 0/0
-  1650 ;;		On exit  : 0/0
-  1651 ;;		Unchanged: 0/0
-  1652 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1596   0026A0  C523  F521         	movff	echo_hex@hex_data,??_echo_hex
+  1597   0026A4  3A21               	swapf	??_echo_hex^(0+1280),f,c
+  1598   0026A6  0E0F               	movlw	15
+  1599   0026A8  1621               	andwf	??_echo_hex^(0+1280),f,c
+  1600   0026AA  0E0F               	movlw	15
+  1601   0026AC  1621               	andwf	??_echo_hex^(0+1280),f,c
+  1602   0026AE  5021               	movf	??_echo_hex^(0+1280),w,c
+  1603   0026B0  0F01               	addlw	low echo_hex@hex_table
+  1604   0026B2  6E22               	movwf	(??_echo_hex+1)^(0+1280),c
+  1605   0026B4  C522  F4F6         	movff	??_echo_hex+1,tblptrl
+  1606   0026B8                     	if	1	;There is more than 1 active tblptr byte
+  1607   0026B8  0E25               	movlw	high __smallconst
+  1608   0026BA  6EF7               	movwf	tblptrh,c
+  1609   0026BC                     	endif
+  1610   0026BC                     	if	0	;tblptru may be non-zero
+  1611   0026BC                     	endif
+  1612   0026BC                     	if	1	;Program memory is > 0xFFFF, there are 3 active tblptr bytes
+  1613   0026BC  0E00               	movlw	low (__smallconst shr (0+16))
+  1614   0026BE  6EF8               	movwf	tblptru,c
+  1615   0026C0                     	endif
+  1616   0026C0  0008               	tblrd		*
+  1617   0026C2  50F5               	movf	tablat,w,c
+  1618   0026C4  ECEC  F013         	call	_uart_send
+  1619                           
+  1620                           ;mix_sam02.c: 447:  uart_send(hex_table[hex_data & 0x0F]);
+  1621   0026C8  C523  F521         	movff	echo_hex@hex_data,??_echo_hex
+  1622   0026CC  0E0F               	movlw	15
+  1623   0026CE  1621               	andwf	??_echo_hex^(0+1280),f,c
+  1624   0026D0  5021               	movf	??_echo_hex^(0+1280),w,c
+  1625   0026D2  0F01               	addlw	low echo_hex@hex_table
+  1626   0026D4  6E22               	movwf	(??_echo_hex+1)^(0+1280),c
+  1627   0026D6  C522  F4F6         	movff	??_echo_hex+1,tblptrl
+  1628   0026DA                     	if	1	;There is more than 1 active tblptr byte
+  1629   0026DA  0E25               	movlw	high __smallconst
+  1630   0026DC  6EF7               	movwf	tblptrh,c
+  1631   0026DE                     	endif
+  1632   0026DE                     	if	0	;tblptru may be non-zero
+  1633   0026DE                     	endif
+  1634   0026DE                     	if	1	;Program memory is > 0xFFFF, there are 3 active tblptr bytes
+  1635   0026DE  0E00               	movlw	low (__smallconst shr (0+16))
+  1636   0026E0  6EF8               	movwf	tblptru,c
+  1637   0026E2                     	endif
+  1638   0026E2  0008               	tblrd		*
+  1639   0026E4  50F5               	movf	tablat,w,c
+  1640   0026E6  ECEC  F013         	call	_uart_send
+  1641   0026EA  0012               	return		;funcret
+  1642   0026EC                     __end_of_echo_hex:
+  1643                           	callstack 0
+  1644                           
+  1645 ;; *************** function _uart_send *****************
+  1646 ;; Defined at:
+  1647 ;;		line 432 in file "mix_sam02.c"
+  1648 ;; Parameters:    Size  Location     Type
+  1649 ;;  data            1    wreg     unsigned char 
+  1650 ;; Auto vars:     Size  Location     Type
+  1651 ;;  data            1    1[COMRAM] unsigned char 
+  1652 ;; Return value:  Size  Location     Type
+  1653 ;;                  1    wreg      void 
+  1654 ;; Registers used:
+  1655 ;;		wreg, fsr2l, fsr2h, status,2, status,0
+  1656 ;; Tracked objects:
+  1657 ;;		On entry : 0/0
+  1658 ;;		On exit  : 0/0
+  1659 ;;		Unchanged: 0/0
+  1660 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1653 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1661 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1654 ;;      Locals:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1662 ;;      Locals:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1655 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1663 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1656 ;;      Totals:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1664 ;;      Totals:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1657 ;;Total ram usage:        1 bytes
-  1658 ;; Hardware stack levels used: 1
-  1659 ;; Hardware stack levels required when called: 1
-  1660 ;; This function calls:
-  1661 ;;		Nothing
-  1662 ;; This function is called by:
-  1663 ;;		_update_out
-  1664 ;;		_echo_hex
-  1665 ;;		_echo_str
-  1666 ;; This function uses a non-reentrant model
-  1667 ;;
-  1668                           
-  1669                           	psect	text14
-  1670   0027CE                     __ptext14:
-  1671                           	callstack 0
-  1672   0027CE                     _uart_send:
-  1673                           	callstack 123
-  1674                           
-  1675                           ;incstack = 0
-  1676                           ;uart_send@data stored from wreg
-  1677   0027CE  6E20               	movwf	uart_send@data^(0+1280),c
-  1678                           
-  1679                           ;mix_sam02.c: 429:  if (u8_tx_count < (8)) {
-  1680   0027D0  0E08               	movlw	8
-  1681   0027D2  6014               	cpfslt	_u8_tx_count^(0+1280),c	;volatile
-  1682   0027D4  D00D               	goto	l1006
-  1683                           
-  1684                           ;mix_sam02.c: 430:   au8_tx_buffer[u8_tx_head] = data;
-  1685   0027D6  0E01               	movlw	low _au8_tx_buffer
-  1686   0027D8  2416               	addwf	_u8_tx_head^(0+1280),w,c	;volatile
-  1687   0027DA  6ED9               	movwf	fsr2l,c
-  1688   0027DC  6ADA               	clrf	fsr2h,c
-  1689   0027DE  0E05               	movlw	high _au8_tx_buffer
-  1690   0027E0  22DA               	addwfc	fsr2h,f,c
-  1691   0027E2  C520  F4DF         	movff	uart_send@data,indf2
-  1692                           
-  1693                           ;mix_sam02.c: 431:   u8_tx_head = (u8_tx_head + 1) & ((8) - 1);
-  1694   0027E6  2816               	incf	_u8_tx_head^(0+1280),w,c	;volatile
-  1695   0027E8  0B07               	andlw	7
-  1696   0027EA  6E16               	movwf	_u8_tx_head^(0+1280),c	;volatile
-  1697                           
-  1698                           ;mix_sam02.c: 432:   U3TXIE = 0;
-  1699   0027EC  92A7               	bcf	1191,1,c	;volatile
+  1665 ;;Total ram usage:        1 bytes
+  1666 ;; Hardware stack levels used: 1
+  1667 ;; Hardware stack levels required when called: 1
+  1668 ;; This function calls:
+  1669 ;;		Nothing
+  1670 ;; This function is called by:
+  1671 ;;		_update_out
+  1672 ;;		_echo_hex
+  1673 ;;		_echo_str
+  1674 ;; This function uses a non-reentrant model
+  1675 ;;
+  1676                           
+  1677                           	psect	text14
+  1678   0027D8                     __ptext14:
+  1679                           	callstack 0
+  1680   0027D8                     _uart_send:
+  1681                           	callstack 123
+  1682                           
+  1683                           ;incstack = 0
+  1684                           ;uart_send@data stored from wreg
+  1685   0027D8  6E20               	movwf	uart_send@data^(0+1280),c
+  1686                           
+  1687                           ;mix_sam02.c: 433:  if (u8_tx_count < (8)) {
+  1688   0027DA  0E08               	movlw	8
+  1689   0027DC  6014               	cpfslt	_u8_tx_count^(0+1280),c	;volatile
+  1690   0027DE  D00D               	goto	l1007
+  1691                           
+  1692                           ;mix_sam02.c: 434:   au8_tx_buffer[u8_tx_head] = data;
+  1693   0027E0  0E01               	movlw	low _au8_tx_buffer
+  1694   0027E2  2416               	addwf	_u8_tx_head^(0+1280),w,c	;volatile
+  1695   0027E4  6ED9               	movwf	fsr2l,c
+  1696   0027E6  6ADA               	clrf	fsr2h,c
+  1697   0027E8  0E05               	movlw	high _au8_tx_buffer
+  1698   0027EA  22DA               	addwfc	fsr2h,f,c
+  1699   0027EC  C520  F4DF         	movff	uart_send@data,indf2
   1700                           
-  1701                           ;mix_sam02.c: 433:   u8_tx_count++;
-  1702   0027EE  2A14               	incf	_u8_tx_count^(0+1280),f,c	;volatile
-  1703   0027F0                     l1006:
-  1704                           
-  1705                           ;mix_sam02.c: 435:  U3TXIE = 1;
-  1706   0027F0  82A7               	bsf	1191,1,c	;volatile
-  1707   0027F2  0012               	return		;funcret
-  1708   0027F4                     __end_of_uart_send:
-  1709                           	callstack 0
-  1710                           
-  1711 ;; *************** function _adcc_read *****************
-  1712 ;; Defined at:
-  1713 ;;		line 379 in file "mix_sam02.c"
-  1714 ;; Parameters:    Size  Location     Type
-  1715 ;;		None
-  1716 ;; Auto vars:     Size  Location     Type
-  1717 ;;		None
-  1718 ;; Return value:  Size  Location     Type
-  1719 ;;                  1    wreg      void 
-  1720 ;; Registers used:
-  1721 ;;		None
-  1722 ;; Tracked objects:
-  1723 ;;		On entry : 0/0
-  1724 ;;		On exit  : 3F/3
-  1725 ;;		Unchanged: 0/0
-  1726 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1701                           ;mix_sam02.c: 435:   u8_tx_head = (u8_tx_head + 1) & ((8) - 1);
+  1702   0027F0  2816               	incf	_u8_tx_head^(0+1280),w,c	;volatile
+  1703   0027F2  0B07               	andlw	7
+  1704   0027F4  6E16               	movwf	_u8_tx_head^(0+1280),c	;volatile
+  1705                           
+  1706                           ;mix_sam02.c: 436:   U3TXIE = 0;
+  1707   0027F6  92A7               	bcf	1191,1,c	;volatile
+  1708                           
+  1709                           ;mix_sam02.c: 437:   u8_tx_count++;
+  1710   0027F8  2A14               	incf	_u8_tx_count^(0+1280),f,c	;volatile
+  1711   0027FA                     l1007:
+  1712                           
+  1713                           ;mix_sam02.c: 439:  U3TXIE = 1;
+  1714   0027FA  82A7               	bsf	1191,1,c	;volatile
+  1715   0027FC  0012               	return		;funcret
+  1716   0027FE                     __end_of_uart_send:
+  1717                           	callstack 0
+  1718                           
+  1719 ;; *************** function _adcc_read *****************
+  1720 ;; Defined at:
+  1721 ;;		line 383 in file "mix_sam02.c"
+  1722 ;; Parameters:    Size  Location     Type
+  1723 ;;		None
+  1724 ;; Auto vars:     Size  Location     Type
+  1725 ;;		None
+  1726 ;; Return value:  Size  Location     Type
+  1727 ;;                  1    wreg      void 
+  1728 ;; Registers used:
+  1729 ;;		None
+  1730 ;; Tracked objects:
+  1731 ;;		On entry : 0/0
+  1732 ;;		On exit  : 3F/3
+  1733 ;;		Unchanged: 0/0
+  1734 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1727 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1735 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1728 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1736 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1729 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1737 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1730 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1738 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1731 ;;Total ram usage:        0 bytes
-  1732 ;; Hardware stack levels used: 1
-  1733 ;; Hardware stack levels required when called: 1
-  1734 ;; This function calls:
-  1735 ;;		Nothing
-  1736 ;; This function is called by:
-  1737 ;;		_loop
-  1738 ;; This function uses a non-reentrant model
-  1739 ;;
-  1740                           
-  1741                           	psect	text15
-  1742   0028C8                     __ptext15:
-  1743                           	callstack 0
-  1744   0028C8                     _adcc_read:
-  1745                           	callstack 124
-  1746                           
-  1747                           ;mix_sam02.c: 380:  ADCON0bits.GO = 1;
+  1739 ;;Total ram usage:        0 bytes
+  1740 ;; Hardware stack levels used: 1
+  1741 ;; Hardware stack levels required when called: 1
+  1742 ;; This function calls:
+  1743 ;;		Nothing
+  1744 ;; This function is called by:
+  1745 ;;		_loop
+  1746 ;; This function uses a non-reentrant model
+  1747 ;;
   1748                           
-  1749                           ;incstack = 0
-  1750   0028C8  0103               	movlb	3	; () banked
-  1751   0028CA  81F3               	bsf	243,0,b	;volatile
-  1752   0028CC                     l264:
-  1753                           
-  1754                           ; BSR set to: 3
-  1755   0028CC  B1F3               	btfsc	243,0,b	;volatile
-  1756   0028CE  D7FE               	goto	l264
-  1757                           
-  1758                           ; BSR set to: 3
-  1759                           ;mix_sam02.c: 382:  data_adch = ADRESH;
-  1760   0028D0  C3EB F512          	movff	1003,_data_adch	;volatile
+  1749                           	psect	text15
+  1750   0028D4                     __ptext15:
+  1751                           	callstack 0
+  1752   0028D4                     _adcc_read:
+  1753                           	callstack 124
+  1754                           
+  1755                           ;mix_sam02.c: 384:  ADCON0bits.GO = 1;
+  1756                           
+  1757                           ;incstack = 0
+  1758   0028D4  0103               	movlb	3	; () banked
+  1759   0028D6  81F3               	bsf	243,0,b	;volatile
+  1760   0028D8                     l265:
   1761                           
-  1762                           ;mix_sam02.c: 383:  data_adcl = ADRESL;
-  1763   0028D4  C3EA F511          	movff	1002,_data_adcl	;volatile
-  1764                           
-  1765                           ; BSR set to: 3
-  1766   0028D8  0012               	return		;funcret
-  1767   0028DA                     __end_of_adcc_read:
-  1768                           	callstack 0
+  1762                           ; BSR set to: 3
+  1763   0028D8  B1F3               	btfsc	243,0,b	;volatile
+  1764   0028DA  D7FE               	goto	l265
+  1765                           
+  1766                           ; BSR set to: 3
+  1767                           ;mix_sam02.c: 386:  data_adch = ADRESH;
+  1768   0028DC  C3EB F512          	movff	1003,_data_adch	;volatile
   1769                           
-  1770 ;; *************** function _DEFAULT_ISR *****************
-  1771 ;; Defined at:
-  1772 ;;		line 117 in file "mix_sam02.c"
-  1773 ;; Parameters:    Size  Location     Type
-  1774 ;;		None
-  1775 ;; Auto vars:     Size  Location     Type
-  1776 ;;		None
-  1777 ;; Return value:  Size  Location     Type
-  1778 ;;                  1    wreg      void 
-  1779 ;; Registers used:
-  1780 ;;		None
-  1781 ;; Tracked objects:
-  1782 ;;		On entry : 0/0
-  1783 ;;		On exit  : 0/0
-  1784 ;;		Unchanged: 0/0
-  1785 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1770                           ;mix_sam02.c: 387:  data_adcl = ADRESL;
+  1771   0028E0  C3EA F511          	movff	1002,_data_adcl	;volatile
+  1772                           
+  1773                           ; BSR set to: 3
+  1774   0028E4  0012               	return		;funcret
+  1775   0028E6                     __end_of_adcc_read:
+  1776                           	callstack 0
+  1777                           
+  1778 ;; *************** function _DEFAULT_ISR *****************
+  1779 ;; Defined at:
+  1780 ;;		line 117 in file "mix_sam02.c"
+  1781 ;; Parameters:    Size  Location     Type
+  1782 ;;		None
+  1783 ;; Auto vars:     Size  Location     Type
+  1784 ;;		None
+  1785 ;; Return value:  Size  Location     Type
+  1786 ;;                  1    wreg      void 
+  1787 ;; Registers used:
+  1788 ;;		None
+  1789 ;; Tracked objects:
+  1790 ;;		On entry : 0/0
+  1791 ;;		On exit  : 0/0
+  1792 ;;		Unchanged: 0/0
+  1793 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1786 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1794 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1787 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1795 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1788 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1796 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1789 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1797 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1790 ;;Total ram usage:        0 bytes
-  1791 ;; Hardware stack levels used: 1
-  1792 ;; This function calls:
-  1793 ;;		Nothing
-  1794 ;; This function is called by:
-  1795 ;;		Interrupt level 2
-  1796 ;; This function uses a non-reentrant model
-  1797 ;;
-  1798                           
-  1799                           	psect	text16
-  1800   0028F8                     __ptext16:
-  1801                           	callstack 0
-  1802   0028F8                     _DEFAULT_ISR:
-  1803                           	callstack 123
-  1804                           
-  1805                           ; BSR set to: 3
-  1806                           ;incstack = 0
-  1807   0028F8  0011               	retfie		f
-  1808   0028FA                     __end_of_DEFAULT_ISR:
+  1798 ;;Total ram usage:        0 bytes
+  1799 ;; Hardware stack levels used: 1
+  1800 ;; This function calls:
+  1801 ;;		Nothing
+  1802 ;; This function is called by:
+  1803 ;;		Interrupt level 2
+  1804 ;; This function uses a non-reentrant model
+  1805 ;;
+  1806                           
+  1807                           	psect	text16
+  1808   002904                     __ptext16:
   1809                           	callstack 0
-  1810                           
-  1811 ;; *************** function _INT0_ISR *****************
-  1812 ;; Defined at:
-  1813 ;;		line 120 in file "mix_sam02.c"
-  1814 ;; Parameters:    Size  Location     Type
-  1815 ;;		None
-  1816 ;; Auto vars:     Size  Location     Type
-  1817 ;;		None
-  1818 ;; Return value:  Size  Location     Type
-  1819 ;;                  1    wreg      void 
-  1820 ;; Registers used:
-  1821 ;;		status,2, status,0
-  1822 ;; Tracked objects:
-  1823 ;;		On entry : 0/0
-  1824 ;;		On exit  : 0/0
-  1825 ;;		Unchanged: 0/0
-  1826 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1810   002904                     _DEFAULT_ISR:
+  1811                           	callstack 123
+  1812                           
+  1813                           ; BSR set to: 3
+  1814                           ;incstack = 0
+  1815   002904  0011               	retfie		f
+  1816   002906                     __end_of_DEFAULT_ISR:
+  1817                           	callstack 0
+  1818                           
+  1819 ;; *************** function _INT0_ISR *****************
+  1820 ;; Defined at:
+  1821 ;;		line 120 in file "mix_sam02.c"
+  1822 ;; Parameters:    Size  Location     Type
+  1823 ;;		None
+  1824 ;; Auto vars:     Size  Location     Type
+  1825 ;;		None
+  1826 ;; Return value:  Size  Location     Type
+  1827 ;;                  1    wreg      void 
+  1828 ;; Registers used:
+  1829 ;;		status,2, status,0
+  1830 ;; Tracked objects:
+  1831 ;;		On entry : 0/0
+  1832 ;;		On exit  : 0/0
+  1833 ;;		Unchanged: 0/0
+  1834 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1827 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1835 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1828 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1836 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1829 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1837 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1830 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1838 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1831 ;;Total ram usage:        0 bytes
-  1832 ;; Hardware stack levels used: 1
-  1833 ;; This function calls:
-  1834 ;;		Nothing
-  1835 ;; This function is called by:
-  1836 ;;		Interrupt level 2
-  1837 ;; This function uses a non-reentrant model
-  1838 ;;
-  1839                           
-  1840                           	psect	text17
-  1841   0028E8                     __ptext17:
-  1842                           	callstack 0
-  1843   0028E8                     _INT0_ISR:
-  1844                           	callstack 123
-  1845                           
-  1846                           ;mix_sam02.c: 122:  INT0IF = 0;
+  1839 ;;Total ram usage:        0 bytes
+  1840 ;; Hardware stack levels used: 1
+  1841 ;; This function calls:
+  1842 ;;		Nothing
+  1843 ;; This function is called by:
+  1844 ;;		Interrupt level 2
+  1845 ;; This function uses a non-reentrant model
+  1846 ;;
   1847                           
-  1848                           ;incstack = 0
-  1849   0028E8  90AF               	bcf	1199,0,c	;volatile
-  1850                           
-  1851                           ;mix_sam02.c: 124:  count_out++;
-  1852   0028EA  2A13               	incf	_count_out^(0+1280),f,c	;volatile
-  1853   0028EC  0011               	retfie		f
-  1854   0028EE                     __end_of_INT0_ISR:
-  1855                           	callstack 0
-  1856                           
-  1857 ;; *************** function _TMR2_ISR *****************
-  1858 ;; Defined at:
-  1859 ;;		line 127 in file "mix_sam02.c"
-  1860 ;; Parameters:    Size  Location     Type
-  1861 ;;		None
-  1862 ;; Auto vars:     Size  Location     Type
-  1863 ;;		None
-  1864 ;; Return value:  Size  Location     Type
-  1865 ;;                  1    wreg      void 
-  1866 ;; Registers used:
-  1867 ;;		status,2, status,0
-  1868 ;; Tracked objects:
-  1869 ;;		On entry : 0/0
-  1870 ;;		On exit  : 0/0
-  1871 ;;		Unchanged: 0/0
-  1872 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1848                           	psect	text17
+  1849   0028F4                     __ptext17:
+  1850                           	callstack 0
+  1851   0028F4                     _INT0_ISR:
+  1852                           	callstack 123
+  1853                           
+  1854                           ;mix_sam02.c: 122:  INT0IF = 0;
+  1855                           
+  1856                           ;incstack = 0
+  1857   0028F4  90AF               	bcf	1199,0,c	;volatile
+  1858                           
+  1859                           ;mix_sam02.c: 124:  count_out++;
+  1860   0028F6  2A13               	incf	_count_out^(0+1280),f,c	;volatile
+  1861   0028F8  0011               	retfie		f
+  1862   0028FA                     __end_of_INT0_ISR:
+  1863                           	callstack 0
+  1864                           
+  1865 ;; *************** function _TMR2_ISR *****************
+  1866 ;; Defined at:
+  1867 ;;		line 127 in file "mix_sam02.c"
+  1868 ;; Parameters:    Size  Location     Type
+  1869 ;;		None
+  1870 ;; Auto vars:     Size  Location     Type
+  1871 ;;		None
+  1872 ;; Return value:  Size  Location     Type
+  1873 ;;                  1    wreg      void 
+  1874 ;; Registers used:
+  1875 ;;		status,2, status,0
+  1876 ;; Tracked objects:
+  1877 ;;		On entry : 0/0
+  1878 ;;		On exit  : 0/0
+  1879 ;;		Unchanged: 0/0
+  1880 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1873 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1881 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1874 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1882 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1875 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1883 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1876 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1884 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1877 ;;Total ram usage:        0 bytes
-  1878 ;; Hardware stack levels used: 1
-  1879 ;; This function calls:
-  1880 ;;		Nothing
-  1881 ;; This function is called by:
-  1882 ;;		Interrupt level 2
-  1883 ;; This function uses a non-reentrant model
-  1884 ;;
-  1885                           
-  1886                           	psect	text18
-  1887   0028F0                     __ptext18:
-  1888                           	callstack 0
-  1889   0028F0                     _TMR2_ISR:
-  1890                           	callstack 123
-  1891                           
-  1892                           ;mix_sam02.c: 129:  TMR2IF = 0;
+  1885 ;;Total ram usage:        0 bytes
+  1886 ;; Hardware stack levels used: 1
+  1887 ;; This function calls:
+  1888 ;;		Nothing
+  1889 ;; This function is called by:
+  1890 ;;		Interrupt level 2
+  1891 ;; This function uses a non-reentrant model
+  1892 ;;
   1893                           
-  1894                           ;incstack = 0
-  1895   0028F0  96B1               	bcf	1201,3,c	;volatile
-  1896                           
-  1897                           ;mix_sam02.c: 131:  u8_sys_counter++;
-  1898   0028F2  2A1A               	incf	_u8_sys_counter^(0+1280),f,c	;volatile
-  1899   0028F4  0011               	retfie		f
-  1900   0028F6                     __end_of_TMR2_ISR:
-  1901                           	callstack 0
-  1902                           
-  1903 ;; *************** function _U3RX_ISR *****************
-  1904 ;; Defined at:
-  1905 ;;		line 134 in file "mix_sam02.c"
-  1906 ;; Parameters:    Size  Location     Type
-  1907 ;;		None
-  1908 ;; Auto vars:     Size  Location     Type
-  1909 ;;  data            1    0[COMRAM] unsigned char 
-  1910 ;; Return value:  Size  Location     Type
-  1911 ;;                  1    wreg      void 
-  1912 ;; Registers used:
-  1913 ;;		wreg, fsr2l, fsr2h, status,2, status,0
-  1914 ;; Tracked objects:
-  1915 ;;		On entry : 0/0
-  1916 ;;		On exit  : 0/0
-  1917 ;;		Unchanged: 0/0
-  1918 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1894                           	psect	text18
+  1895   0028FC                     __ptext18:
+  1896                           	callstack 0
+  1897   0028FC                     _TMR2_ISR:
+  1898                           	callstack 123
+  1899                           
+  1900                           ;mix_sam02.c: 129:  TMR2IF = 0;
+  1901                           
+  1902                           ;incstack = 0
+  1903   0028FC  96B1               	bcf	1201,3,c	;volatile
+  1904                           
+  1905                           ;mix_sam02.c: 131:  u8_sys_counter++;
+  1906   0028FE  2A1A               	incf	_u8_sys_counter^(0+1280),f,c	;volatile
+  1907   002900  0011               	retfie		f
+  1908   002902                     __end_of_TMR2_ISR:
+  1909                           	callstack 0
+  1910                           
+  1911 ;; *************** function _U3RX_ISR *****************
+  1912 ;; Defined at:
+  1913 ;;		line 134 in file "mix_sam02.c"
+  1914 ;; Parameters:    Size  Location     Type
+  1915 ;;		None
+  1916 ;; Auto vars:     Size  Location     Type
+  1917 ;;  data            1    0[COMRAM] unsigned char 
+  1918 ;; Return value:  Size  Location     Type
+  1919 ;;                  1    wreg      void 
+  1920 ;; Registers used:
+  1921 ;;		wreg, fsr2l, fsr2h, status,2, status,0
+  1922 ;; Tracked objects:
+  1923 ;;		On entry : 0/0
+  1924 ;;		On exit  : 0/0
+  1925 ;;		Unchanged: 0/0
+  1926 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1919 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1927 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1920 ;;      Locals:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1928 ;;      Locals:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1921 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1929 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1922 ;;      Totals:         1       0       0       0       0       0       0       0       0       0       0       0       
+  1930 ;;      Totals:         1       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1923 ;;Total ram usage:        1 bytes
-  1924 ;; Hardware stack levels used: 1
-  1925 ;; This function calls:
-  1926 ;;		Nothing
-  1927 ;; This function is called by:
-  1928 ;;		Interrupt level 2
-  1929 ;; This function uses a non-reentrant model
-  1930 ;;
-  1931                           
-  1932                           	psect	text19
-  1933   00281C                     __ptext19:
-  1934                           	callstack 0
-  1935   00281C                     _U3RX_ISR:
-  1936                           	callstack 123
-  1937                           
-  1938                           ;mix_sam02.c: 135:  uint8_t data;;mix_sam02.c: 137:  data = U3RXB;
+  1931 ;;Total ram usage:        1 bytes
+  1932 ;; Hardware stack levels used: 1
+  1933 ;; This function calls:
+  1934 ;;		Nothing
+  1935 ;; This function is called by:
+  1936 ;;		Interrupt level 2
+  1937 ;; This function uses a non-reentrant model
+  1938 ;;
   1939                           
-  1940                           ;incstack = 0
-  1941   00281C  C2C7 F51F          	movff	711,U3RX_ISR@data	;volatile
-  1942                           
-  1943                           ;mix_sam02.c: 138:  if (u8_rx_count < (8)) {
-  1944   002820  0E08               	movlw	8
-  1945   002822  6017               	cpfslt	_u8_rx_count^(0+1280),c	;volatile
-  1946   002824  0011               	retfie		f
+  1940                           	psect	text19
+  1941   002828                     __ptext19:
+  1942                           	callstack 0
+  1943   002828                     _U3RX_ISR:
+  1944                           	callstack 123
+  1945                           
+  1946                           ;mix_sam02.c: 135:  uint8_t data;;mix_sam02.c: 137:  data = U3RXB;
   1947                           
-  1948                           ;mix_sam02.c: 139:   au8_rx_buffer[u8_rx_head] = data;
-  1949   002826  0E09               	movlw	low _au8_rx_buffer
-  1950   002828  2419               	addwf	_u8_rx_head^(0+1280),w,c	;volatile
-  1951   00282A  6ED9               	movwf	fsr2l,c
-  1952   00282C  6ADA               	clrf	fsr2h,c
-  1953   00282E  0E05               	movlw	high _au8_rx_buffer
-  1954   002830  22DA               	addwfc	fsr2h,f,c
-  1955   002832  C51F  F4DF         	movff	U3RX_ISR@data,indf2
-  1956                           
-  1957                           ;mix_sam02.c: 140:   u8_rx_head = (u8_rx_head + 1) & ((8) - 1);
-  1958   002836  2819               	incf	_u8_rx_head^(0+1280),w,c	;volatile
-  1959   002838  0B07               	andlw	7
-  1960   00283A  6E19               	movwf	_u8_rx_head^(0+1280),c	;volatile
-  1961                           
-  1962                           ;mix_sam02.c: 141:   u8_rx_count++;
-  1963   00283C  2A17               	incf	_u8_rx_count^(0+1280),f,c	;volatile
-  1964   00283E  0011               	retfie		f
-  1965   002840                     __end_of_U3RX_ISR:
-  1966                           	callstack 0
-  1967                           
-  1968 ;; *************** function _U3TX_ISR *****************
-  1969 ;; Defined at:
-  1970 ;;		line 145 in file "mix_sam02.c"
-  1971 ;; Parameters:    Size  Location     Type
-  1972 ;;		None
-  1973 ;; Auto vars:     Size  Location     Type
-  1974 ;;		None
-  1975 ;; Return value:  Size  Location     Type
-  1976 ;;                  1    wreg      void 
-  1977 ;; Registers used:
-  1978 ;;		wreg, fsr2l, fsr2h, status,2, status,0
-  1979 ;; Tracked objects:
-  1980 ;;		On entry : 0/0
-  1981 ;;		On exit  : 0/0
-  1982 ;;		Unchanged: 0/0
-  1983 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
+  1948                           ;incstack = 0
+  1949   002828  C2C7 F51F          	movff	711,U3RX_ISR@data	;volatile
+  1950                           
+  1951                           ;mix_sam02.c: 138:  if (u8_rx_count < (8)) {
+  1952   00282C  0E08               	movlw	8
+  1953   00282E  6017               	cpfslt	_u8_rx_count^(0+1280),c	;volatile
+  1954   002830  0011               	retfie		f
+  1955                           
+  1956                           ;mix_sam02.c: 139:   au8_rx_buffer[u8_rx_head] = data;
+  1957   002832  0E09               	movlw	low _au8_rx_buffer
+  1958   002834  2419               	addwf	_u8_rx_head^(0+1280),w,c	;volatile
+  1959   002836  6ED9               	movwf	fsr2l,c
+  1960   002838  6ADA               	clrf	fsr2h,c
+  1961   00283A  0E05               	movlw	high _au8_rx_buffer
+  1962   00283C  22DA               	addwfc	fsr2h,f,c
+  1963   00283E  C51F  F4DF         	movff	U3RX_ISR@data,indf2
+  1964                           
+  1965                           ;mix_sam02.c: 140:   u8_rx_head = (u8_rx_head + 1) & ((8) - 1);
+  1966   002842  2819               	incf	_u8_rx_head^(0+1280),w,c	;volatile
+  1967   002844  0B07               	andlw	7
+  1968   002846  6E19               	movwf	_u8_rx_head^(0+1280),c	;volatile
+  1969                           
+  1970                           ;mix_sam02.c: 141:   u8_rx_count++;
+  1971   002848  2A17               	incf	_u8_rx_count^(0+1280),f,c	;volatile
+  1972   00284A  0011               	retfie		f
+  1973   00284C                     __end_of_U3RX_ISR:
+  1974                           	callstack 0
+  1975                           
+  1976 ;; *************** function _U3TX_ISR *****************
+  1977 ;; Defined at:
+  1978 ;;		line 145 in file "mix_sam02.c"
+  1979 ;; Parameters:    Size  Location     Type
+  1980 ;;		None
+  1981 ;; Auto vars:     Size  Location     Type
+  1982 ;;		None
+  1983 ;; Return value:  Size  Location     Type
+  1984 ;;                  1    wreg      void 
+  1985 ;; Registers used:
+  1986 ;;		wreg, fsr2l, fsr2h, status,2, status,0
+  1987 ;; Tracked objects:
+  1988 ;;		On entry : 0/0
+  1989 ;;		On exit  : 0/0
+  1990 ;;		Unchanged: 0/0
+  1991 ;; Data sizes:     COMRAM   BANK5   BANK6   BANK7   BANK8   BANK9  BANK10  BANK11  BANK12  BANK13  BANK14  BANK15  BANK1
       +6  BANK17  BANK18  BANK19  BANK20  BANK21  BANK22  BANK23  BANK24  BANK25  BANK26  BANK27  BANK28  BANK29  BANK30  BANK3
       +1  BANK32  BANK33  BANK34  BANK35  BANK36
-  1984 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1992 ;;      Params:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1985 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1993 ;;      Locals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1986 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
+  1994 ;;      Temps:          0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1987 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
+  1995 ;;      Totals:         0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0       0       0       0       0       0       0       0       0       0       
       +0       0       0       0       0       0
-  1988 ;;Total ram usage:        0 bytes
-  1989 ;; Hardware stack levels used: 1
-  1990 ;; This function calls:
-  1991 ;;		Nothing
-  1992 ;; This function is called by:
-  1993 ;;		Interrupt level 2
-  1994 ;; This function uses a non-reentrant model
-  1995 ;;
-  1996                           
-  1997                           	psect	text20
-  1998   0027F4                     __ptext20:
-  1999                           	callstack 0
-  2000   0027F4                     _U3TX_ISR:
-  2001                           	callstack 123
-  2002                           
-  2003                           ;mix_sam02.c: 147:  if (u8_tx_count > 0) {
+  1996 ;;Total ram usage:        0 bytes
+  1997 ;; Hardware stack levels used: 1
+  1998 ;; This function calls:
+  1999 ;;		Nothing
+  2000 ;; This function is called by:
+  2001 ;;		Interrupt level 2
+  2002 ;; This function uses a non-reentrant model
+  2003 ;;
   2004                           
-  2005                           ;incstack = 0
-  2006   0027F4  5014               	movf	_u8_tx_count^(0+1280),w,c	;volatile
-  2007   0027F6  B4D8               	btfsc	status,2,c
-  2008   0027F8  D00E               	goto	i2l216
-  2009                           
-  2010                           ;mix_sam02.c: 148:   U3TXB = au8_tx_buffer[u8_tx_tail];
-  2011   0027FA  0E01               	movlw	low _au8_tx_buffer
-  2012   0027FC  2415               	addwf	_u8_tx_tail^(0+1280),w,c	;volatile
-  2013   0027FE  6ED9               	movwf	fsr2l,c
-  2014   002800  6ADA               	clrf	fsr2h,c
-  2015   002802  0E05               	movlw	high _au8_tx_buffer
-  2016   002804  22DA               	addwfc	fsr2h,f,c
-  2017   002806  50DF               	movf	indf2,w,c
-  2018   002808  0102               	movlb	2	; () banked
-  2019   00280A  6FC9               	movwf	201,b	;volatile
-  2020                           
-  2021                           ; BSR set to: 2
-  2022                           ;mix_sam02.c: 149:   u8_tx_tail = (u8_tx_tail + 1) & ((8) - 1);
-  2023   00280C  2815               	incf	_u8_tx_tail^(0+1280),w,c	;volatile
-  2024   00280E  0B07               	andlw	7
-  2025   002810  6E15               	movwf	_u8_tx_tail^(0+1280),c	;volatile
-  2026                           
-  2027                           ; BSR set to: 2
-  2028                           ;mix_sam02.c: 150:   u8_tx_count--;
-  2029   002812  0614               	decf	_u8_tx_count^(0+1280),f,c	;volatile
-  2030                           
-  2031                           ;mix_sam02.c: 151:  }
-  2032   002814  0011               	retfie		f
-  2033   002816                     i2l216:
+  2005                           	psect	text20
+  2006   002800                     __ptext20:
+  2007                           	callstack 0
+  2008   002800                     _U3TX_ISR:
+  2009                           	callstack 123
+  2010                           
+  2011                           ;mix_sam02.c: 147:  if (u8_tx_count > 0) {
+  2012                           
+  2013                           ;incstack = 0
+  2014   002800  5014               	movf	_u8_tx_count^(0+1280),w,c	;volatile
+  2015   002802  B4D8               	btfsc	status,2,c
+  2016   002804  D00E               	goto	i2l216
+  2017                           
+  2018                           ;mix_sam02.c: 148:   U3TXB = au8_tx_buffer[u8_tx_tail];
+  2019   002806  0E01               	movlw	low _au8_tx_buffer
+  2020   002808  2415               	addwf	_u8_tx_tail^(0+1280),w,c	;volatile
+  2021   00280A  6ED9               	movwf	fsr2l,c
+  2022   00280C  6ADA               	clrf	fsr2h,c
+  2023   00280E  0E05               	movlw	high _au8_tx_buffer
+  2024   002810  22DA               	addwfc	fsr2h,f,c
+  2025   002812  50DF               	movf	indf2,w,c
+  2026   002814  0102               	movlb	2	; () banked
+  2027   002816  6FC9               	movwf	201,b	;volatile
+  2028                           
+  2029                           ; BSR set to: 2
+  2030                           ;mix_sam02.c: 149:   u8_tx_tail = (u8_tx_tail + 1) & ((8) - 1);
+  2031   002818  2815               	incf	_u8_tx_tail^(0+1280),w,c	;volatile
+  2032   00281A  0B07               	andlw	7
+  2033   00281C  6E15               	movwf	_u8_tx_tail^(0+1280),c	;volatile
   2034                           
-  2035                           ;mix_sam02.c: 153:   U3TXIE = 0;
-  2036   002816  92A7               	bcf	1191,1,c	;volatile
-  2037   002818  0011               	retfie		f
-  2038   00281A                     __end_of_U3TX_ISR:
-  2039                           	callstack 0
-  2040                           
-  2041                           ;
-  2042                           ; Interrupt Vector Table @ 0x8
-  2043                           ;
-  2044                           
-  2045                           	psect	ivt0x8
-  2046   000008                     __pivt0x8:
+  2035                           ; BSR set to: 2
+  2036                           ;mix_sam02.c: 150:   u8_tx_count--;
+  2037   00281E  0614               	decf	_u8_tx_count^(0+1280),f,c	;volatile
+  2038                           
+  2039                           ;mix_sam02.c: 151:  }
+  2040   002820  0011               	retfie		f
+  2041   002822                     i2l216:
+  2042                           
+  2043                           ;mix_sam02.c: 153:   U3TXIE = 0;
+  2044   002822  92A7               	bcf	1191,1,c	;volatile
+  2045   002824  0011               	retfie		f
+  2046   002826                     __end_of_U3TX_ISR:
   2047                           	callstack 0
-  2048   000008                     ivt0x8_base:
-  2049                           	callstack 0
-  2050                           
-  2051                           ; Vector 0 : SWINT
-  2052   000008  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2053                           
-  2054                           ; Vector 1 : HLVD
-  2055   00000A  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2056                           
-  2057                           ; Vector 2 : OSF
-  2058   00000C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2059                           
-  2060                           ; Vector 3 : CSW
-  2061   00000E  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2062                           
-  2063                           ; Vector 4 : Undefined
-  2064   000010  0040               	dw	ivt0x8_undefint shr (0+2)
-  2065                           
-  2066                           ; Vector 5 : CLC1
-  2067   000012  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2068                           
-  2069                           ; Vector 6 : Undefined
-  2070   000014  0040               	dw	ivt0x8_undefint shr (0+2)
-  2071                           
-  2072                           ; Vector 7 : IOC
-  2073   000016  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2074                           
-  2075                           ; Vector 8 : INT0
-  2076   000018  0A3A               	dw	_INT0_ISR shr (0+2)
-  2077                           
-  2078                           ; Vector 9 : ZCD
-  2079   00001A  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2080                           
-  2081                           ; Vector 10 : AD
-  2082   00001C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2083                           
-  2084                           ; Vector 11 : ACT
-  2085   00001E  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2086                           
-  2087                           ; Vector 12 : CMP1
-  2088   000020  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2089                           
-  2090                           ; Vector 13 : SMT1
-  2091   000022  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2092                           
-  2093                           ; Vector 14 : SMT1PRA
-  2094   000024  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2095                           
-  2096                           ; Vector 15 : SMT1PRW
-  2097   000026  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2098                           
-  2099                           ; Vector 16 : ADT
-  2100   000028  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2101                           
-  2102                           ; Vector 17 : Undefined
-  2103   00002A  0040               	dw	ivt0x8_undefint shr (0+2)
-  2104                           
-  2105                           ; Vector 18 : Undefined
-  2106   00002C  0040               	dw	ivt0x8_undefint shr (0+2)
-  2107                           
-  2108                           ; Vector 19 : Undefined
-  2109   00002E  0040               	dw	ivt0x8_undefint shr (0+2)
-  2110                           
-  2111                           ; Vector 20 : DMA1SCNT
-  2112   000030  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2113                           
-  2114                           ; Vector 21 : DMA1DCNT
-  2115   000032  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2116                           
-  2117                           ; Vector 22 : DMA1OR
-  2118   000034  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2119                           
-  2120                           ; Vector 23 : DMA1A
-  2121   000036  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2122                           
-  2123                           ; Vector 24 : SPI1RX
-  2124   000038  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2125                           
-  2126                           ; Vector 25 : SPI1TX
-  2127   00003A  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2128                           
-  2129                           ; Vector 26 : SPI1
-  2130   00003C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2131                           
-  2132                           ; Vector 27 : TMR2
-  2133   00003E  0A3C               	dw	_TMR2_ISR shr (0+2)
-  2134                           
-  2135                           ; Vector 28 : TMR1
-  2136   000040  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2137                           
-  2138                           ; Vector 29 : TMR1G
-  2139   000042  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2140                           
-  2141                           ; Vector 30 : CCP1
-  2142   000044  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2143                           
-  2144                           ; Vector 31 : TMR0
-  2145   000046  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2146                           
-  2147                           ; Vector 32 : U1RX
-  2148   000048  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2149                           
-  2150                           ; Vector 33 : U1TX
-  2151   00004A  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2152                           
-  2153                           ; Vector 34 : U1E
-  2154   00004C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2155                           
-  2156                           ; Vector 35 : U1
-  2157   00004E  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2158                           
-  2159                           ; Vector 36 : Undefined
-  2160   000050  0040               	dw	ivt0x8_undefint shr (0+2)
-  2161                           
-  2162                           ; Vector 37 : Undefined
-  2163   000052  0040               	dw	ivt0x8_undefint shr (0+2)
-  2164                           
-  2165                           ; Vector 38 : PWM1PR
-  2166   000054  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2167                           
-  2168                           ; Vector 39 : PWM1
-  2169   000056  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2170                           
-  2171                           ; Vector 40 : SPI2RX
-  2172   000058  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2173                           
-  2174                           ; Vector 41 : SPI2TX
-  2175   00005A  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2176                           
-  2177                           ; Vector 42 : SPI2
-  2178   00005C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2179                           
-  2180                           ; Vector 43 : Undefined
-  2181   00005E  0040               	dw	ivt0x8_undefint shr (0+2)
-  2182                           
-  2183                           ; Vector 44 : TMR3
-  2184   000060  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2185                           
-  2186                           ; Vector 45 : TMR3G
-  2187   000062  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2188                           
-  2189                           ; Vector 46 : PWM2PR
-  2190   000064  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2191                           
-  2192                           ; Vector 47 : PWM2
-  2193   000066  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2194                           
-  2195                           ; Vector 48 : INT1
-  2196   000068  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2197                           
-  2198                           ; Vector 49 : CLC2
-  2199   00006A  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2200                           
-  2201                           ; Vector 50 : CWG1
-  2202   00006C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2203                           
-  2204                           ; Vector 51 : NCO1
-  2205   00006E  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2206                           
-  2207                           ; Vector 52 : DMA2SCNT
-  2208   000070  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2209                           
-  2210                           ; Vector 53 : DMA2DCNT
-  2211   000072  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2212                           
-  2213                           ; Vector 54 : DMA2OR
-  2214   000074  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2215                           
-  2216                           ; Vector 55 : DMA2A
-  2217   000076  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2218                           
-  2219                           ; Vector 56 : I2C1RX
-  2220   000078  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2221                           
-  2222                           ; Vector 57 : I2C1TX
-  2223   00007A  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2224                           
-  2225                           ; Vector 58 : I2C1
-  2226   00007C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2227                           
-  2228                           ; Vector 59 : I2C1E
-  2229   00007E  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2230                           
-  2231                           ; Vector 60 : Undefined
-  2232   000080  0040               	dw	ivt0x8_undefint shr (0+2)
-  2233                           
-  2234                           ; Vector 61 : CLC3
-  2235   000082  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2236                           
-  2237                           ; Vector 62 : PWM3PR
-  2238   000084  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2239                           
-  2240                           ; Vector 63 : PWM3
-  2241   000086  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2242                           
-  2243                           ; Vector 64 : U2RX
-  2244   000088  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2245                           
-  2246                           ; Vector 65 : U2TX
-  2247   00008A  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2248                           
-  2249                           ; Vector 66 : U2E
-  2250   00008C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2251                           
-  2252                           ; Vector 67 : U2
-  2253   00008E  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2254                           
-  2255                           ; Vector 68 : TMR5
-  2256   000090  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2257                           
-  2258                           ; Vector 69 : TMR5G
-  2259   000092  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2260                           
-  2261                           ; Vector 70 : CCP2
-  2262   000094  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2263                           
-  2264                           ; Vector 71 : SCAN
-  2265   000096  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2266                           
-  2267                           ; Vector 72 : U3RX
-  2268   000098  0A07               	dw	_U3RX_ISR shr (0+2)
-  2269                           
-  2270                           ; Vector 73 : U3TX
-  2271   00009A  09FD               	dw	_U3TX_ISR shr (0+2)
-  2272                           
-  2273                           ; Vector 74 : U3E
-  2274   00009C  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2275                           
-  2276                           ; Vector 75 : U3
-  2277   00009E  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2278                           
-  2279                           ; Vector 76 : Undefined
-  2280   0000A0  0040               	dw	ivt0x8_undefint shr (0+2)
-  2281                           
-  2282                           ; Vector 77 : CLC4
-  2283   0000A2  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2284                           
-  2285                           ; Vector 78 : Undefined
-  2286   0000A4  0040               	dw	ivt0x8_undefint shr (0+2)
-  2287                           
-  2288                           ; Vector 79 : Undefined
-  2289   0000A6  0040               	dw	ivt0x8_undefint shr (0+2)
-  2290                           
-  2291                           ; Vector 80 : INT2
-  2292   0000A8  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2293                           
-  2294                           ; Vector 81 : CLC5
-  2295   0000AA  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2296                           
-  2297                           ; Vector 82 : CWG2
-  2298   0000AC  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2299                           
-  2300                           ; Vector 83 : NCO2
-  2301   0000AE  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2302                           
-  2303                           ; Vector 84 : DMA3SCNT
-  2304   0000B0  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2305                           
-  2306                           ; Vector 85 : DMA3DCNT
-  2307   0000B2  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2308                           
-  2309                           ; Vector 86 : DMA3OR
-  2310   0000B4  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2311                           
-  2312                           ; Vector 87 : DMA3A
-  2313   0000B6  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2314                           
-  2315                           ; Vector 88 : CCP3
-  2316   0000B8  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2317                           
-  2318                           ; Vector 89 : CLC6
-  2319   0000BA  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2320                           
-  2321                           ; Vector 90 : CWG3
-  2322   0000BC  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2323                           
-  2324                           ; Vector 91 : TMR4
-  2325   0000BE  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2326                           
-  2327                           ; Vector 92 : DMA4SCNT
-  2328   0000C0  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2329                           
-  2330                           ; Vector 93 : DMA4DCNT
-  2331   0000C2  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2332                           
-  2333                           ; Vector 94 : DMA4OR
-  2334   0000C4  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2335                           
-  2336                           ; Vector 95 : DMA4A
-  2337   0000C6  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2338                           
-  2339                           ; Vector 96 : U4RX
-  2340   0000C8  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2341                           
-  2342                           ; Vector 97 : U4TX
-  2343   0000CA  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2344                           
-  2345                           ; Vector 98 : U4E
-  2346   0000CC  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2347                           
-  2348                           ; Vector 99 : U4
-  2349   0000CE  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2350                           
-  2351                           ; Vector 100 : DMA5SCNT
-  2352   0000D0  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2353                           
-  2354                           ; Vector 101 : DMA5DCNT
-  2355   0000D2  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2356                           
-  2357                           ; Vector 102 : DMA5OR
-  2358   0000D4  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2359                           
-  2360                           ; Vector 103 : DMA5A
-  2361   0000D6  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2362                           
-  2363                           ; Vector 104 : U5RX
-  2364   0000D8  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2365                           
-  2366                           ; Vector 105 : U5TX
-  2367   0000DA  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2368                           
-  2369                           ; Vector 106 : U5E
-  2370   0000DC  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2371                           
-  2372                           ; Vector 107 : U5
-  2373   0000DE  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2374                           
-  2375                           ; Vector 108 : DMA6SCNT
-  2376   0000E0  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2377                           
-  2378                           ; Vector 109 : DMA6DCNT
-  2379   0000E2  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2380                           
-  2381                           ; Vector 110 : DMA6OR
-  2382   0000E4  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2383                           
-  2384                           ; Vector 111 : DMA6A
-  2385   0000E6  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2386                           
-  2387                           ; Vector 112 : Undefined
-  2388   0000E8  0040               	dw	ivt0x8_undefint shr (0+2)
-  2389                           
-  2390                           ; Vector 113 : CLC7
-  2391   0000EA  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2392                           
-  2393                           ; Vector 114 : CMP2
-  2394   0000EC  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2395                           
-  2396                           ; Vector 115 : NCO3
-  2397   0000EE  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2398                           
-  2399                           ; Vector 116 : Undefined
-  2400   0000F0  0040               	dw	ivt0x8_undefint shr (0+2)
-  2401                           
-  2402                           ; Vector 117 : Undefined
-  2403   0000F2  0040               	dw	ivt0x8_undefint shr (0+2)
-  2404                           
-  2405                           ; Vector 118 : Undefined
-  2406   0000F4  0040               	dw	ivt0x8_undefint shr (0+2)
-  2407                           
-  2408                           ; Vector 119 : Undefined
-  2409   0000F6  0040               	dw	ivt0x8_undefint shr (0+2)
-  2410                           
-  2411                           ; Vector 120 : NVM
-  2412   0000F8  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2413                           
-  2414                           ; Vector 121 : CLC8
-  2415   0000FA  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2416                           
-  2417                           ; Vector 122 : CRC
-  2418   0000FC  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2419                           
-  2420                           ; Vector 123 : TMR6
-  2421   0000FE  0A3E               	dw	_DEFAULT_ISR shr (0+2)
-  2422   000100                     ivt0x8_undefint:
-  2423                           	callstack 0
-  2424   000100  00FF               	reset	
-  2425                           
-  2426                           	psect	rparam
-  2427   000000                     
-  2428                           	psect	config
-  2429                           
-  2430                           ;Config register CONFIG1 @ 0x300000
-  2431                           ;	External Oscillator Selection
-  2432                           ;	FEXTOSC = OFF, Oscillator not enabled
-  2433                           ;	Reset Oscillator Selection
-  2434                           ;	RSTOSC = HFINTOSC_64MHZ, HFINTOSC with HFFRQ = 64 MHz and CDIV = 1:1
-  2435   300000                     	org	3145728
-  2436   300000  8C                 	db	140
+  2048                           
+  2049                           ;
+  2050                           ; Interrupt Vector Table @ 0x8
+  2051                           ;
+  2052                           
+  2053                           	psect	ivt0x8
+  2054   000008                     __pivt0x8:
+  2055                           	callstack 0
+  2056   000008                     ivt0x8_base:
+  2057                           	callstack 0
+  2058                           
+  2059                           ; Vector 0 : SWINT
+  2060   000008  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2061                           
+  2062                           ; Vector 1 : HLVD
+  2063   00000A  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2064                           
+  2065                           ; Vector 2 : OSF
+  2066   00000C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2067                           
+  2068                           ; Vector 3 : CSW
+  2069   00000E  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2070                           
+  2071                           ; Vector 4 : Undefined
+  2072   000010  0040               	dw	ivt0x8_undefint shr (0+2)
+  2073                           
+  2074                           ; Vector 5 : CLC1
+  2075   000012  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2076                           
+  2077                           ; Vector 6 : Undefined
+  2078   000014  0040               	dw	ivt0x8_undefint shr (0+2)
+  2079                           
+  2080                           ; Vector 7 : IOC
+  2081   000016  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2082                           
+  2083                           ; Vector 8 : INT0
+  2084   000018  0A3D               	dw	_INT0_ISR shr (0+2)
+  2085                           
+  2086                           ; Vector 9 : ZCD
+  2087   00001A  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2088                           
+  2089                           ; Vector 10 : AD
+  2090   00001C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2091                           
+  2092                           ; Vector 11 : ACT
+  2093   00001E  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2094                           
+  2095                           ; Vector 12 : CMP1
+  2096   000020  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2097                           
+  2098                           ; Vector 13 : SMT1
+  2099   000022  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2100                           
+  2101                           ; Vector 14 : SMT1PRA
+  2102   000024  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2103                           
+  2104                           ; Vector 15 : SMT1PRW
+  2105   000026  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2106                           
+  2107                           ; Vector 16 : ADT
+  2108   000028  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2109                           
+  2110                           ; Vector 17 : Undefined
+  2111   00002A  0040               	dw	ivt0x8_undefint shr (0+2)
+  2112                           
+  2113                           ; Vector 18 : Undefined
+  2114   00002C  0040               	dw	ivt0x8_undefint shr (0+2)
+  2115                           
+  2116                           ; Vector 19 : Undefined
+  2117   00002E  0040               	dw	ivt0x8_undefint shr (0+2)
+  2118                           
+  2119                           ; Vector 20 : DMA1SCNT
+  2120   000030  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2121                           
+  2122                           ; Vector 21 : DMA1DCNT
+  2123   000032  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2124                           
+  2125                           ; Vector 22 : DMA1OR
+  2126   000034  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2127                           
+  2128                           ; Vector 23 : DMA1A
+  2129   000036  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2130                           
+  2131                           ; Vector 24 : SPI1RX
+  2132   000038  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2133                           
+  2134                           ; Vector 25 : SPI1TX
+  2135   00003A  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2136                           
+  2137                           ; Vector 26 : SPI1
+  2138   00003C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2139                           
+  2140                           ; Vector 27 : TMR2
+  2141   00003E  0A3F               	dw	_TMR2_ISR shr (0+2)
+  2142                           
+  2143                           ; Vector 28 : TMR1
+  2144   000040  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2145                           
+  2146                           ; Vector 29 : TMR1G
+  2147   000042  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2148                           
+  2149                           ; Vector 30 : CCP1
+  2150   000044  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2151                           
+  2152                           ; Vector 31 : TMR0
+  2153   000046  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2154                           
+  2155                           ; Vector 32 : U1RX
+  2156   000048  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2157                           
+  2158                           ; Vector 33 : U1TX
+  2159   00004A  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2160                           
+  2161                           ; Vector 34 : U1E
+  2162   00004C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2163                           
+  2164                           ; Vector 35 : U1
+  2165   00004E  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2166                           
+  2167                           ; Vector 36 : Undefined
+  2168   000050  0040               	dw	ivt0x8_undefint shr (0+2)
+  2169                           
+  2170                           ; Vector 37 : Undefined
+  2171   000052  0040               	dw	ivt0x8_undefint shr (0+2)
+  2172                           
+  2173                           ; Vector 38 : PWM1PR
+  2174   000054  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2175                           
+  2176                           ; Vector 39 : PWM1
+  2177   000056  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2178                           
+  2179                           ; Vector 40 : SPI2RX
+  2180   000058  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2181                           
+  2182                           ; Vector 41 : SPI2TX
+  2183   00005A  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2184                           
+  2185                           ; Vector 42 : SPI2
+  2186   00005C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2187                           
+  2188                           ; Vector 43 : Undefined
+  2189   00005E  0040               	dw	ivt0x8_undefint shr (0+2)
+  2190                           
+  2191                           ; Vector 44 : TMR3
+  2192   000060  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2193                           
+  2194                           ; Vector 45 : TMR3G
+  2195   000062  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2196                           
+  2197                           ; Vector 46 : PWM2PR
+  2198   000064  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2199                           
+  2200                           ; Vector 47 : PWM2
+  2201   000066  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2202                           
+  2203                           ; Vector 48 : INT1
+  2204   000068  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2205                           
+  2206                           ; Vector 49 : CLC2
+  2207   00006A  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2208                           
+  2209                           ; Vector 50 : CWG1
+  2210   00006C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2211                           
+  2212                           ; Vector 51 : NCO1
+  2213   00006E  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2214                           
+  2215                           ; Vector 52 : DMA2SCNT
+  2216   000070  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2217                           
+  2218                           ; Vector 53 : DMA2DCNT
+  2219   000072  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2220                           
+  2221                           ; Vector 54 : DMA2OR
+  2222   000074  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2223                           
+  2224                           ; Vector 55 : DMA2A
+  2225   000076  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2226                           
+  2227                           ; Vector 56 : I2C1RX
+  2228   000078  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2229                           
+  2230                           ; Vector 57 : I2C1TX
+  2231   00007A  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2232                           
+  2233                           ; Vector 58 : I2C1
+  2234   00007C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2235                           
+  2236                           ; Vector 59 : I2C1E
+  2237   00007E  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2238                           
+  2239                           ; Vector 60 : Undefined
+  2240   000080  0040               	dw	ivt0x8_undefint shr (0+2)
+  2241                           
+  2242                           ; Vector 61 : CLC3
+  2243   000082  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2244                           
+  2245                           ; Vector 62 : PWM3PR
+  2246   000084  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2247                           
+  2248                           ; Vector 63 : PWM3
+  2249   000086  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2250                           
+  2251                           ; Vector 64 : U2RX
+  2252   000088  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2253                           
+  2254                           ; Vector 65 : U2TX
+  2255   00008A  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2256                           
+  2257                           ; Vector 66 : U2E
+  2258   00008C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2259                           
+  2260                           ; Vector 67 : U2
+  2261   00008E  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2262                           
+  2263                           ; Vector 68 : TMR5
+  2264   000090  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2265                           
+  2266                           ; Vector 69 : TMR5G
+  2267   000092  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2268                           
+  2269                           ; Vector 70 : CCP2
+  2270   000094  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2271                           
+  2272                           ; Vector 71 : SCAN
+  2273   000096  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2274                           
+  2275                           ; Vector 72 : U3RX
+  2276   000098  0A0A               	dw	_U3RX_ISR shr (0+2)
+  2277                           
+  2278                           ; Vector 73 : U3TX
+  2279   00009A  0A00               	dw	_U3TX_ISR shr (0+2)
+  2280                           
+  2281                           ; Vector 74 : U3E
+  2282   00009C  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2283                           
+  2284                           ; Vector 75 : U3
+  2285   00009E  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2286                           
+  2287                           ; Vector 76 : Undefined
+  2288   0000A0  0040               	dw	ivt0x8_undefint shr (0+2)
+  2289                           
+  2290                           ; Vector 77 : CLC4
+  2291   0000A2  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2292                           
+  2293                           ; Vector 78 : Undefined
+  2294   0000A4  0040               	dw	ivt0x8_undefint shr (0+2)
+  2295                           
+  2296                           ; Vector 79 : Undefined
+  2297   0000A6  0040               	dw	ivt0x8_undefint shr (0+2)
+  2298                           
+  2299                           ; Vector 80 : INT2
+  2300   0000A8  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2301                           
+  2302                           ; Vector 81 : CLC5
+  2303   0000AA  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2304                           
+  2305                           ; Vector 82 : CWG2
+  2306   0000AC  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2307                           
+  2308                           ; Vector 83 : NCO2
+  2309   0000AE  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2310                           
+  2311                           ; Vector 84 : DMA3SCNT
+  2312   0000B0  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2313                           
+  2314                           ; Vector 85 : DMA3DCNT
+  2315   0000B2  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2316                           
+  2317                           ; Vector 86 : DMA3OR
+  2318   0000B4  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2319                           
+  2320                           ; Vector 87 : DMA3A
+  2321   0000B6  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2322                           
+  2323                           ; Vector 88 : CCP3
+  2324   0000B8  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2325                           
+  2326                           ; Vector 89 : CLC6
+  2327   0000BA  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2328                           
+  2329                           ; Vector 90 : CWG3
+  2330   0000BC  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2331                           
+  2332                           ; Vector 91 : TMR4
+  2333   0000BE  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2334                           
+  2335                           ; Vector 92 : DMA4SCNT
+  2336   0000C0  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2337                           
+  2338                           ; Vector 93 : DMA4DCNT
+  2339   0000C2  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2340                           
+  2341                           ; Vector 94 : DMA4OR
+  2342   0000C4  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2343                           
+  2344                           ; Vector 95 : DMA4A
+  2345   0000C6  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2346                           
+  2347                           ; Vector 96 : U4RX
+  2348   0000C8  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2349                           
+  2350                           ; Vector 97 : U4TX
+  2351   0000CA  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2352                           
+  2353                           ; Vector 98 : U4E
+  2354   0000CC  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2355                           
+  2356                           ; Vector 99 : U4
+  2357   0000CE  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2358                           
+  2359                           ; Vector 100 : DMA5SCNT
+  2360   0000D0  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2361                           
+  2362                           ; Vector 101 : DMA5DCNT
+  2363   0000D2  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2364                           
+  2365                           ; Vector 102 : DMA5OR
+  2366   0000D4  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2367                           
+  2368                           ; Vector 103 : DMA5A
+  2369   0000D6  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2370                           
+  2371                           ; Vector 104 : U5RX
+  2372   0000D8  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2373                           
+  2374                           ; Vector 105 : U5TX
+  2375   0000DA  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2376                           
+  2377                           ; Vector 106 : U5E
+  2378   0000DC  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2379                           
+  2380                           ; Vector 107 : U5
+  2381   0000DE  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2382                           
+  2383                           ; Vector 108 : DMA6SCNT
+  2384   0000E0  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2385                           
+  2386                           ; Vector 109 : DMA6DCNT
+  2387   0000E2  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2388                           
+  2389                           ; Vector 110 : DMA6OR
+  2390   0000E4  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2391                           
+  2392                           ; Vector 111 : DMA6A
+  2393   0000E6  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2394                           
+  2395                           ; Vector 112 : Undefined
+  2396   0000E8  0040               	dw	ivt0x8_undefint shr (0+2)
+  2397                           
+  2398                           ; Vector 113 : CLC7
+  2399   0000EA  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2400                           
+  2401                           ; Vector 114 : CMP2
+  2402   0000EC  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2403                           
+  2404                           ; Vector 115 : NCO3
+  2405   0000EE  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2406                           
+  2407                           ; Vector 116 : Undefined
+  2408   0000F0  0040               	dw	ivt0x8_undefint shr (0+2)
+  2409                           
+  2410                           ; Vector 117 : Undefined
+  2411   0000F2  0040               	dw	ivt0x8_undefint shr (0+2)
+  2412                           
+  2413                           ; Vector 118 : Undefined
+  2414   0000F4  0040               	dw	ivt0x8_undefint shr (0+2)
+  2415                           
+  2416                           ; Vector 119 : Undefined
+  2417   0000F6  0040               	dw	ivt0x8_undefint shr (0+2)
+  2418                           
+  2419                           ; Vector 120 : NVM
+  2420   0000F8  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2421                           
+  2422                           ; Vector 121 : CLC8
+  2423   0000FA  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2424                           
+  2425                           ; Vector 122 : CRC
+  2426   0000FC  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2427                           
+  2428                           ; Vector 123 : TMR6
+  2429   0000FE  0A41               	dw	_DEFAULT_ISR shr (0+2)
+  2430   000100                     ivt0x8_undefint:
+  2431                           	callstack 0
+  2432   000100  00FF               	reset	
+  2433                           
+  2434                           	psect	rparam
+  2435   000000                     
+  2436                           	psect	config
   2437                           
-  2438                           ;Config register CONFIG2 @ 0x300001
-  2439                           ;	Clock out Enable bit
-  2440                           ;	CLKOUTEN = OFF, CLKOUT function is disabled
-  2441                           ;	PRLOCKED One-Way Set Enable bit
-  2442                           ;	PR1WAY = ON, PRLOCKED bit can be cleared and set only once
-  2443                           ;	Clock Switch Enable bit
-  2444                           ;	CSWEN = ON, Writing to NOSC and NDIV is allowed
-  2445                           ;	Fail-Safe Clock Monitor Enable bit
-  2446                           ;	FCMEN = ON, Fail-Safe Clock Monitor enabled
-  2447   300001                     	org	3145729
-  2448   300001  FF                 	db	255
-  2449                           
-  2450                           ;Config register CONFIG3 @ 0x300002
-  2451                           ;	MCLR Enable bit
-  2452                           ;	MCLRE = EXTMCLR, If LVP = 0, MCLR pin is MCLR; If LVP = 1, RE3 pin function is MCLR
-  2453                           ;	Power-up timer selection bits
-  2454                           ;	PWRTS = PWRT_OFF, PWRT is disabled
-  2455                           ;	Multi-vector enable bit
-  2456                           ;	MVECEN = ON, Multi-vector enabled, Vector table used for interrupts
-  2457                           ;	IVTLOCK bit One-way set enable bit
-  2458                           ;	IVT1WAY = ON, IVTLOCKED bit can be cleared and set only once
-  2459                           ;	Low Power BOR Enable bit
-  2460                           ;	LPBOREN = OFF, Low-Power BOR disabled
-  2461                           ;	Brown-out Reset Enable bits
-  2462                           ;	BOREN = SBORDIS, Brown-out Reset enabled , SBOREN bit is ignored
-  2463   300002                     	org	3145730
-  2464   300002  FF                 	db	255
-  2465                           
-  2466                           ;Config register CONFIG4 @ 0x300003
-  2467                           ;	Brown-out Reset Voltage Selection bits
-  2468                           ;	BORV = VBOR_1P9, Brown-out Reset Voltage (VBOR) set to 1.9V
-  2469                           ;	ZCD Disable bit
-  2470                           ;	ZCD = OFF, ZCD module is disabled. ZCD can be enabled by setting the ZCDSEN bit of ZCD
+  2438                           ;Config register CONFIG1 @ 0x300000
+  2439                           ;	External Oscillator Selection
+  2440                           ;	FEXTOSC = OFF, Oscillator not enabled
+  2441                           ;	Reset Oscillator Selection
+  2442                           ;	RSTOSC = HFINTOSC_64MHZ, HFINTOSC with HFFRQ = 64 MHz and CDIV = 1:1
+  2443   300000                     	org	3145728
+  2444   300000  8C                 	db	140
+  2445                           
+  2446                           ;Config register CONFIG2 @ 0x300001
+  2447                           ;	Clock out Enable bit
+  2448                           ;	CLKOUTEN = OFF, CLKOUT function is disabled
+  2449                           ;	PRLOCKED One-Way Set Enable bit
+  2450                           ;	PR1WAY = ON, PRLOCKED bit can be cleared and set only once
+  2451                           ;	Clock Switch Enable bit
+  2452                           ;	CSWEN = ON, Writing to NOSC and NDIV is allowed
+  2453                           ;	Fail-Safe Clock Monitor Enable bit
+  2454                           ;	FCMEN = ON, Fail-Safe Clock Monitor enabled
+  2455   300001                     	org	3145729
+  2456   300001  FF                 	db	255
+  2457                           
+  2458                           ;Config register CONFIG3 @ 0x300002
+  2459                           ;	MCLR Enable bit
+  2460                           ;	MCLRE = EXTMCLR, If LVP = 0, MCLR pin is MCLR; If LVP = 1, RE3 pin function is MCLR
+  2461                           ;	Power-up timer selection bits
+  2462                           ;	PWRTS = PWRT_OFF, PWRT is disabled
+  2463                           ;	Multi-vector enable bit
+  2464                           ;	MVECEN = ON, Multi-vector enabled, Vector table used for interrupts
+  2465                           ;	IVTLOCK bit One-way set enable bit
+  2466                           ;	IVT1WAY = ON, IVTLOCKED bit can be cleared and set only once
+  2467                           ;	Low Power BOR Enable bit
+  2468                           ;	LPBOREN = OFF, Low-Power BOR disabled
+  2469                           ;	Brown-out Reset Enable bits
+  2470                           ;	BOREN = SBORDIS, Brown-out Reset enabled , SBOREN bit is ignored
+  2471   300002                     	org	3145730
+  2472   300002  FF                 	db	255
+  2473                           
+  2474                           ;Config register CONFIG4 @ 0x300003
+  2475                           ;	Brown-out Reset Voltage Selection bits
+  2476                           ;	BORV = VBOR_1P9, Brown-out Reset Voltage (VBOR) set to 1.9V
+  2477                           ;	ZCD Disable bit
+  2478                           ;	ZCD = OFF, ZCD module is disabled. ZCD can be enabled by setting the ZCDSEN bit of ZCD
       +                          CON
-  2471                           ;	PPSLOCK bit One-Way Set Enable bit
-  2472                           ;	PPS1WAY = OFF, PPSLOCKED bit can be set and cleared repeatedly (subject to the unlock 
+  2479                           ;	PPSLOCK bit One-Way Set Enable bit
+  2480                           ;	PPS1WAY = OFF, PPSLOCKED bit can be set and cleared repeatedly (subject to the unlock 
       +                          sequence)
-  2473                           ;	Stack Full/Underflow Reset Enable bit
-  2474                           ;	STVREN = ON, Stack full/underflow will cause Reset
-  2475                           ;	Low Voltage Programming Enable bit
-  2476                           ;	LVP = ON, Low voltage programming enabled. MCLR/VPP pin function is MCLR. MCLRE config
+  2481                           ;	Stack Full/Underflow Reset Enable bit
+  2482                           ;	STVREN = ON, Stack full/underflow will cause Reset
+  2483                           ;	Low Voltage Programming Enable bit
+  2484                           ;	LVP = ON, Low voltage programming enabled. MCLR/VPP pin function is MCLR. MCLRE config
       +                          uration bit is ignored
-  2477                           ;	Extended Instruction Set Enable bit
-  2478                           ;	XINST = OFF, Extended Instruction Set and Indexed Addressing Mode disabled
-  2479   300003                     	org	3145731
-  2480   300003  F7                 	db	247
-  2481                           
-  2482                           ;Config register CONFIG5 @ 0x300004
-  2483                           ;	WDT Period selection bits
-  2484                           ;	WDTCPS = WDTCPS_31, Divider ratio 1:65536; software control of WDTPS
-  2485                           ;	WDT operating mode
-  2486                           ;	WDTE = OFF, WDT Disabled; SWDTEN is ignored
-  2487   300004                     	org	3145732
-  2488   300004  9F                 	db	159
+  2485                           ;	Extended Instruction Set Enable bit
+  2486                           ;	XINST = OFF, Extended Instruction Set and Indexed Addressing Mode disabled
+  2487   300003                     	org	3145731
+  2488   300003  F7                 	db	247
   2489                           
-  2490                           ;Config register CONFIG6 @ 0x300005
-  2491                           ;	WDT Window Select bits
-  2492                           ;	WDTCWS = WDTCWS_7, window always open (100%); software control; keyed access not requi
-      +                          red
-  2493                           ;	WDT input clock selector
-  2494                           ;	WDTCCS = SC, Software Control
-  2495   300005                     	org	3145733
-  2496   300005  FF                 	db	255
+  2490                           ;Config register CONFIG5 @ 0x300004
+  2491                           ;	WDT Period selection bits
+  2492                           ;	WDTCPS = WDTCPS_31, Divider ratio 1:65536; software control of WDTPS
+  2493                           ;	WDT operating mode
+  2494                           ;	WDTE = OFF, WDT Disabled; SWDTEN is ignored
+  2495   300004                     	org	3145732
+  2496   300004  9F                 	db	159
   2497                           
-  2498                           ;Config register CONFIG7 @ 0x300006
-  2499                           ;	Boot Block Size selection bits
-  2500                           ;	BBSIZE = BBSIZE_512, Boot Block size is 512 words
-  2501                           ;	Boot Block enable bit
-  2502                           ;	BBEN = OFF, Boot block disabled
-  2503                           ;	Storage Area Flash enable bit
-  2504                           ;	SAFEN = OFF, SAF disabled
-  2505                           ;	Background Debugger
-  2506                           ;	DEBUG = OFF, Background Debugger disabled
-  2507   300006                     	org	3145734
-  2508   300006  FF                 	db	255
-  2509                           
-  2510                           ;Config register CONFIG8 @ 0x300007
-  2511                           ;	Boot Block Write Protection bit
-  2512                           ;	WRTB = OFF, Boot Block not Write protected
-  2513                           ;	Configuration Register Write Protection bit
-  2514                           ;	WRTC = OFF, Configuration registers not Write protected
-  2515                           ;	Data EEPROM Write Protection bit
-  2516                           ;	WRTD = OFF, Data EEPROM not Write protected
-  2517                           ;	SAF Write protection bit
-  2518                           ;	WRTSAF = OFF, SAF not Write Protected
-  2519                           ;	Application Block write protection bit
-  2520                           ;	WRTAPP = OFF, Application Block not write protected
-  2521   300007                     	org	3145735
-  2522   300007  FF                 	db	255
-  2523                           
-  2524                           ;Config register CONFIG10 @ 0x300009
-  2525                           ;	PFM and Data EEPROM Code Protection bit
-  2526                           ;	CP = OFF, PFM and Data EEPROM code protection disabled
-  2527   300009                     	org	3145737
-  2528   300009  FF                 	db	255
-  2529                           tosu	equ	0x4FF
-  2530                           tosh	equ	0x4FE
-  2531                           tosl	equ	0x4FD
-  2532                           stkptr	equ	0x4FC
-  2533                           pclatu	equ	0x4FB
-  2534                           pclath	equ	0x4FA
-  2535                           pcl	equ	0x4F9
-  2536                           tblptru	equ	0x4F8
-  2537                           tblptrh	equ	0x4F7
-  2538                           tblptrl	equ	0x4F6
-  2539                           tablat	equ	0x4F5
-  2540                           prodh	equ	0x4F4
-  2541                           prodl	equ	0x4F3
-  2542                           indf0	equ	0x4EF
-  2543                           postinc0	equ	0x4EE
-  2544                           postdec0	equ	0x4ED
-  2545                           preinc0	equ	0x4EC
-  2546                           plusw0	equ	0x4EB
-  2547                           fsr0h	equ	0x4EA
-  2548                           fsr0l	equ	0x4E9
-  2549                           wreg	equ	0x4E8
-  2550                           indf1	equ	0x4E7
-  2551                           postinc1	equ	0x4E6
-  2552                           postdec1	equ	0x4E5
-  2553                           preinc1	equ	0x4E4
-  2554                           plusw1	equ	0x4E3
-  2555                           fsr1h	equ	0x4E2
-  2556                           fsr1l	equ	0x4E1
-  2557                           bsr	equ	0x4E0
-  2558                           indf2	equ	0x4DF
-  2559                           postinc2	equ	0x4DE
-  2560                           postdec2	equ	0x4DD
-  2561                           preinc2	equ	0x4DC
-  2562                           plusw2	equ	0x4DB
-  2563                           fsr2h	equ	0x4DA
-  2564                           fsr2l	equ	0x4D9
-  2565                           status	equ	0x4D8
+  2498                           ;Config register CONFIG6 @ 0x300005
+  2499                           ;	WDT Window Select bits
+  2500                           ;	WDTCWS = WDTCWS_7, window always open (100%); software control; keyed access not requi
+      +                          red
+  2501                           ;	WDT input clock selector
+  2502                           ;	WDTCCS = SC, Software Control
+  2503   300005                     	org	3145733
+  2504   300005  FF                 	db	255
+  2505                           
+  2506                           ;Config register CONFIG7 @ 0x300006
+  2507                           ;	Boot Block Size selection bits
+  2508                           ;	BBSIZE = BBSIZE_512, Boot Block size is 512 words
+  2509                           ;	Boot Block enable bit
+  2510                           ;	BBEN = OFF, Boot block disabled
+  2511                           ;	Storage Area Flash enable bit
+  2512                           ;	SAFEN = OFF, SAF disabled
+  2513                           ;	Background Debugger
+  2514                           ;	DEBUG = OFF, Background Debugger disabled
+  2515   300006                     	org	3145734
+  2516   300006  FF                 	db	255
+  2517                           
+  2518                           ;Config register CONFIG8 @ 0x300007
+  2519                           ;	Boot Block Write Protection bit
+  2520                           ;	WRTB = OFF, Boot Block not Write protected
+  2521                           ;	Configuration Register Write Protection bit
+  2522                           ;	WRTC = OFF, Configuration registers not Write protected
+  2523                           ;	Data EEPROM Write Protection bit
+  2524                           ;	WRTD = OFF, Data EEPROM not Write protected
+  2525                           ;	SAF Write protection bit
+  2526                           ;	WRTSAF = OFF, SAF not Write Protected
+  2527                           ;	Application Block write protection bit
+  2528                           ;	WRTAPP = OFF, Application Block not write protected
+  2529   300007                     	org	3145735
+  2530   300007  FF                 	db	255
+  2531                           
+  2532                           ;Config register CONFIG10 @ 0x300009
+  2533                           ;	PFM and Data EEPROM Code Protection bit
+  2534                           ;	CP = OFF, PFM and Data EEPROM code protection disabled
+  2535   300009                     	org	3145737
+  2536   300009  FF                 	db	255
+  2537                           tosu	equ	0x4FF
+  2538                           tosh	equ	0x4FE
+  2539                           tosl	equ	0x4FD
+  2540                           stkptr	equ	0x4FC
+  2541                           pclatu	equ	0x4FB
+  2542                           pclath	equ	0x4FA
+  2543                           pcl	equ	0x4F9
+  2544                           tblptru	equ	0x4F8
+  2545                           tblptrh	equ	0x4F7
+  2546                           tblptrl	equ	0x4F6
+  2547                           tablat	equ	0x4F5
+  2548                           prodh	equ	0x4F4
+  2549                           prodl	equ	0x4F3
+  2550                           indf0	equ	0x4EF
+  2551                           postinc0	equ	0x4EE
+  2552                           postdec0	equ	0x4ED
+  2553                           preinc0	equ	0x4EC
+  2554                           plusw0	equ	0x4EB
+  2555                           fsr0h	equ	0x4EA
+  2556                           fsr0l	equ	0x4E9
+  2557                           wreg	equ	0x4E8
+  2558                           indf1	equ	0x4E7
+  2559                           postinc1	equ	0x4E6
+  2560                           postdec1	equ	0x4E5
+  2561                           preinc1	equ	0x4E4
+  2562                           plusw1	equ	0x4E3
+  2563                           fsr1h	equ	0x4E2
+  2564                           fsr1l	equ	0x4E1
+  2565                           bsr	equ	0x4E0
+  2566                           indf2	equ	0x4DF
+  2567                           postinc2	equ	0x4DE
+  2568                           postdec2	equ	0x4DD
+  2569                           preinc2	equ	0x4DC
+  2570                           plusw2	equ	0x4DB
+  2571                           fsr2h	equ	0x4DA
+  2572                           fsr2l	equ	0x4D9
+  2573                           status	equ	0x4D8
 
 Data Sizes:
     Strings     3
@@ -3896,92 +3904,92 @@ CODE                 0      0       0       0        0.0%
 
 
 Microchip Technology PIC18 Macro Assembler V2.45 build 20230818022343 
-Symbol Table                                                                                   Sat May 25 00:08:40 2024
+Symbol Table                                                                                   Sat May 25 11:29:43 2024
 
-                       u70 274C                        l251 273A                        l254 2744  
-                      l246 258C                        l264 28CC                        l992 27CA  
-                      _GIE 26B7                        wreg 04E8            timer_check@time 0522  
-                     l1006 27F0                       l1110 28B0                       l1242 269A  
-                     l1252 278C                       l1092 273E                       l1236 2664  
-                     l1308 2562                       l1318 28B8                       l1248 2776  
-                     l1096 2750                       STR_1 2511                       _LATA 04BE  
-                     _T2PR 0323                       _U3ON 1697                       _main 28B4  
-           echo_str@p_data 0521                       _loop 2516                       fsr2h 04DA  
-                     indf2 04DF                       fsr2l 04D9                       start 0102  
-             ___param_bank 0000           __end_of_INT0_ISR 28EE           __end_of_U3RX_ISR 2840  
-                    ?_main 051F                      _ADPCH 03EC           __end_of_U3TX_ISR 281A  
-                    ?_loop 051F                      _T2CON 0324                      _LATA6 25F6  
-                    _U3BRG 02D4                      _T2HLT 0325                      _T2TMR 0322  
-                    _T2RST 0327                      i2l216 2816                      _U3RXB 02C7  
-                    _U3TXB 02C9              _au8_rx_buffer 0509                      _TRISA 04C6  
-                    _WPUB0 2048              _au8_tx_buffer 0501           __end_of_TMR2_ISR 28F6  
-                    _setup 2596             __pbitbssCOMRAM 2948                      tablat 04F5  
-      request_in@data_recv 0523                      status 04D8            __initialization 2840  
-             __end_of_main 28C8               __end_of_loop 2596                     ??_main 0528  
-                   ??_loop 0527              __activetblptr 0003                     _ADRESH 03EB  
-                   _ADRESL 03EA                     ?_setup 051F                     _ANSELA 0400  
-                   _RC0PPS 0211                     _RC1PPS 0212                     _RA6PPS 0207  
-                   _INT0IE 24F8                     _INT0IF 2578                     _U3RXIE 2538  
-                   _U3RXEN 168C                     _U3TXIE 2539                     _U3TXEN 168D  
-                   _OSCFRQ 00B1                     _TMR2IF 258B                     _TRISB0 2638  
-                   _TRISC0 2640                     _TRISC1 2641                     _TRISA6 2636  
-                   _TRISB4 263C                     _TRISA7 2637           __end_of_echo_hex 26EC  
-           _u16_timer_200m 051B           __end_of_echo_str 27A4               ?_timer2_init 051F  
-                   clear_0 2848                     isa$std 0001               __mediumconst 0000  
-                   tblptrh 04F7                     tblptrl 04F6                     tblptru 04F8  
-             ?_timer_check 0520               ?_timer_start 0520                 __accesstop 0560  
-  __end_of__initialization 285C                  ?_INT0_ISR 051F              ___rparam_used 0001  
-                ?_U3RX_ISR 051F                  ?_U3TX_ISR 051F             __pcstackCOMRAM 051F  
-               _u8_rx_head 0519                  ?_TMR2_ISR 051F                 _u8_rx_tail 0518  
-               _u8_tx_head 0516             ivt0x8_undefint 0100                 _u8_tx_tail 0515  
-        echo_hex@hex_table 2501              __end_of_setup 25F6                loop@chk_val 0527  
-                  ??_setup 0522         timer_check@p_timer 0520         timer_check@ret_val 0526  
-               ??_INT0_ISR 051F                 ??_U3RX_ISR 051F                 ??_U3TX_ISR 0520  
-                  IVTBASEH 045E                    IVTBASEL 045D                    IVTBASEU 045F  
-__end_ofecho_hex@hex_table 2511                 ??_TMR2_ISR 051F               U3RX_ISR@data 051F  
-                  _ANSELB0 2040                    _ANSELA6 2006                    _ANSELB4 2044  
-                  _ANSELA7 2007          __end_of_adcc_init 289C          __end_of_adcc_read 28DA  
-                  _INT0EDG 26B0              ??_DEFAULT_ISR 051F                    _U3RXPPS 0276  
-                ?_echo_hex 051F                  ?_echo_str 0521                    _PWM1CLK 0461  
-                  _PWM1GIE 0468                    _PWM1CON 0469                    _PWM1GIR 0467  
-                  _PWM1ERS 0460                    _PWM1LDS 0462                    _PWM1PRH 0464  
-                  _PWM1PRL 0463                    __Hparam 0000                    __Lparam 0000  
-             __psmallconst 2500                    __pcinit 2840                    __ramtop 2500  
-                  __ptext0 28B4                    __ptext1 2596                    __ptext2 26EC  
-                  __ptext3 2862                    __ptext4 25F6                    __ptext5 2882  
-                  __ptext6 2516                    __ptext7 289C                    __ptext8 28DA  
-                  __ptext9 264E                 ??_echo_hex 0521                 ??_echo_str 0522  
-      __end_of_DEFAULT_ISR 28FA       end_of_initialization 285C          __end_of_pwm1_init 264E  
-               _uart3_init 26EC          __end_of_uart_read 27CE          __end_of_uart_send 27F4  
-           _u8_sys_counter 051A                    postdec2 04DD                  _PWM1S1CFG 046A  
-                _PWM1S1P1H 046C                  _PWM1S1P2H 046E                  _PWM1S1P1L 046B  
-                _PWM1S1P2L 046D                    postinc0 04EE                    postinc2 04DE  
-               _request_in 2732                  _PWM1PIPOS 0466                 _update_out 289C  
-              _u8_rx_count 0517               _u16_timer_1s 051D                _u8_tx_count 0514  
-              _DEFAULT_ISR 28F8              __pbitnvCOMRAM 2940        start_initialization 2840  
-               ivt0x8_base 0008                ?_uart3_init 051F                ?_request_in 051F  
-              __pbssCOMRAM 0501                ?_update_out 051F                  _adcc_init 2882  
-                _adcc_read 28C8           echo_hex@hex_data 0523                  _data_adch 0512  
-                _data_adcl 0511                  _bit_state 2940                __smallconst 2500  
-                _count_out 0513                 ?_adcc_init 051F                 ?_adcc_read 051F  
-                 _T2CLKCON 0326                   _INT0_ISR 28E8                  _pwm1_init 25F6  
-                 _U3RX_ISR 281C                   _PIE3bits 04A1                   _PIE4bits 04A2  
-                 _U3TX_ISR 27F4                   _PIR3bits 04B1                   _PIR4bits 04B2  
-                 _PWM1CPRE 0465                  _uart_read 27A4                  _uart_send 27CE  
-                 _TMR2_ISR 28F0              ??_timer2_init 0520                 _ADCON0bits 03F3  
-            ??_timer_check 0524              ??_timer_start 0522                 ?_pwm1_init 051F  
-                 __Hrparam 0000                   __Lrparam 0000                 ?_uart_read 051F  
-               ?_uart_send 051F        __end_of_timer2_init 2882               ?_DEFAULT_ISR 051F  
-                 _echo_hex 269E                   _echo_str 2774                   __pivt0x8 0008  
-                 _bit_flag 2948                ??_adcc_init 0520                ??_adcc_read 0520  
-                 __ptext10 2732                   __ptext11 27A4                   __ptext20 27F4  
-                 __ptext12 2774                   __ptext13 269E                   __ptext14 27CE  
-                 __ptext15 28C8                   __ptext16 28F8                   __ptext17 28E8  
-                 __ptext18 28F0                   __ptext19 281C        __end_of_timer_check 269E  
-             ??_uart3_init 0520        __end_of_timer_start 28E8                   isa$xinst 0000  
-             ??_request_in 0521         __end_of_uart3_init 2732                _PWM1CONbits 0469  
-              _PWM1GIRbits 0467         timer_start@p_timer 0520               ??_update_out 0521  
-                 intlevel2 0000         __end_of_request_in 2774                ??_pwm1_init 0520  
-            uart_read@data 0520                ??_uart_read 0520                ??_uart_send 0520  
-       __end_of_update_out 28B4                _timer2_init 2862              uart_send@data 0520  
-              _timer_check 264E                _timer_start 28DA  
+                       u70 270A                        l251 26F4                        l253 26F8  
+                      l246 258C                        l255 2702                        l265 28D8  
+                      l993 27D4                        _GIE 26B7                        wreg 04E8  
+          timer_check@time 0522                       l1007 27FA                       l1111 28BC  
+                     l1243 269A                       l1253 2796                       l1093 26FC  
+                     l1237 2664                       l1309 2562                       l1319 28C4  
+                     l1249 2780                       l1097 270E                       STR_1 2511  
+                     _LATA 04BE                       _T2PR 0323                       _U3ON 1697  
+                     _main 28C0             echo_str@p_data 0521                       _loop 2516  
+                     fsr2h 04DA                       indf2 04DF                       fsr2l 04D9  
+                     start 0102               ___param_bank 0000           __end_of_INT0_ISR 28FA  
+         __end_of_U3RX_ISR 284C                      ?_main 051F                      _ADPCH 03EC  
+         __end_of_U3TX_ISR 2826                      ?_loop 051F                      _T2CON 0324  
+                    _LATA6 25F6                      _U3BRG 02D4                      _T2HLT 0325  
+                    _T2TMR 0322                      _T2RST 0327                      i2l216 2822  
+                    _U3RXB 02C7                      _U3TXB 02C9              _au8_rx_buffer 0509  
+                    _TRISA 04C6                      _WPUB0 2048              _au8_tx_buffer 0501  
+         __end_of_TMR2_ISR 2902                      _setup 2596             __pbitbssCOMRAM 2948  
+                    tablat 04F5        request_in@data_recv 0523                      status 04D8  
+          __initialization 284C               __end_of_main 28D4               __end_of_loop 2596  
+                   ??_main 0528                     ??_loop 0527              __activetblptr 0003  
+                   _ADRESH 03EB                     _ADRESL 03EA                     ?_setup 051F  
+                   _ANSELA 0400                     _RC0PPS 0211                     _RC1PPS 0212  
+                   _RA6PPS 0207                     _INT0IE 24F8                     _INT0IF 2578  
+                   _U3RXIE 2538                     _U3RXEN 168C                     _U3TXIE 2539  
+                   _U3TXEN 168D                     _OSCFRQ 00B1                     _TMR2IF 258B  
+                   _TRISB0 2638                     _TRISC0 2640                     _TRISC1 2641  
+                   _TRISA6 2636                     _TRISB4 263C                     _TRISA7 2637  
+         __end_of_echo_hex 26EC             _u16_timer_200m 051B           __end_of_echo_str 27AE  
+             ?_timer2_init 051F                     clear_0 2854                     isa$std 0001  
+             __mediumconst 0000                     tblptrh 04F7                     tblptrl 04F6  
+                   tblptru 04F8               ?_timer_check 0520               ?_timer_start 0520  
+               __accesstop 0560    __end_of__initialization 2868                  ?_INT0_ISR 051F  
+            ___rparam_used 0001                  ?_U3RX_ISR 051F                  ?_U3TX_ISR 051F  
+           __pcstackCOMRAM 051F                 _u8_rx_head 0519                  ?_TMR2_ISR 051F  
+               _u8_rx_tail 0518                 _u8_tx_head 0516             ivt0x8_undefint 0100  
+               _u8_tx_tail 0515          echo_hex@hex_table 2501              __end_of_setup 25F6  
+              loop@chk_val 0527                    ??_setup 0522         timer_check@p_timer 0520  
+       timer_check@ret_val 0526                 ??_INT0_ISR 051F                 ??_U3RX_ISR 051F  
+               ??_U3TX_ISR 0520                    IVTBASEH 045E                    IVTBASEL 045D  
+                  IVTBASEU 045F  __end_ofecho_hex@hex_table 2511                 ??_TMR2_ISR 051F  
+             U3RX_ISR@data 051F                    _ANSELB0 2040                    _ANSELA6 2006  
+                  _ANSELB4 2044                    _ANSELA7 2007          __end_of_adcc_init 28A8  
+        __end_of_adcc_read 28E6                    _INT0EDG 26B0              ??_DEFAULT_ISR 051F  
+                  _U3RXPPS 0276                  ?_echo_hex 051F                  ?_echo_str 0521  
+                  _PWM1CLK 0461                    _PWM1GIE 0468                    _PWM1CON 0469  
+                  _PWM1GIR 0467                    _PWM1ERS 0460                    _PWM1LDS 0462  
+                  _PWM1PRH 0464                    _PWM1PRL 0463                    __Hparam 0000  
+                  __Lparam 0000               __psmallconst 2500                    __pcinit 284C  
+                  __ramtop 2500                    __ptext0 28C0                    __ptext1 2596  
+                  __ptext2 2738                    __ptext3 286E                    __ptext4 25F6  
+                  __ptext5 288E                    __ptext6 2516                    __ptext7 28A8  
+                  __ptext8 28E6                    __ptext9 264E                 ??_echo_hex 0521  
+               ??_echo_str 0522        __end_of_DEFAULT_ISR 2906       end_of_initialization 2868  
+        __end_of_pwm1_init 264E                 _uart3_init 2738          __end_of_uart_read 27D8  
+        __end_of_uart_send 27FE             _u8_sys_counter 051A                    postdec2 04DD  
+                _PWM1S1CFG 046A                  _PWM1S1P1H 046C                  _PWM1S1P2H 046E  
+                _PWM1S1P1L 046B                  _PWM1S1P2L 046D                    postinc0 04EE  
+                  postinc2 04DE                 _request_in 26EC                  _PWM1PIPOS 0466  
+               _update_out 28A8                _u8_rx_count 0517               _u16_timer_1s 051D  
+              _u8_tx_count 0514                _DEFAULT_ISR 2904              __pbitnvCOMRAM 2940  
+      start_initialization 284C                 ivt0x8_base 0008                ?_uart3_init 051F  
+              ?_request_in 051F                __pbssCOMRAM 0501                ?_update_out 051F  
+                _adcc_init 288E                  _adcc_read 28D4           echo_hex@hex_data 0523  
+                _data_adch 0512                  _data_adcl 0511                  _bit_state 2940  
+              __smallconst 2500                  _count_out 0513                 ?_adcc_init 051F  
+               ?_adcc_read 051F                   _T2CLKCON 0326                   _INT0_ISR 28F4  
+                _pwm1_init 25F6                   _U3RX_ISR 2828                   _PIE3bits 04A1  
+                 _PIE4bits 04A2                   _U3TX_ISR 2800                   _PIR3bits 04B1  
+                 _PIR4bits 04B2                   _PWM1CPRE 0465                  _uart_read 27AE  
+                _uart_send 27D8                   _TMR2_ISR 28FC              ??_timer2_init 0520  
+               _ADCON0bits 03F3              ??_timer_check 0524              ??_timer_start 0522  
+               ?_pwm1_init 051F                   __Hrparam 0000                   __Lrparam 0000  
+               ?_uart_read 051F                 ?_uart_send 051F        __end_of_timer2_init 288E  
+             ?_DEFAULT_ISR 051F                   _echo_hex 269E                   _echo_str 277E  
+                 __pivt0x8 0008                   _bit_flag 2948                ??_adcc_init 0520  
+              ??_adcc_read 0520                   __ptext10 26EC                   __ptext11 27AE  
+                 __ptext20 2800                   __ptext12 277E                   __ptext13 269E  
+                 __ptext14 27D8                   __ptext15 28D4                   __ptext16 2904  
+                 __ptext17 28F4                   __ptext18 28FC                   __ptext19 2828  
+      __end_of_timer_check 269E               ??_uart3_init 0520        __end_of_timer_start 28F4  
+                 isa$xinst 0000               ??_request_in 0521         __end_of_uart3_init 277E  
+              _PWM1CONbits 0469                _PWM1GIRbits 0467         timer_start@p_timer 0520  
+             ??_update_out 0521                   intlevel2 0000         __end_of_request_in 2738  
+              ??_pwm1_init 0520              uart_read@data 0520                ??_uart_read 0520  
+              ??_uart_send 0520         __end_of_update_out 28C0                _timer2_init 286E  
+            uart_send@data 0520                _timer_check 264E                _timer_start 28E6  
