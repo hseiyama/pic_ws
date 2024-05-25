@@ -83,12 +83,14 @@ void __interrupt(irq(TMR2),base(8)) TMR2_ISR(void) {
 void main(void) {
 	// System initialize
 	OSCFRQ = 0x08;					// 64MHz internal OSC
+	// User initialize
+	setup();
 	// TIMER2 Initialize
 	TMR2_Initialize();
 	// Initialize variant
 	u8_sys_counter = 0;
-	// User initialize
-	setup();
+	// Global interrupt
+	GIE = 1;						// Global interrupt enable
 
 	while (TRUE) {
 		if (u8_sys_counter >= SYS_MAIN_CYCLE) {

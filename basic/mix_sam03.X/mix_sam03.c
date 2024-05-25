@@ -53,9 +53,6 @@ void setup(void) {
 	bit_flag = 0;
 	bit_state = 1;
 
-	// Global interrupt
-	GIE = 1;						// Global interrupt enable
-
 	// start timer_1s
 	TimerStart(&u16_timer_1s);
 	// start timer_200ms
