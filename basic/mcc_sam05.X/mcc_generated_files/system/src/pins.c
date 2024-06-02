@@ -105,7 +105,7 @@ void PIN_MANAGER_Initialize(void)
     */
     RB1I2C = 0x0;
     RB2I2C = 0x0;
-    RC3I2C = 0x0;
+    RC3I2C = 0x1;
     RC4I2C = 0x0;
     /**
     PPS registers

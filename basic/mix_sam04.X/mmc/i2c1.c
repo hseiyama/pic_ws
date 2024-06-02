@@ -99,6 +99,8 @@ void I2C1_Initialize(void)
 	TRISC3 = 0;						// Set as output
     /* ODx registers */
     ODCONC = 0xC;
+    /* RxyI2C | RxyFEAT registers */
+    RC3I2C = 0x1;
     /* PPS registers */
     I2C1SCLPPS = 0x12;  //RC2->I2C1:SCL1;
     RC2PPS = 0x37;  //RC2->I2C1:SCL1;

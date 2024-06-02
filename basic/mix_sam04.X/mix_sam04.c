@@ -10,39 +10,50 @@
 #define MCP23017_ADDR	(0x20)
 #define SIZE_I2C_WRITE	(2)
 #define SIZE_I2C_READ	(1)
-// MCP23017 Register Address PORTA
-#define IODIRA			(0x00)		// I/O方向レジスタ
-#define IPOLA			(0x02)		// 入力極性ポートレジスタ
-#define GPINTENA		(0x04)		// 状態変化割り込みピン
-#define DEFVALA			(0x06)		// 既定値レジスタ
-#define INTCONA			(0x08)		// 状態変化割り込み制御レジスタ
-#define IOCON			(0x0A)		// I/Oエクスパンダコンフィグレーションレジスタ
-#define GPPUA			(0x0C)		// GPIOプルアップ抵抗レジスタ
-#define INTFA			(0x0E)		// 割り込みフラグレジスタ
-#define INTCAPA			(0x10)		// 割り込み時にキャプチャしたポート値を示すレジスタ
-#define GPIOA			(0x12)		// 汎用I/Oポ ートレジスタ
-#define OLATA			(0x14)		// 出力ラッチレジスタ
-// MCP23017 Register Address PORTB
-#define IODIRB			(0x01)		// I/O方向レジスタ
-#define IPOLB			(0x03)		// 入力極性ポートレジスタ
-#define GPINTENB		(0x05)		// 状態変化割り込みピン
-#define DEFVALB			(0x07)		// 既定値レジスタ
-#define INTCONB			(0x09)		// 状態変化割り込み制御レジスタ
-//#define IOCON			(0x0B)		// I/Oエクスパンダコンフィグレーションレジスタ
-#define GPPUB			(0x0D)		// GPIOプルアップ抵抗レジスタ
-#define INTFB			(0x0F)		// 割り込みフラグレジスタ
-#define INTCAPB			(0x11)		// 割り込み時にキャプチャしたポート値を示すレジスタ
-#define GPIOB			(0x13)		// 汎用I/Oポ ートレジスタ
-#define OLATB			(0x15)		// 出力ラッチレジスタ
+// MCP23017 Register Address
+#define REG_IODIRA		(0x00)		// I/O方向レジスタ
+#define REG_IODIRB		(0x01)
+#define REG_IPOLA		(0x02)		// 入力極性ポートレジスタ
+#define REG_IPOLB		(0x03)
+#define REG_GPINTENA	(0x04)		// 状態変化割り込みピン
+#define REG_GPINTENB	(0x05)
+#define REG_DEFVALA		(0x06)		// 既定値レジスタ
+#define REG_DEFVALB		(0x07)
+#define REG_INTCONA		(0x08)		// 状態変化割り込み制御レジスタ
+#define REG_INTCONB		(0x09)
+#define REG_IOCON		(0x0A)		// I/Oエクスパンダコンフィグレーションレジスタ
+//#define REG_IOCON		(0x0B)
+#define REG_GPPUA		(0x0C)		// GPIOプルアップ抵抗レジスタ
+#define REG_GPPUB		(0x0D)
+#define REG_INTFA		(0x0E)		// 割り込みフラグレジスタ
+#define REG_INTFB		(0x0F)
+#define REG_INTCAPA		(0x10)		// 割り込み時にキャプチャしたポート値を示すレジスタ
+#define REG_INTCAPB		(0x11)
+#define REG_GPIOA		(0x12)		// 汎用I/Oポ ートレジスタ
+#define REG_GPIOB		(0x13)
+#define REG_OLATA		(0x14)		// 出力ラッチレジスタ
+#define REG_OLATB		(0x15)
+
+enum {
+	STATE_WAIT_READ = 0,
+	STATE_WAIT_WRITE
+};
+
+const uint8_t acu8_msg_reset[] = "Status is RESET.\r\n";
+const uint8_t acu8_msg_awake[] = "Status is AWAKE.\r\n";
 
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
 volatile uint8_t	u8_count_out;
 __bit				bit_flag;
 __bit				bit_state;
+uint8_t				u8_state_i2c;
+uint8_t				au8_data_i2c_write[SIZE_I2C_WRITE];
+uint8_t				u8_data_i2c_read;
 
 static void MCP23017_Initialize(void);
 static void MCP23017_Write(uint8_t reg_addr, uint8_t data);
+static void MCP23017_UpdateState(void);
 static void request_in(void);
 static void update_out(void);
 
@@ -76,10 +87,13 @@ void setup(void) {
 	u8_count_out = 0x00;
 	bit_flag = 0;
 	bit_state = 1;
+	u8_state_i2c = STATE_WAIT_READ;
 
 	// Global interrupt
 	GIE = 1;						// Global interrupt enable
 
+	// Message
+	EchoStr((char *)&acu8_msg_reset[0]);
 	// MCP23017 Initialize
 	MCP23017_Initialize();
 
@@ -107,25 +121,52 @@ void loop(void) {
 	}
 	request_in();
 	update_out();
+	// MCP23017 UpdateState
+	MCP23017_UpdateState();
 }
 
 static void MCP23017_Initialize(void) {
 	// IOCON コンフィグレーションを初期化
-	MCP23017_Write(IOCON, 0x00);	// I/Oエクスパンダコンフィグレーションレジスタ
+	MCP23017_Write(REG_IOCON, 0x00);	// I/Oエクスパンダコンフィグレーションレジスタ
 	// PORTA 0-3ピンを入力として設定
-	MCP23017_Write(IODIRA, 0xFF);	// I/O方向レジスタ
-	MCP23017_Write(GPPUA, 0x0F);	// GPIOプルアップ抵抗レジスタ
+	MCP23017_Write(REG_IODIRA, 0xFF);	// I/O方向レジスタ
+	MCP23017_Write(REG_GPPUA, 0x0F);	// GPIOプルアップ抵抗レジスタ
 	// PORTB 0-3ピンを出力として設定
-	MCP23017_Write(IODIRB, 0xF0);	// I/O方向レジスタ
-	MCP23017_Write(OLATB, 0x0A);	// 出力ラッチレジスタ
+	MCP23017_Write(REG_IODIRB, 0xF0);	// I/O方向レジスタ
+	MCP23017_Write(REG_OLATB, 0x00);	// 出力ラッチレジスタ
 }
 
 static void MCP23017_Write(uint8_t reg_addr, uint8_t data) {
-	uint8_t data_write[SIZE_I2C_WRITE];
-	data_write[0] = reg_addr;
-	data_write[1] = data;
-	I2C1_Host_Write(MCP23017_ADDR, &data_write[0], SIZE_I2C_WRITE);
+	au8_data_i2c_write[0] = reg_addr;
+	au8_data_i2c_write[1] = data;
+	I2C1_Host_Write(MCP23017_ADDR, &au8_data_i2c_write[0], SIZE_I2C_WRITE);
 	while (I2C1_IsBusy());
+}
+
+static void MCP23017_UpdateState(void) {
+	switch (u8_state_i2c) {
+	case STATE_WAIT_READ:
+		if (!I2C1_IsBusy()) {
+			au8_data_i2c_write[0] = REG_GPIOA;
+			I2C1_Host_WriteRead(MCP23017_ADDR,
+				&au8_data_i2c_write[0], 1,
+				&u8_data_i2c_read, SIZE_I2C_READ);
+			u8_state_i2c = STATE_WAIT_WRITE;
+		}
+		break;
+	case STATE_WAIT_WRITE:
+		if (!I2C1_IsBusy()) {
+			au8_data_i2c_write[0] = REG_OLATB;
+			au8_data_i2c_write[1] = u8_data_i2c_read;
+			I2C1_Host_Write(MCP23017_ADDR,
+				&au8_data_i2c_write[0], SIZE_I2C_WRITE);
+			u8_state_i2c = STATE_WAIT_READ;
+		}
+		break;
+	default:
+		u8_state_i2c = STATE_WAIT_READ;
+		break;
+	}
 }
 
 static void request_in(void) {
@@ -139,12 +180,18 @@ static void request_in(void) {
 	case 's':						// Judge Sleep
 		// Sleep
 		Sleep();
-		break;
-	case 'z':						// Judge Zero
-		u8_count_out = 0x00;
+		// Message
+		EchoStr((char *)&acu8_msg_awake[0]);
 		break;
 	case 'u':						// Judge Uart
 		bit_state = !bit_state;
+		break;
+	case 'w':						// Judge aWake
+		// Message
+		EchoStr((char *)&acu8_msg_awake[0]);
+		break;
+	case 'z':						// Judge Zero
+		u8_count_out = 0x00;
 		break;
 	default:
 		break;
