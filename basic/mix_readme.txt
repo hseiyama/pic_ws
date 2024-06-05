@@ -8,3 +8,4 @@ mix_sam03.X（実機確認）
 　・モジュール分割（UART,ADCC,PWM1）
 mix_sam04.X（実機確認）
 　・I2c1の試行
+　・Spi1の試行

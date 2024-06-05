@@ -4,13 +4,17 @@
 #include "system.h"
 #include "uart3.h"
 #include "i2c1.h"
+#include "spi1.h"
 
 #define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
 #define MCP23017_ADDR	(0x20)
 #define SIZE_I2C_WRITE	(2)
 #define SIZE_I2C_READ	(1)
-// MCP23017 Register Address
+#define MCP23S17_ADDR	(0x40)
+#define SIZE_SPI_WRITE	(3)
+#define SIZE_SPI_READ	(1)
+// MCP23017/MCP23S17 Register Address
 #define REG_IODIRA		(0x00)		// I/O方向レジスタ
 #define REG_IODIRB		(0x01)
 #define REG_IPOLA		(0x02)		// 入力極性ポートレジスタ
@@ -50,10 +54,16 @@ __bit				bit_state;
 uint8_t				u8_state_i2c;
 uint8_t				au8_data_i2c_write[SIZE_I2C_WRITE];
 uint8_t				u8_data_i2c_read;
+uint8_t				u8_state_spi;
+uint8_t				au8_data_spi_write[SIZE_SPI_WRITE];
+uint8_t				u8_data_spi_read;
 
 static void MCP23017_Initialize(void);
 static void MCP23017_Write(uint8_t reg_addr, uint8_t data);
 static void MCP23017_UpdateState(void);
+static void MCP23S17_Initialize(void);
+static void MCP23S17_Write(uint8_t reg_addr, uint8_t data);
+static void MCP23S17_UpdateState(void);
 static void request_in(void);
 static void update_out(void);
 
@@ -82,12 +92,15 @@ void setup(void) {
 	UART3_Initialize();
 	// I2C1 Initialize
 	I2C1_Host_Initialize();
+	// SPI1 Initialize
+	SPI1_Host_Initialize();
 
 	// Initialize variant
 	u8_count_out = 0x00;
 	bit_flag = 0;
 	bit_state = 1;
 	u8_state_i2c = STATE_WAIT_READ;
+	u8_state_spi = STATE_WAIT_READ;
 
 	// Global interrupt
 	GIE = 1;						// Global interrupt enable
@@ -96,6 +109,8 @@ void setup(void) {
 	EchoStr((char *)&acu8_msg_reset[0]);
 	// MCP23017 Initialize
 	MCP23017_Initialize();
+	// MCP23S17 Initialize
+	MCP23S17_Initialize();
 
 	// start timer_1s
 	TimerStart(&u16_timer_1s);
@@ -123,6 +138,8 @@ void loop(void) {
 	update_out();
 	// MCP23017 UpdateState
 	MCP23017_UpdateState();
+	// MCP23S17 UpdateState
+	MCP23S17_UpdateState();
 }
 
 static void MCP23017_Initialize(void) {
@@ -140,31 +157,76 @@ static void MCP23017_Write(uint8_t reg_addr, uint8_t data) {
 	au8_data_i2c_write[0] = reg_addr;
 	au8_data_i2c_write[1] = data;
 	I2C1_Host_Write(MCP23017_ADDR, &au8_data_i2c_write[0], SIZE_I2C_WRITE);
-	while (I2C1_IsBusy());
+	while (I2C1_Host_IsBusy());
 }
 
 static void MCP23017_UpdateState(void) {
 	switch (u8_state_i2c) {
 	case STATE_WAIT_READ:
-		if (!I2C1_IsBusy()) {
+		if (!I2C1_Host_IsBusy()) {
 			au8_data_i2c_write[0] = REG_GPIOA;
-			I2C1_Host_WriteRead(MCP23017_ADDR,
-				&au8_data_i2c_write[0], 1,
-				&u8_data_i2c_read, SIZE_I2C_READ);
+			I2C1_Host_WriteRead(MCP23017_ADDR, &au8_data_i2c_write[0], 1, &u8_data_i2c_read, SIZE_I2C_READ);
 			u8_state_i2c = STATE_WAIT_WRITE;
 		}
 		break;
 	case STATE_WAIT_WRITE:
-		if (!I2C1_IsBusy()) {
+		if (!I2C1_Host_IsBusy()) {
 			au8_data_i2c_write[0] = REG_OLATB;
 			au8_data_i2c_write[1] = u8_data_i2c_read;
-			I2C1_Host_Write(MCP23017_ADDR,
-				&au8_data_i2c_write[0], SIZE_I2C_WRITE);
+			I2C1_Host_Write(MCP23017_ADDR, &au8_data_i2c_write[0], SIZE_I2C_WRITE);
 			u8_state_i2c = STATE_WAIT_READ;
 		}
 		break;
 	default:
 		u8_state_i2c = STATE_WAIT_READ;
+		break;
+	}
+}
+
+static void MCP23S17_Initialize(void) {
+	LATC7 = 1;						// CS deactive
+	SPI1_Host_Open(HOST_CONFIG);
+	// IOCON コンフィグレーションを初期化
+	MCP23S17_Write(REG_IOCON, 0x00);	// I/Oエクスパンダコンフィグレーションレジスタ
+	// PORTA 0-3ピンを入力として設定
+	MCP23S17_Write(REG_IODIRA, 0xFF);	// I/O方向レジスタ
+	MCP23S17_Write(REG_GPPUA, 0x0F);	// GPIOプルアップ抵抗レジスタ
+	// PORTB 0-3ピンを出力として設定
+	MCP23S17_Write(REG_IODIRB, 0xF0);	// I/O方向レジスタ
+	MCP23S17_Write(REG_OLATB, 0x00);	// 出力ラッチレジスタ
+}
+
+static void MCP23S17_Write(uint8_t reg_addr, uint8_t data) {
+	au8_data_spi_write[0] = MCP23S17_ADDR;
+	au8_data_spi_write[1] = reg_addr;
+	au8_data_spi_write[2] = data;
+	LATC7 = 0;						// CS active
+	SPI1_Host_BufferWrite(&au8_data_spi_write[0], SIZE_SPI_WRITE);
+	LATC7 = 1;						// CS deactive
+}
+
+static void MCP23S17_UpdateState(void) {
+	switch (u8_state_spi) {
+	case STATE_WAIT_READ:
+		au8_data_spi_write[0] = MCP23S17_ADDR | 1;
+		au8_data_spi_write[1] = REG_GPIOA;
+		LATC7 = 0;					// CS active
+		SPI1_Host_BufferWrite(&au8_data_spi_write[0], 2);
+		SPI1_Host_BufferRead(&u8_data_spi_read, SIZE_SPI_READ);
+		LATC7 = 1;					// CS deactive
+		u8_state_spi = STATE_WAIT_WRITE;
+		break;
+	case STATE_WAIT_WRITE:
+		au8_data_spi_write[0] = MCP23S17_ADDR;
+		au8_data_spi_write[1] = REG_OLATB;
+		au8_data_spi_write[2] = u8_data_spi_read;
+		LATC7 = 0;					// CS active
+		SPI1_Host_BufferWrite(&au8_data_spi_write[0], SIZE_SPI_WRITE);
+		LATC7 = 1;					// CS deactive
+		u8_state_spi = STATE_WAIT_READ;
+		break;
+	default:
+		u8_state_spi = STATE_WAIT_READ;
 		break;
 	}
 }

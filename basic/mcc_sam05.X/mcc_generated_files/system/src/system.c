@@ -55,6 +55,7 @@ void SYSTEM_Initialize(void)
     I2C1_Host_Initialize();
     NVM_Initialize();
     PWM1_16BIT_Initialize();
+    SPI1_Host_Initialize();
     Timer0_Initialize();
     TMR2_Initialize();
     UART3_Initialize();
