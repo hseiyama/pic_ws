@@ -12,8 +12,7 @@
 #define SIZE_I2C_WRITE	(2)
 #define SIZE_I2C_READ	(1)
 #define MCP23S17_ADDR	(0x40)
-#define SIZE_SPI_WRITE	(3)
-#define SIZE_SPI_READ	(1)
+#define SIZE_SPI_BUFFER	(3)
 // MCP23017/MCP23S17 Register Address
 #define REG_IODIRA		(0x00)		// I/O方向レジスタ
 #define REG_IODIRB		(0x01)
@@ -55,7 +54,7 @@ uint8_t				u8_state_i2c;
 uint8_t				au8_data_i2c_write[SIZE_I2C_WRITE];
 uint8_t				u8_data_i2c_read;
 uint8_t				u8_state_spi;
-uint8_t				au8_data_spi_write[SIZE_SPI_WRITE];
+uint8_t				au8_data_spi_buffer[SIZE_SPI_BUFFER];
 uint8_t				u8_data_spi_read;
 
 static void MCP23017_Initialize(void);
@@ -63,6 +62,7 @@ static void MCP23017_Write(uint8_t reg_addr, uint8_t data);
 static void MCP23017_UpdateState(void);
 static void MCP23S17_Initialize(void);
 static void MCP23S17_Write(uint8_t reg_addr, uint8_t data);
+static uint8_t MCP23S17_Read(uint8_t reg_addr);
 static void MCP23S17_UpdateState(void);
 static void request_in(void);
 static void update_out(void);
@@ -197,32 +197,32 @@ static void MCP23S17_Initialize(void) {
 }
 
 static void MCP23S17_Write(uint8_t reg_addr, uint8_t data) {
-	au8_data_spi_write[0] = MCP23S17_ADDR;
-	au8_data_spi_write[1] = reg_addr;
-	au8_data_spi_write[2] = data;
+	au8_data_spi_buffer[0] = MCP23S17_ADDR;
+	au8_data_spi_buffer[1] = reg_addr;
+	au8_data_spi_buffer[2] = data;
 	LATC7 = 0;						// CS active
-	SPI1_Host_BufferWrite(&au8_data_spi_write[0], SIZE_SPI_WRITE);
+	SPI1_Host_BufferExchange(&au8_data_spi_buffer[0], SIZE_SPI_BUFFER);
 	LATC7 = 1;						// CS deactive
+}
+
+static uint8_t MCP23S17_Read(uint8_t reg_addr) {
+	au8_data_spi_buffer[0] = MCP23S17_ADDR | 1;
+	au8_data_spi_buffer[1] = REG_GPIOA;
+	au8_data_spi_buffer[2] = 0x00;
+	LATC7 = 0;						// CS active
+	SPI1_Host_BufferExchange(&au8_data_spi_buffer[0], SIZE_SPI_BUFFER);
+	LATC7 = 1;						// CS deactive
+	return au8_data_spi_buffer[2];
 }
 
 static void MCP23S17_UpdateState(void) {
 	switch (u8_state_spi) {
 	case STATE_WAIT_READ:
-		au8_data_spi_write[0] = MCP23S17_ADDR | 1;
-		au8_data_spi_write[1] = REG_GPIOA;
-		LATC7 = 0;					// CS active
-		SPI1_Host_BufferWrite(&au8_data_spi_write[0], 2);
-		SPI1_Host_BufferRead(&u8_data_spi_read, SIZE_SPI_READ);
-		LATC7 = 1;					// CS deactive
+		u8_data_spi_read = MCP23S17_Read(REG_GPIOA);
 		u8_state_spi = STATE_WAIT_WRITE;
 		break;
 	case STATE_WAIT_WRITE:
-		au8_data_spi_write[0] = MCP23S17_ADDR;
-		au8_data_spi_write[1] = REG_OLATB;
-		au8_data_spi_write[2] = u8_data_spi_read;
-		LATC7 = 0;					// CS active
-		SPI1_Host_BufferWrite(&au8_data_spi_write[0], SIZE_SPI_WRITE);
-		LATC7 = 1;					// CS deactive
+		MCP23S17_Write(REG_OLATB, u8_data_spi_read);
 		u8_state_spi = STATE_WAIT_READ;
 		break;
 	default:
