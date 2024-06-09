@@ -50,6 +50,7 @@ void SYSTEM_Initialize(void)
     CLOCK_Initialize();
     PIN_MANAGER_Initialize();
     ADCC_Initialize();
+    CCP1_Initialize();
     CLC1_Initialize();
     CPU_Initialize();
     DMA1_Initialize();
@@ -59,6 +60,7 @@ void SYSTEM_Initialize(void)
     PWM1_16BIT_Initialize();
     SPI1_Host_Initialize();
     Timer0_Initialize();
+    Timer1_Initialize();
     TMR2_Initialize();
     UART3_Initialize();
     INTERRUPT_Initialize();

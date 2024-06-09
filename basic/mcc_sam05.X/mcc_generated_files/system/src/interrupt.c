@@ -61,6 +61,7 @@ void  INTERRUPT_Initialize (void)
     // Assign peripheral interrupt priority vectors
     IPR1bits.INT0IP = 1;
     IPR3bits.TMR2IP = 1;
+    IPR3bits.CCP1IP = 1;
     IPR3bits.TMR0IP = 1;
     IPR7bits.I2C1RXIP = 1;
     IPR7bits.I2C1TXIP = 1;

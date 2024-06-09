@@ -59,7 +59,7 @@ void PIN_MANAGER_Initialize(void)
     ANSELx registers
     */
     ANSELA = 0x20;
-    ANSELB = 0xF8;
+    ANSELB = 0xD8;
     ANSELC = 0x3;
     ANSELD = 0xFF;
     ANSELE = 0x7;
@@ -125,6 +125,8 @@ void PIN_MANAGER_Initialize(void)
     RC2PPS = 0x37;  //RC2->I2C1:SCL1;
     I2C1SDAPPS = 0x13;  //RC3->I2C1:SDA1;
     RC3PPS = 0x38;  //RC3->I2C1:SDA1;
+    CCP1PPS = 0xD;  //RB5->CCP1:CCP1;
+    RB5PPS = 0x15;  //RB5->CCP1:CCP1;
     SPI1SCKPPS = 0x14;  //RC4->SPI1:SCK1;
     RC4PPS = 0x31;  //RC4->SPI1:SCK1;
 

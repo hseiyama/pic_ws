@@ -7,6 +7,8 @@
 #include "spi1.h"
 #include "clc1.h"
 #include "nco1.h"
+#include "ccp1.h"
+#include "tmr1.h"
 
 #define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
@@ -58,6 +60,8 @@ uint8_t				u8_data_i2c_read;
 uint8_t				u8_state_spi;
 uint8_t				au8_data_spi_buffer[SIZE_SPI_BUFFER];
 uint8_t				u8_data_spi_read;
+volatile uint16_t	u16_data_ccp;
+volatile __bit		bit_capture;
 
 static void MCP23017_Initialize(void);
 static void MCP23017_Write(uint8_t reg_addr, uint8_t data);
@@ -74,6 +78,11 @@ void __interrupt(irq(INT0),base(8)) INT0_ISR(void) {
 	INT0IF = 0;
 	// Interrupt process
 	u8_count_out++;
+}
+
+void CCP1_CBK(uint16_t data) {
+	u16_data_ccp = data;
+	bit_capture = 1;
 }
 
 void setup(void) {
@@ -100,6 +109,10 @@ void setup(void) {
 	CLC1_Initialize();
 	// NCO1 Initialize
 	NCO1_Initialize();
+	// CCP1 Initialize
+	CCP1_Initialize();
+	// Timer1 Initialize
+	Timer1_Initialize();
 
 	// Initialize variant
 	u8_count_out = 0x00;
@@ -107,6 +120,8 @@ void setup(void) {
 	bit_state = 1;
 	u8_state_i2c = STATE_WAIT_READ;
 	u8_state_spi = STATE_WAIT_READ;
+	u16_data_ccp = 0x0000;
+	bit_capture = 0;
 
 	// Global interrupt
 	GIE = 1;						// Global interrupt enable
@@ -119,6 +134,10 @@ void setup(void) {
 	MCP23S17_Initialize();
 	// CLC1 Enable
 	CLC1_Enable();
+	// CCP1 Setting
+	CCP1_SetCallBack(CCP1_CBK);
+	// Timer1 Start
+	Timer1_Start();
 
 	// start timer_1s
 	TimerStart(&u16_timer_1s);
@@ -277,5 +296,15 @@ static void update_out(void) {
 			UART3_Write('+');
 		}
 		bit_flag = 0;
+	}
+	// CCP1 output
+	if (bit_capture == 1) {
+		GIE = 0;					// Global interrupt disable
+		EchoStr("\r\n");
+		EchoHex((u16_data_ccp >> 8) & 0xFF);
+		EchoHex(u16_data_ccp & 0xFF);
+		EchoStr("(ccp) ");
+		GIE = 1;					// Global interrupt enable
+		bit_capture = 0;
 	}
 }

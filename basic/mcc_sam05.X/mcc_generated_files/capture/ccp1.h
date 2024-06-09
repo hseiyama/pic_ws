@@ -1,17 +1,14 @@
 /**
- * System Driver Header File
+ * CCP1 Generated Driver API Header File.
  * 
- * @file system.h
+ * @file ccp1.h
  * 
- * @defgroup systemdriver System Driver
+ * @defgroup capture1 CAPTURE1
  * 
- * @brief This file contains the API prototype for the System Driver.
+ * @brief This file contains the API prototypes and other data types for the CCP1 module.
  *
- * @version Driver Version 2.0.3
- *
- * @version Package Version 5.3.5
+ * @version CCP1 Driver Version 2.0.2
 */
-
 /*
 ? [2024] Microchip Technology Inc. and its subsidiaries.
 
@@ -33,40 +30,61 @@
     THIS SOFTWARE.
 */
 
-#ifndef SYSTEM_H
-#define	SYSTEM_H
+#ifndef CCP1_H
+#define CCP1_H
+
+ /**
+   Section: Included Files
+ */
 
 #include <xc.h>
 #include <stdint.h>
 #include <stdbool.h>
-#include "../system/config_bits.h"
-#include "../system/pins.h"
-#include "../adc/adcc.h"
-#include "../capture/ccp1.h"
-#include "../clc/clc1.h"
-#include "../dma/dma1.h"
-#include "../i2c_host/i2c1.h"
-#include "../nco/nco1.h"
-#include "../nvm/nvm.h"
-#include "../pwm/pwm1_16bit.h"
-#include "../spi/spi1.h"
-#include "../timer/tmr0.h"
-#include "../timer/tmr1.h"
-#include "../timer/tmr2.h"
-#include "../uart/uart3.h"
-#include "../system/interrupt.h"
-#include "../system/clock.h"
+
+
+/** 
+   Section: Data Type Definition
+*/
 
 /**
- * @ingroup systemdriver
- * @brief Initializes the system module.
- * This routine is called only once during system initialization, before calling other APIs.
+ * @ingroup capture1
+ * @union CCPR1_PERIOD_REG_T
+ * @brief Custom data type to hold the low byte, high byte, and 16-bit values of the period register.
+ */
+typedef union CCPR1Reg_tag
+{
+   struct
+   {
+      uint8_t ccpr1l; /**< CCPR1L low byte.*/
+      uint8_t ccpr1h; /**< CCPR1H high byte.*/
+   };
+   struct
+   {
+      uint16_t ccpr1_16Bit; /**< CCPR1 16-bit.*/
+   };
+} CCPR1_PERIOD_REG_T ;
+
+/**
+  Section: CCP1 Capture Module APIs
+*/
+
+/**
+ * @ingroup capture1
+ * @brief Initializes the CCP1 module. This is called only once before calling other CCP1 APIs.
  * @param None.
  * @return None.
-*/
-void SYSTEM_Initialize(void);
+ */
+void CCP1_Initialize(void);
 
-#endif	/* SYSTEM_H */
+/**
+ * @ingroup capture1
+ * @brief Assigns a callback function that will be called from the Capture ISR when a capture interrupt event occurs.
+ * @param (*customCallBack)(uint16_t) - Function pointer to the new callback.
+ * @return None.
+ */
+void CCP1_SetCallBack(void (*customCallBack)(uint16_t));
+
+#endif // CCP1_H
 /**
  End of File
 */
