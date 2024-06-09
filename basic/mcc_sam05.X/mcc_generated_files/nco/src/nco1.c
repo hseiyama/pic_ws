@@ -1,17 +1,14 @@
 /**
- * System Driver Header File
+ * NCO1 Generated Driver File.
  * 
- * @file system.h
+ * @file nco1.c
  * 
- * @defgroup systemdriver System Driver
+ * @ingroup  nco1
  * 
- * @brief This file contains the API prototype for the System Driver.
+ * @brief This file contains the API implementation for the NCO1 driver.
  *
- * @version Driver Version 2.0.3
- *
- * @version Package Version 5.3.5
+ * @version NCO1 Driver Version 2.0.1
 */
-
 /*
 ? [2024] Microchip Technology Inc. and its subsidiaries.
 
@@ -33,38 +30,41 @@
     THIS SOFTWARE.
 */
 
-#ifndef SYSTEM_H
-#define	SYSTEM_H
 
 #include <xc.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include "../system/config_bits.h"
-#include "../system/pins.h"
-#include "../adc/adcc.h"
-#include "../clc/clc1.h"
-#include "../dma/dma1.h"
-#include "../i2c_host/i2c1.h"
-#include "../nco/nco1.h"
-#include "../nvm/nvm.h"
-#include "../pwm/pwm1_16bit.h"
-#include "../spi/spi1.h"
-#include "../timer/tmr0.h"
-#include "../timer/tmr2.h"
-#include "../uart/uart3.h"
-#include "../system/interrupt.h"
-#include "../system/clock.h"
+#include "../nco1.h"
+#include "../../system/interrupt.h"
 
-/**
- * @ingroup systemdriver
- * @brief Initializes the system module.
- * This routine is called only once during system initialization, before calling other APIs.
- * @param None.
- * @return None.
-*/
-void SYSTEM_Initialize(void);
+void NCO1_Initialize(void){
 
-#endif	/* SYSTEM_H */
+    //NPWS 1_clk; NCKS LFINTOSC; 
+    NCO1CLK = 0x2;
+    //NCOACC 0x0; 
+    NCO1ACCU = 0x0;
+    //NCOACC 0x0; 
+    NCO1ACCH = 0x0;
+    //NCOACC 0x0; 
+    NCO1ACCL = 0x0;
+    //NCOINC 0; 
+    NCO1INCU = 0x0;
+    //NCOINC 0; 
+    NCO1INCH = 0x0;
+    //NCOINC 135; 
+    NCO1INCL = 0x87;
+    //NEN enabled; NPOL active_hi; NPFM FDC_mode; 
+    NCO1CON = 0x80;
+}
+ 
+void __interrupt(irq(NCO1),base(8)) NCO1_ISR()
+{
+   // Clear the NCO interrupt flag
+    PIR6bits.NCO1IF = 0;
+}
+
+bool NCO1_GetOutputStatus(void) 
+{
+	return (NCO1CONbits.OUT);
+}
 /**
  End of File
 */

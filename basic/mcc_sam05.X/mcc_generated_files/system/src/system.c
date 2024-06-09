@@ -54,6 +54,7 @@ void SYSTEM_Initialize(void)
     CPU_Initialize();
     DMA1_Initialize();
     I2C1_Host_Initialize();
+    NCO1_Initialize();
     NVM_Initialize();
     PWM1_16BIT_Initialize();
     SPI1_Host_Initialize();

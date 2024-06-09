@@ -6,6 +6,7 @@
 #include "i2c1.h"
 #include "spi1.h"
 #include "clc1.h"
+#include "nco1.h"
 
 #define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
@@ -97,6 +98,8 @@ void setup(void) {
 	SPI1_Host_Initialize();
 	// CLC1 Initialize
 	CLC1_Initialize();
+	// NCO1 Initialize
+	NCO1_Initialize();
 
 	// Initialize variant
 	u8_count_out = 0x00;
