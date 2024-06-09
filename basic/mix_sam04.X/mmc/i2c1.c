@@ -90,12 +90,13 @@ volatile i2c_host_event_status_t i2c1Status = {0};
  */
 void I2C1_Initialize(void)
 {
-	// RC2-RC3 output pin
+	// RC2 SCL
 	ANSELC2 = 0;					// Disable analog function
-	ANSELC3 = 0;					// Disable analog function
 	LATC2 = 1;						// Set high level
-	LATC3 = 1;						// Set high level
 	TRISC2 = 0;						// Set as output
+	// RC3 SDA
+	ANSELC3 = 0;					// Disable analog function
+	LATC3 = 1;						// Set high level
 	TRISC3 = 0;						// Set as output
     /* ODx registers */
     ODCONC = 0xC;

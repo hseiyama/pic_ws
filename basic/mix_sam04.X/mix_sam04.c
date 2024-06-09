@@ -5,6 +5,7 @@
 #include "uart3.h"
 #include "i2c1.h"
 #include "spi1.h"
+#include "clc1.h"
 
 #define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
@@ -94,6 +95,8 @@ void setup(void) {
 	I2C1_Host_Initialize();
 	// SPI1 Initialize
 	SPI1_Host_Initialize();
+	// CLC1 Initialize
+	CLC1_Initialize();
 
 	// Initialize variant
 	u8_count_out = 0x00;
@@ -111,6 +114,8 @@ void setup(void) {
 	MCP23017_Initialize();
 	// MCP23S17 Initialize
 	MCP23S17_Initialize();
+	// CLC1 Enable
+	CLC1_Enable();
 
 	// start timer_1s
 	TimerStart(&u16_timer_1s);

@@ -50,6 +50,7 @@ void SYSTEM_Initialize(void)
     CLOCK_Initialize();
     PIN_MANAGER_Initialize();
     ADCC_Initialize();
+    CLC1_Initialize();
     CPU_Initialize();
     DMA1_Initialize();
     I2C1_Host_Initialize();

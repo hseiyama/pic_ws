@@ -11,4 +11,9 @@ mix_sam04.X（実機確認）
 　・Spi1(ポーリング)の試行
 　　【注意1】SPI1_BufferRead()→SPI1_BufferWrite()で動作不備あり。
 　　【注意2】SPI1_BufferWrite()を使うと、末尾に余計な波形が出る。
+　　　補足）3byteの場合でのみ発生。2byteでは起きない。
+　　　原因）送受信キューは各2個ある。
+　　　　　　SPI1TXIFが条件なので、過剰に送信キューにセットすると推測。
 　　【補足1】***Exchange(5.69us)は***Write(3.06us)と比べ少し遅い。
+　・Clc1の試行
+　　【補足1】単純なANDでは50nsで反応する（Fosc/4より高速）。
