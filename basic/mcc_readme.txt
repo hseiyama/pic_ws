@@ -13,3 +13,5 @@ mcc_sam04.X
 　・EEPROM読み出し/書き込み（実機確認）
 mcc_sam05.X
 　・素材収集用
+mcc_sam06.X
+　・CAN試行用
