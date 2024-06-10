@@ -36,7 +36,7 @@
  */
 
 #include <xc.h>
-#include "../pwm1_16bit.h"
+#include "pwm1_16bit.h"
 
 //Pointers to PWM1_16BIT interrupt handlers
 //User can use them in application code to initialize with custom ISRs
@@ -49,6 +49,18 @@ static void PWM1_16BIT_Period_DefaultInterruptHandler(void);
 
 void PWM1_16BIT_Initialize(void)
 {
+	// RC0 PWM11
+	ANSELC0 = 0;					// Disable analog function
+	LATC0 = 0;						// Set low level
+	TRISC0 = 0;						// Set as output
+	// RC1 PWM12
+	ANSELC1 = 0;					// Disable analog function
+	LATC1 = 0;						// Set low level
+	TRISC1 = 0;						// Set as output
+    /* PPS registers */
+    RC0PPS = 0x18;  //RC0->PWM1_16BIT:PWM11;
+    RC1PPS = 0x19;  //RC1->PWM1_16BIT:PWM12;
+
     //PWMERS External Reset Disabled; 
     PWM1ERS = 0x0;
 
@@ -82,14 +94,14 @@ void PWM1_16BIT_Initialize(void)
     //PWMS1P1L 0; 
     PWM1S1P1L = 0x0;
 
-    //PWMS1P1H 8; 
-    PWM1S1P1H = 0x8;
+    //PWMS1P1H 1; 
+    PWM1S1P1H = 0x1;
 
     //PWMS1P2L 0; 
     PWM1S1P2L = 0x0;
 
-    //PWMS1P2H 8; 
-    PWM1S1P2H = 0x8;
+    //PWMS1P2H 1; 
+    PWM1S1P2H = 0x1;
     
     //Clear PWM1_16BIT period interrupt flag
     PIR4bits.PWM1PIF = 0;

@@ -9,6 +9,8 @@
 #include "nco1.h"
 #include "ccp1.h"
 #include "tmr1.h"
+#include "adcc.h"
+#include "pwm1_16bit.h"
 
 #define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
@@ -62,6 +64,9 @@ uint8_t				au8_data_spi_buffer[SIZE_SPI_BUFFER];
 uint8_t				u8_data_spi_read;
 volatile uint16_t	u16_data_ccp;
 volatile __bit		bit_capture;
+uint16_t			u16_data_adcc;
+uint16_t			u16_data_pwm2;
+__bit				bit_pwm2;
 
 static void MCP23017_Initialize(void);
 static void MCP23017_Write(uint8_t reg_addr, uint8_t data);
@@ -72,6 +77,7 @@ static uint8_t MCP23S17_Read(uint8_t reg_addr);
 static void MCP23S17_UpdateState(void);
 static void request_in(void);
 static void update_out(void);
+static void print_vale(uint16_t data, char *p_msg);
 
 void __interrupt(irq(INT0),base(8)) INT0_ISR(void) {
 	// Clear interrupt flag
@@ -111,8 +117,11 @@ void setup(void) {
 	NCO1_Initialize();
 	// CCP1 Initialize
 	CCP1_Initialize();
-	// Timer1 Initialize
 	Timer1_Initialize();
+	// ADCC Initialize
+	ADCC_Initialize();
+	// PWM1 Initialize
+	PWM1_16BIT_Initialize();
 
 	// Initialize variant
 	u8_count_out = 0x00;
@@ -122,6 +131,9 @@ void setup(void) {
 	u8_state_spi = STATE_WAIT_READ;
 	u16_data_ccp = 0x0000;
 	bit_capture = 0;
+	u16_data_adcc = 0x0100;
+	u16_data_pwm2 = 0x0100;
+	bit_pwm2 = 0;
 
 	// Global interrupt
 	GIE = 1;						// Global interrupt enable
@@ -136,7 +148,6 @@ void setup(void) {
 	CLC1_Enable();
 	// CCP1 Setting
 	CCP1_SetCallBack(CCP1_CBK);
-	// Timer1 Start
 	Timer1_Start();
 
 	// start timer_1s
@@ -262,6 +273,40 @@ static void request_in(void) {
 	uint8_t data_recv;
 	data_recv = UART3_Read();
 	switch (data_recv) {
+	case '!':						// Judge PWM12(-1)
+		u16_data_pwm2 = (u16_data_pwm2 - 1) & 0x0FFF;
+		bit_pwm2 = 1;
+		break;
+	case '"':						// Judge PWM12(-16)
+		u16_data_pwm2 = (u16_data_pwm2 - 16) & 0x0FFF;
+		bit_pwm2 = 1;
+		break;
+	case '#':						// Judge PWM12(-256)
+		u16_data_pwm2 = (u16_data_pwm2 - 256) & 0x0FFF;
+		bit_pwm2 = 1;
+		break;
+	case '1':						// Judge PWM12(+1)
+		u16_data_pwm2 = (u16_data_pwm2 + 1) & 0x0FFF;
+		bit_pwm2 = 1;
+		break;
+	case '2':						// Judge PWM12(+16)
+		u16_data_pwm2 = (u16_data_pwm2 + 16) & 0x0FFF;
+		bit_pwm2 = 1;
+		break;
+	case '3':						// Judge PWM12(+256)
+		u16_data_pwm2 = (u16_data_pwm2 +256) & 0x0FFF;
+		bit_pwm2 = 1;
+		break;
+	case 'a':						// Judge Adcc
+		u16_data_adcc = ADCC_GetSingleConversion(channel_ANB4);
+		print_vale(u16_data_adcc,"(adcc) ");
+		break;
+	case 'p':						// Judge PWM11
+		u16_data_adcc = ADCC_GetSingleConversion(channel_ANB4);
+		PWM1_16BIT_SetSlice1Output1DutyCycleRegister(u16_data_adcc);
+		PWM1_16BIT_LoadBufferRegisters();
+		print_vale(u16_data_adcc,"(pwm1) ");
+		break;
 	case 'r':						// Judge Reset
 		// Reset
 		Reset();
@@ -299,12 +344,21 @@ static void update_out(void) {
 	}
 	// CCP1 output
 	if (bit_capture == 1) {
-		GIE = 0;					// Global interrupt disable
-		EchoStr("\r\n");
-		EchoHex((u16_data_ccp >> 8) & 0xFF);
-		EchoHex(u16_data_ccp & 0xFF);
-		EchoStr("(ccp) ");
-		GIE = 1;					// Global interrupt enable
+		print_vale(u16_data_ccp,"(ccp) ");
 		bit_capture = 0;
 	}
+	// PWM12 output
+	if (bit_pwm2 == 1) {
+		PWM1_16BIT_SetSlice1Output2DutyCycleRegister(u16_data_pwm2);
+		PWM1_16BIT_LoadBufferRegisters();
+		print_vale(u16_data_pwm2,"(pwm2) ");
+		bit_pwm2 = 0;
+	}
+}
+
+static void print_vale(uint16_t data, char *p_msg) {
+	EchoStr("\r\n");
+	EchoHex((data >> 8) & 0xFF);
+	EchoHex(data & 0xFF);
+	EchoStr(p_msg);
 }

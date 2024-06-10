@@ -19,3 +19,5 @@ mix_sam04.X（実機確認）
 　　【補足1】単純なANDでは50nsで反応する（Fosc/4より高速）。
 　・Nco1の試行
 　・Ccp1(capture)の試行
+　・Adcc
+　・Pwm1
