@@ -54,19 +54,19 @@ const uint8_t acu8_msg_awake[] = "Status is AWAKE.\r\n";
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
 volatile uint8_t	u8_count_out;
-__bit				bit_flag;
-__bit				bit_state;
-uint8_t				u8_state_i2c;
+__bit				bit_event_200ms;
+__bit				bit_state_uart;
+uint8_t				u8_state_i2c;		// I2C1
 uint8_t				au8_data_i2c_write[SIZE_I2C_WRITE];
 uint8_t				u8_data_i2c_read;
-uint8_t				u8_state_spi;
+uint8_t				u8_state_spi;		// SPI1
 uint8_t				au8_data_spi_buffer[SIZE_SPI_BUFFER];
 uint8_t				u8_data_spi_read;
-volatile uint16_t	u16_data_ccp;
-volatile __bit		bit_capture;
-uint16_t			u16_data_adcc;
-uint16_t			u16_data_pwm2;
-__bit				bit_pwm2;
+volatile uint16_t	u16_data_ccp;		// CCP1
+volatile __bit		bit_event_ccp;
+uint16_t			u16_data_adcc;		// ADCC
+uint16_t			u16_data_pwm2;		// PWM1
+int16_t				s16_diff_pwm2;
 
 static void MCP23017_Initialize(void);
 static void MCP23017_Write(uint8_t reg_addr, uint8_t data);
@@ -88,7 +88,7 @@ void __interrupt(irq(INT0),base(8)) INT0_ISR(void) {
 
 void CCP1_CBK(uint16_t data) {
 	u16_data_ccp = data;
-	bit_capture = 1;
+	bit_event_ccp = 1;
 }
 
 void setup(void) {
@@ -125,15 +125,15 @@ void setup(void) {
 
 	// Initialize variant
 	u8_count_out = 0x00;
-	bit_flag = 0;
-	bit_state = 1;
+	bit_event_200ms = 0;
+	bit_state_uart = 1;
 	u8_state_i2c = STATE_WAIT_READ;
 	u8_state_spi = STATE_WAIT_READ;
 	u16_data_ccp = 0x0000;
-	bit_capture = 0;
+	bit_event_ccp = 0;
 	u16_data_adcc = 0x0100;
 	u16_data_pwm2 = 0x0100;
-	bit_pwm2 = 0;
+	s16_diff_pwm2 = 0;
 
 	// Global interrupt
 	GIE = 1;						// Global interrupt enable
@@ -168,7 +168,7 @@ void loop(void) {
 	// check timer_200ms
 	chk_val = TimerCheck(&u16_timer_200m, TIME_200MS);
 	if (chk_val) {
-		bit_flag = 1;
+		bit_event_200ms = 1;
 		// start timer_200ms
 		TimerStart(&u16_timer_200m);
 	}
@@ -274,28 +274,22 @@ static void request_in(void) {
 	data_recv = UART3_Read();
 	switch (data_recv) {
 	case '!':						// Judge PWM12(-1)
-		u16_data_pwm2 = (u16_data_pwm2 - 1) & 0x0FFF;
-		bit_pwm2 = 1;
+		s16_diff_pwm2 = -1;
 		break;
 	case '"':						// Judge PWM12(-16)
-		u16_data_pwm2 = (u16_data_pwm2 - 16) & 0x0FFF;
-		bit_pwm2 = 1;
+		s16_diff_pwm2 = -16;
 		break;
 	case '#':						// Judge PWM12(-256)
-		u16_data_pwm2 = (u16_data_pwm2 - 256) & 0x0FFF;
-		bit_pwm2 = 1;
+		s16_diff_pwm2 = -256;
 		break;
 	case '1':						// Judge PWM12(+1)
-		u16_data_pwm2 = (u16_data_pwm2 + 1) & 0x0FFF;
-		bit_pwm2 = 1;
+		s16_diff_pwm2 = 1;
 		break;
 	case '2':						// Judge PWM12(+16)
-		u16_data_pwm2 = (u16_data_pwm2 + 16) & 0x0FFF;
-		bit_pwm2 = 1;
+		s16_diff_pwm2 = 16;
 		break;
 	case '3':						// Judge PWM12(+256)
-		u16_data_pwm2 = (u16_data_pwm2 +256) & 0x0FFF;
-		bit_pwm2 = 1;
+		s16_diff_pwm2 = 256;
 		break;
 	case 'a':						// Judge Adcc
 		u16_data_adcc = ADCC_GetSingleConversion(channel_ANB4);
@@ -318,7 +312,7 @@ static void request_in(void) {
 		EchoStr((char *)&acu8_msg_awake[0]);
 		break;
 	case 'u':						// Judge Uart
-		bit_state = !bit_state;
+		bit_state_uart = !bit_state_uart;
 		break;
 	case 'w':						// Judge aWake
 		// Message
@@ -336,23 +330,24 @@ static void update_out(void) {
 	// LED output
 	LATA = u8_count_out & 0x0F;
 	// UART output
-	if (bit_flag == 1) {
-		if (bit_state == 1) {
+	if (bit_event_200ms == 1) {
+		if (bit_state_uart == 1) {
 			UART3_Write('+');
 		}
-		bit_flag = 0;
+		bit_event_200ms = 0;
 	}
 	// CCP1 output
-	if (bit_capture == 1) {
+	if (bit_event_ccp == 1) {
 		print_vale(u16_data_ccp,"(ccp) ");
-		bit_capture = 0;
+		bit_event_ccp = 0;
 	}
 	// PWM12 output
-	if (bit_pwm2 == 1) {
+	if (s16_diff_pwm2 != 0) {
+		u16_data_pwm2 = (u16_data_pwm2 + (uint16_t)s16_diff_pwm2) & 0x0FFF;
 		PWM1_16BIT_SetSlice1Output2DutyCycleRegister(u16_data_pwm2);
 		PWM1_16BIT_LoadBufferRegisters();
 		print_vale(u16_data_pwm2,"(pwm2) ");
-		bit_pwm2 = 0;
+		s16_diff_pwm2 = 0;
 	}
 }
 
