@@ -14,9 +14,11 @@
 
 #define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
+// MCP23017
 #define MCP23017_ADDR	(0x20)
 #define SIZE_I2C_WRITE	(2)
 #define SIZE_I2C_READ	(1)
+// MCP23S17
 #define MCP23S17_ADDR	(0x40)
 #define SIZE_SPI_BUFFER	(3)
 // MCP23017/MCP23S17 Register Address
@@ -56,16 +58,16 @@ uint16_t			u16_timer_200m;
 volatile uint8_t	u8_count_out;
 __bit				bit_event_200ms;
 __bit				bit_state_uart;
-uint8_t				u8_state_i2c;		// I2C1
+uint8_t				u8_state_i2c;			// I2C1
 uint8_t				au8_data_i2c_write[SIZE_I2C_WRITE];
 uint8_t				u8_data_i2c_read;
-uint8_t				u8_state_spi;		// SPI1
+uint8_t				u8_state_spi;			// SPI1
 uint8_t				au8_data_spi_buffer[SIZE_SPI_BUFFER];
 uint8_t				u8_data_spi_read;
-volatile uint16_t	u16_data_ccp;		// CCP1
+volatile uint16_t	u16_data_ccp;			// CCP1
 volatile __bit		bit_event_ccp;
-uint16_t			u16_data_adcc;		// ADCC
-uint16_t			u16_data_pwm2;		// PWM1
+uint16_t			u16_data_adcc;			// ADCC
+uint16_t			u16_data_pwm2;			// PWM1
 int16_t				s16_diff_pwm2;
 
 static void MCP23017_Initialize(void);
@@ -245,7 +247,7 @@ static void MCP23S17_Write(uint8_t reg_addr, uint8_t data) {
 
 static uint8_t MCP23S17_Read(uint8_t reg_addr) {
 	au8_data_spi_buffer[0] = MCP23S17_ADDR | 1;
-	au8_data_spi_buffer[1] = REG_GPIOA;
+	au8_data_spi_buffer[1] = reg_addr;
 	au8_data_spi_buffer[2] = 0x00;
 	LATC7 = 0;						// CS active
 	SPI1_Host_BufferExchange(&au8_data_spi_buffer[0], SIZE_SPI_BUFFER);
