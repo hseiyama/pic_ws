@@ -42,6 +42,8 @@
 #include "../system/config_bits.h"
 #include "../system/pins.h"
 #include "../can/can1.h"
+#include "../timer/tmr2.h"
+#include "../uart/uart3.h"
 #include "../system/interrupt.h"
 #include "../system/clock.h"
 

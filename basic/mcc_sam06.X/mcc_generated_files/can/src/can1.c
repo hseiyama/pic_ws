@@ -903,7 +903,7 @@ void CAN1_FIFO1NotEmptyCallbackRegister(void (*handler)(void))
     }
 }
 
-void CAN1_InformationISR(void)
+void __interrupt(irq(CAN),base(8)) CAN1_InformationISR(void)
 {
     // Bus Wake-up Activity Interrupt 
     if(1 == C1INTHbits.WAKIF)
@@ -919,7 +919,7 @@ void CAN1_InformationISR(void)
     PIR0bits.CANIF = 0;
 }
 
-void CAN1_TransmitISR(void)
+void __interrupt(irq(CANTX),base(8)) CAN1_TransmitISR(void)
 { 
 	
     if (1 == C1TXQSTALbits.TXQEIF)
@@ -933,7 +933,7 @@ void CAN1_TransmitISR(void)
     } 
 }
 
-void CAN1_ReceiveISR(void)
+void __interrupt(irq(CANRX),base(8)) CAN1_ReceiveISR(void)
 {
 	
     if (1 == C1FIFOSTA1Lbits.TFNRFNIF)

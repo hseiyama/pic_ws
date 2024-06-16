@@ -323,28 +323,4 @@ void CAN1_FIFO1NotEmptyCallbackRegister(void (*handler)(void));
  */
 void CAN1_Tasks(void);
 
-/**
- * @ingroup can_driver
- * @brief CAN1 Information Interrupt Service Routine (ISR) function.
- * @param None.
- * @return None.
- */
-void CAN1_InformationISR(void);
-
-/**
- * @ingroup can_driver
- * @brief CAN1 Transmit Interrupt Service Routine (ISR) function.
- * @param None.
- * @return None.
- */
-void CAN1_TransmitISR(void);
-
-/**
- * @ingroup can_driver
- * @brief CAN1 Receive Interrupt Service Routine (ISR) function.
- * @param None.
- * @return None.
- */
-void CAN1_ReceiveISR(void);
-
 #endif  //CAN1_H

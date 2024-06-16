@@ -21,3 +21,5 @@ mix_sam04.X（実機確認）
 　・Ccp1(capture)の試行
 　・Adcc
 　・Pwm1
+mix_sam05.X【PIC18F26Q84】
+　・Can1の試行

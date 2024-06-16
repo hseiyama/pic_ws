@@ -5,9 +5,9 @@
  * 
  * @defgroup interrupt INTERRUPT
  * 
- * @brief This file contains the API prototypes and other data types for the Interrupt Manager driver.
+ * @brief This file contains API prototypes and the other data types for the Interrupt Manager driver.
  *
- * @version Interrupt Manager Driver Version 2.0.4
+ * @version Interrupt Manager Driver Version 2.1.3
 */
 
 /*
@@ -34,31 +34,53 @@
 #ifndef INTERRUPT_H
 #define INTERRUPT_H
 
-
 /**
  * @ingroup interrupt
- * @def INTERRUPT_GlobalInterruptEnable()
- * @brief Enables the global interrupts.
+ * @def INTERRUPT_GlobalInterruptHighEnable()
+ * @brief Enables the high priority global interrupts.
  */
-#define INTERRUPT_GlobalInterruptEnable() (INTCON0bits.GIE = 1)
+#define INTERRUPT_GlobalInterruptHighEnable() (INTCON0bits.GIE = 1)
 
 /**
  * @ingroup interrupt
- * @def INTERRUPT_GlobalInterruptDisable()
- * @brief Disables the global interrupts.
+ * @def INTERRUPT_GlobalInterruptHighDisable()
+ * @brief Disables the high priority global interrupts.
  */
-#define INTERRUPT_GlobalInterruptDisable() (INTCON0bits.GIE = 0)
+#define INTERRUPT_GlobalInterruptHighDisable() (INTCON0bits.GIE = 0)
 
 /**
  * @ingroup interrupt
- * @def INTERRUPT_GlobalInterruptStatus()
+ * @def INTERRUPT_GlobalInterruptHighStatus()
  * @brief Returns the Global Interrupt Enable bit status.
  * @param None.
- * @retval True - Global Interrupt enabled.
- * @retval False - Global Interrupt disabled.
+ * @retval True - High priority global interrupt is enabled.
+ * @retval False - High priority global interrupt is disabled.
  */
-#define INTERRUPT_GlobalInterruptStatus() (INTCON0bits.GIE)
+#define INTERRUPT_GlobalInterruptHighStatus() (INTCON0bits.GIE)
 
+/**
+ * @ingroup interrupt
+ * @def INTERRUPT_GlobalInterruptLowEnable()
+ * @brief Enables the low priority global interrupts.
+ */
+#define INTERRUPT_GlobalInterruptLowEnable() (INTCON0bits.GIEL = 1)
+
+/**
+ * @ingroup interrupt
+ * @def INTERRUPT_GlobalInterruptLowDisable()
+ * @brief Disables the low priority global interrupts.
+ */
+#define INTERRUPT_GlobalInterruptLowDisable() (INTCON0bits.GIEL = 0)
+
+/**
+ * @ingroup interrupt
+ * @def INTERRUPT_GlobalInterruptLowStatus()
+ * @brief Returns the Global Low-Priority Interrupt Enable bit status.
+ * @param None.
+ * @retval True - Low priority global interrupt is enabled.
+ * @retval False - Low priority global interrupt is disabled.
+ */
+#define INTERRUPT_GlobalInterruptLowStatus() (INTCON0bits.GIEL)
 
 /**
  * @ingroup interrupt
@@ -71,8 +93,7 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT0_InterruptFlagClear()
- * @brief Clears the Interrupt flag for the INT0 external interrupt.
+ * @def Clears the interrupt flag for the external interrupt, INT0.
  * @param None.
  * @return None.
  */
@@ -80,8 +101,7 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT0_InterruptDisable()
- * @brief Disables the external interrupt on the INT0 pin.
+ * @def Disables the external interrupt on the INT0 pin.
  * @param None.
  * @return None.
  */
@@ -89,17 +109,16 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT0_InterruptEnable()
- * @brief Enables the external interrupt on the INT0 pin.
+ * @def Enables the external interrupt on the INT0 pin.
  * @param None.
  * @return None.
  */
 #define EXT_INT0_InterruptEnable()       (PIE1bits.INT0IE = 1)
 
+
 /**
  * @ingroup interrupt
- * @def EXT_INT0_risingEdgeSet()
- * @brief Sets the external interrupt to trigger when the pin's level transitions from low to high (positive edge trigger).
+ * @def Sets the external interrupt to trigger when the pin's level transitions from low to high (positive edge trigger).
  * @param None.
  * @return None.
  */
@@ -107,7 +126,6 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT0_fallingEdgeSet() 
  * @brief Sets the external interrupt to trigger when the pin's level transitions from high to low (negative edge trigger).
  * @param None.
  * @return None.
@@ -116,8 +134,7 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT1_InterruptFlagClear()
- * @brief Clears the Interrupt flag for the INT1 external interrupt.
+ * @def Clears the interrupt flag for the external interrupt, INT1.
  * @param None.
  * @return None.
  */
@@ -125,8 +142,7 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT1_InterruptDisable()
- * @brief Disables the external interrupt on the INT1 pin.
+ * @def Disables the external interrupt on the INT1 pin.
  * @param None.
  * @return None.
  */
@@ -134,17 +150,16 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT1_InterruptEnable()
- * @brief Enables the external interrupt on the INT1 pin.
+ * @def Enables the external interrupt on the INT1 pin.
  * @param None.
  * @return None.
  */
 #define EXT_INT1_InterruptEnable()       (PIE6bits.INT1IE = 1)
 
+
 /**
  * @ingroup interrupt
- * @def EXT_INT1_risingEdgeSet()
- * @brief Sets the external interrupt to trigger when the pin's level transitions from low to high (positive edge trigger).
+ * @def Sets the external interrupt to trigger when the pin's level transitions from low to high (positive edge trigger).
  * @param None.
  * @return None.
  */
@@ -152,7 +167,6 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT1_fallingEdgeSet() 
  * @brief Sets the external interrupt to trigger when the pin's level transitions from high to low (negative edge trigger).
  * @param None.
  * @return None.
@@ -161,8 +175,7 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT2_InterruptFlagClear()
- * @brief Clears the Interrupt flag for the INT2 external interrupt.
+ * @def Clears the interrupt flag for the external interrupt, INT2.
  * @param None.
  * @return None.
  */
@@ -170,8 +183,7 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT2_InterruptDisable()
- * @brief Disables the external interrupt on the INT2 pin.
+ * @def Disables the external interrupt on the INT2 pin.
  * @param None.
  * @return None.
  */
@@ -179,17 +191,16 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT2_InterruptEnable()
- * @brief Enables the external interrupt on the INT2 pin.
+ * @def Enables the external interrupt on the INT2 pin.
  * @param None.
  * @return None.
  */
 #define EXT_INT2_InterruptEnable()       (PIE10bits.INT2IE = 1)
 
+
 /**
  * @ingroup interrupt
- * @def EXT_INT2_risingEdgeSet()
- * @brief Sets the external interrupt to trigger when the pin's level transitions from low to high (positive edge trigger).
+ * @def Sets the external interrupt to trigger when the pin's level transitions from low to high (positive edge trigger).
  * @param None.
  * @return None.
  */
@@ -197,7 +208,6 @@ void INTERRUPT_Initialize (void);
 
 /**
  * @ingroup interrupt
- * @def EXT_INT2_fallingEdgeSet() 
  * @brief Sets the external interrupt to trigger when the pin's level transitions from high to low (negative edge trigger).
  * @param None.
  * @return None.
@@ -207,15 +217,6 @@ void INTERRUPT_Initialize (void);
 /**
    Section: External Interrupt Handlers
  */
-
-/**
- * @ingroup interrupt
- * @brief Implements the Interrupt Service Routine (ISR) whenever the signal on the INT0 pin transitions on the selected edge.
- * @pre INTERRUPT_Initialize() is already called.
- * @param None.
- * @return None.
- */
-void INT0_ISR(void);
 
 /**
  * @ingroup interrupt
@@ -256,15 +257,6 @@ void INT0_DefaultInterruptHandler(void);
 
 /**
  * @ingroup interrupt
- * @brief Implements the Interrupt Service Routine (ISR) whenever the signal on the INT1 pin transitions on the selected edge.
- * @pre INTERRUPT_Initialize() is already called.
- * @param None.
- * @return None.
- */
-void INT1_ISR(void);
-
-/**
- * @ingroup interrupt
  * @brief Function to be called in the INT1 ISR containing the interrupt handler function for the INT1 pin interrupt event.
  * @pre INTERRUPT_Initialize() is already called.
  * @param None.
@@ -299,15 +291,6 @@ extern void (*INT1_InterruptHandler)(void);
  * @return None.
  */
 void INT1_DefaultInterruptHandler(void);
-
-/**
- * @ingroup interrupt
- * @brief Implements the Interrupt Service Routine (ISR) whenever the signal on the INT2 pin transitions on the selected edge.
- * @pre INTERRUPT_Initialize() is already called.
- * @param None.
- * @return None.
- */
-void INT2_ISR(void);
 
 /**
  * @ingroup interrupt
