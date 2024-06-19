@@ -300,22 +300,6 @@ void CAN1_RxBufferOverFlowCallbackRegister(void (*handler)(void));
 
 /**
  * @ingroup can_driver
- * @brief Setter function for the CAN1_TXQEmpty callback. 
- * @param [in] handler - Pointer to the callback routine.
- * @return None.
- */
-void CAN1_TXQEmptyCallbackRegister(void (*handler)(void)); 
-
-/**
- * @ingroup can_driver
- * @brief Setter function for the CAN1_FIFO1NotEmpty callback. 
- * @param [in] handler - Pointer to the callback routine.
- * @return None.
- */
-void CAN1_FIFO1NotEmptyCallbackRegister(void (*handler)(void)); 
-
-/**
- * @ingroup can_driver
  * @brief Used to implement the tasks for polled implementations.
  * @pre CAN1_Initialize() function is already called.
  * @param None.

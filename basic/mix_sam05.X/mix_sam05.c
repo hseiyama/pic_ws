@@ -90,6 +90,9 @@ static void CAN_SendMessage(void) {
 		// 送信バッファがいっぱいの場合の処理
 		EchoStr("Can Transmit FIFO is Full.\r\n");
 	}
+	else {
+		UART3_Write('c');
+	}
 }
 
 static void request_in(void) {

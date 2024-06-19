@@ -128,10 +128,6 @@ static void (*CAN1_SystemErrorHandler)(void) = NULL;
 static void (*CAN1_TxAttemptHandler)(void) = NULL;
 static void (*CAN1_RxBufferOverFlowHandler)(void) = NULL;
 
-static void (*CAN1_TXQEmptyHandler)(void) = NULL;
-
-static void (*CAN1_FIFO1NotEmptyHandler)(void) = NULL;
-
 static uint8_t rxMsgData[CAN1_RX_FIFO_MSG_DATA]; // CAN1 Receive FIFO Message object data field
 
 /**
@@ -450,19 +446,14 @@ static bool CAN1_ReceiveFromFiFo(uint8_t index, enum CAN_RX_FIFO_CHANNELS channe
 */
 static void CAN1_TX_FIFO_Configuration(void)
 {
-    // TXQNIE disabled; TXQEIE enabled; TXATIE disabled; 
-    C1TXQCONL = 0x84;
+    // TXQNIE disabled; TXQEIE disabled; TXATIE disabled; 
+    C1TXQCONL = 0x80;
     // UINC disabled; FRESET enabled; 
     C1TXQCONH = 0x4;
     // TXPRI 0; TXAT Unlimited number of retransmission attempts; 
     C1TXQCONU = 0x60;
     // FSIZE 4; PLSIZE 8; 
     C1TXQCONT = 0x3;
-
-   C1INTUbits.TXIE = 1;
-   
-   PIR4bits.CANTXIF = 0; 
-   PIE4bits.CANTXIE = 1; 
 }
 
 /**
@@ -473,19 +464,14 @@ static void CAN1_TX_FIFO_Configuration(void)
 */
 static void CAN1_RX_FIFO_Configuration(void)
 {
-    // TFNRFNIE enabled; TFHRFHIE disabled; TFERFFIE disabled; RXOVIE disabled; TXATIE disabled; RXTSEN disabled; RTREN disabled; TXEN disabled; 
-    C1FIFOCON1L = 0x1;
+    // TFNRFNIE disabled; TFHRFHIE disabled; TFERFFIE disabled; RXOVIE disabled; TXATIE disabled; RXTSEN disabled; RTREN disabled; TXEN disabled; 
+    C1FIFOCON1L = 0x0;
     // UINC disabled; TXREQ disabled; FRESET enabled; 
     C1FIFOCON1H = 0x4;
     // TXPRI 0; TXAT Disables retransmission attempts; 
     C1FIFOCON1U = 0x0;
     // FSIZE 4; PLSIZE 8; 
     C1FIFOCON1T = 0x3;
-
-	C1INTUbits.RXIE = 1;
-
-    PIR4bits.CANRXIF = 0;
-    PIE4bits.CANRXIE = 1;
 }
 
 /**
@@ -520,10 +506,10 @@ static void CAN1_BitRateConfiguration(void)
 
 void CAN1_Initialize(void)
 {
-	// RB0 STBY
-	ANSELB0 = 0;					// Disable analog function
-	LATB0 = 1;						// Set high level
-	TRISB0 = 0;						// Set as output
+	// RB1 STBY
+	ANSELB1 = 0;					// Disable analog function
+	LATB1 = 1;						// Set high level
+	TRISB1 = 0;						// Set as output
 	// RB2 TXD
 	ANSELB2 = 0;					// Disable analog function
 	LATB2 = 0;						// Set low level
@@ -579,8 +565,8 @@ void CAN1_Initialize(void)
         (void)CAN1_OperationModeSet(CAN_NORMAL_2_0_MODE);    
     }
 
-	// RB0 STBY
-	LATB0 = 0;						// Set low level
+	// RB1 STBY
+	LATB1 = 0;						// Set low level
 }
 
 void CAN1_Deinitialize(void)
@@ -905,22 +891,6 @@ void CAN1_RxBufferOverFlowCallbackRegister(void (*handler)(void))
     }
 }
 
-void CAN1_TXQEmptyCallbackRegister(void (*handler)(void))
-{
-    if(handler != NULL)
-    {
-        CAN1_TXQEmptyHandler = handler;
-    }
-}
-
-void CAN1_FIFO1NotEmptyCallbackRegister(void (*handler)(void))
-{
-    if(handler != NULL)
-    {
-        CAN1_FIFO1NotEmptyHandler = handler;
-    }
-}
-
 void __interrupt(irq(CAN),base(8)) CAN1_InformationISR(void)
 {
     // Bus Wake-up Activity Interrupt 
@@ -935,34 +905,6 @@ void __interrupt(irq(CAN),base(8)) CAN1_InformationISR(void)
     }
     
     PIR0bits.CANIF = 0;
-}
-
-void __interrupt(irq(CANTX),base(8)) CAN1_TransmitISR(void)
-{ 
-	
-    if (1 == C1TXQSTALbits.TXQEIF)
-    {
-	    if(CAN1_TXQEmptyHandler != NULL)
-		{
-		    CAN1_TXQEmptyHandler();
-		}
-        
-        // Read only flag
-    } 
-}
-
-void __interrupt(irq(CANRX),base(8)) CAN1_ReceiveISR(void)
-{
-	
-    if (1 == C1FIFOSTA1Lbits.TFNRFNIF)
-    {
-	    if(CAN1_FIFO1NotEmptyHandler != NULL)
-		{
-		    CAN1_FIFO1NotEmptyHandler();
-		}
-        
-        // Read only flag
-    }  	
 }
 
 void CAN1_Tasks(void)
