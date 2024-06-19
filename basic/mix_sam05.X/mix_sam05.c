@@ -3,6 +3,7 @@
 #include "types.h"
 #include "system.h"
 #include "uart3.h"
+#include "can1.h"
 
 #define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
@@ -17,6 +18,7 @@ __bit				bit_event_1s;
 __bit				bit_event_200ms;
 __bit				bit_state_uart;
 
+static void CAN_SendMessage(void);
 static void request_in(void);
 static void update_out(void);
 static void print_vale(uint16_t data, char *p_msg);
@@ -31,6 +33,8 @@ void setup(void) {
 
 	// UART3 Initialize
 	UART3_Initialize();
+	// CAN1 Initialize
+	CAN1_Initialize();
 
 	// Initialize variant
 	u8_count_out = 0x00;
@@ -55,6 +59,7 @@ void loop(void) {
 	// check timer_1s
 	chk_val = TimerCheck(&u16_timer_1s, TIME_1S);
 	if (chk_val) {
+		CAN_SendMessage();
 		bit_event_1s = 1;
 		// start timer_1s
 		TimerStart(&u16_timer_1s);
@@ -68,6 +73,23 @@ void loop(void) {
 	}
 	request_in();
 	update_out();
+}
+
+static void CAN_SendMessage(void) {
+	struct CAN_MSG_OBJ txObj;
+	uint8_t txData[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+
+	txObj.msgId = 0x123;  // メッセージID
+	txObj.field.formatType = CAN_2_0_FORMAT;
+	txObj.field.frameType = CAN_FRAME_DATA;
+	txObj.field.dlc = 8;  // データ長
+	txObj.data = txData;  // 送信データ
+
+	// メッセージ送信
+	if (CAN1_Transmit(CAN1_TXQ, &txObj) == CAN_TX_MSG_REQUEST_FIFO_FULL) {
+		// 送信バッファがいっぱいの場合の処理
+		EchoStr("Can Transmit FIFO is Full.\r\n");
+	}
 }
 
 static void request_in(void) {
