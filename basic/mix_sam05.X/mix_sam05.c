@@ -78,15 +78,19 @@ void loop(void) {
 static void CAN_SendMessage(void) {
 	struct CAN_MSG_OBJ txObj;
 	uint8_t txData[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+	uint8_t txStatus;
 
-	txObj.msgId = 0x123;  // メッセージID
 	txObj.field.formatType = CAN_2_0_FORMAT;
 	txObj.field.frameType = CAN_FRAME_DATA;
-	txObj.field.dlc = 8;  // データ長
-	txObj.data = txData;  // 送信データ
+	txObj.field.idType = CAN_FRAME_STD;
+	txObj.field.brs = CAN_NON_BRS_MODE;
+	txObj.msgId = 0x123;			// メッセージID
+	txObj.field.dlc = DLC_8;		// データ長
+	txObj.data = &txData[0];		// 送信データ
 
 	// メッセージ送信
-	if (CAN1_Transmit(CAN1_TXQ, &txObj) == CAN_TX_MSG_REQUEST_FIFO_FULL) {
+	txStatus = CAN1_Transmit(CAN1_TXQ, &txObj);
+	if (txStatus == CAN_TX_MSG_REQUEST_FIFO_FULL) {
 		// 送信バッファがいっぱいの場合の処理
 		EchoStr("Can Transmit FIFO is Full.\r\n");
 	}

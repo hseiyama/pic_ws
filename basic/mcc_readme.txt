@@ -15,3 +15,5 @@ mcc_sam05.X
 　・素材収集用
 mcc_sam06.X【PIC18F26Q84】
 　・CAN試行用（素材収集）
+mcc_sam07.X【PIC18F26Q84】
+　・CAN（実機確認）
