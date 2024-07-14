@@ -493,12 +493,12 @@ static void CAN1_RX_FIFO_FilterMaskConfiguration(void)
 */
 static void CAN1_BitRateConfiguration(void)
 {
-    // SJW 63; 
-    C1NBTCFGL = 0x3F;
-    // TSEG2 63; 
-    C1NBTCFGH = 0x3F;
-    // TSEG1 62; 
-    C1NBTCFGU = 0x3E;
+    // SJW 31; 
+    C1NBTCFGL = 0x1F;
+    // TSEG2 31; 
+    C1NBTCFGH = 0x1F;
+    // TSEG1 94; 
+    C1NBTCFGU = 0x5E;
     // BRP 0; 
     C1NBTCFGT = 0x0;
 }
@@ -508,7 +508,7 @@ void CAN1_Initialize(void)
 {
 	// RB1 STBY
 	ANSELB1 = 0;					// Disable analog function
-	LATB1 = 1;						// Set high level
+	LATB1 = 0;						// Set low level
 	TRISB1 = 0;						// Set as output
 	// RB2 TXD
 	ANSELB2 = 0;					// Disable analog function
@@ -564,9 +564,6 @@ void CAN1_Initialize(void)
         /* Place CAN1 module in Normal Operation mode */
         (void)CAN1_OperationModeSet(CAN_NORMAL_2_0_MODE);    
     }
-
-	// RB1 STBY
-	LATB1 = 0;						// Set low level
 }
 
 void CAN1_Deinitialize(void)

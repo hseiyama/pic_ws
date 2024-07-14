@@ -17,3 +17,5 @@ mcc_sam06.X【PIC18F26Q84】
 　・CAN試行用（素材収集）
 mcc_sam07.X【PIC18F26Q84】
 　・CAN（実機確認）
+　【注意】設定「TSEG1<TSEG2」で動作不備あり。
+　【推測】制約「TSEG1>TSEG2>=SJW」があるのでは？

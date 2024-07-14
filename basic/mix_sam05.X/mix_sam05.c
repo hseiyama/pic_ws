@@ -80,13 +80,13 @@ static void CAN_SendMessage(void) {
 	uint8_t txData[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
 	uint8_t txStatus;
 
-	txObj.field.formatType = CAN_2_0_FORMAT;
-	txObj.field.frameType = CAN_FRAME_DATA;
-	txObj.field.idType = CAN_FRAME_STD;
-	txObj.field.brs = CAN_NON_BRS_MODE;
-	txObj.msgId = 0x123;			// メッセージID
-	txObj.field.dlc = DLC_8;		// データ長
-	txObj.data = &txData[0];		// 送信データ
+	txObj.field.formatType = CAN_2_0_FORMAT;	// CAN 2.0 フォーマット
+	txObj.field.brs = CAN_NON_BRS_MODE;			// CANビットレート切替え(CAN FD用)
+	txObj.field.frameType = CAN_FRAME_DATA;		// CANデータフレーム
+	txObj.field.idType = CAN_FRAME_STD;			// CAN標準ID
+	txObj.msgId = 0x123;						// メッセージID
+	txObj.field.dlc = DLC_8;					// データ長
+	txObj.data = &txData[0];					// 送信データ
 
 	// メッセージ送信
 	txStatus = CAN1_Transmit(CAN1_TXQ, &txObj);
