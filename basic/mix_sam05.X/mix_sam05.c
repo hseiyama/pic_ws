@@ -19,6 +19,7 @@ __bit				bit_event_200ms;
 __bit				bit_state_uart;
 
 static void CAN_SendMessage(void);
+static void CAN_ReceiveMessage(void);
 static void request_in(void);
 static void update_out(void);
 static void print_vale(uint16_t data, char *p_msg);
@@ -56,6 +57,7 @@ void setup(void) {
 
 void loop(void) {
 	uint8_t chk_val;
+	CAN_ReceiveMessage();
 	// check timer_1s
 	chk_val = TimerCheck(&u16_timer_1s, TIME_1S);
 	if (chk_val) {
@@ -96,6 +98,32 @@ static void CAN_SendMessage(void) {
 	}
 	else {
 		UART3_Write('c');
+	}
+}
+
+static void CAN_ReceiveMessage(void) {
+	struct CAN_MSG_OBJ rxObj;
+	uint8_t rxStatus;
+	uint8_t index;
+
+	// メッセージ受信を確認
+	rxStatus = CAN1_Receive(&rxObj);
+	if (rxStatus) {
+		// メッセージ受信がある場合の処理
+		if (rxObj.field.frameType == CAN_FRAME_DATA) {
+			// 受信データを処理
+			EchoStr("\r\n[id=");
+			EchoHex((rxObj.msgId >> 8) & 0xFF);
+			EchoHex(rxObj.msgId & 0xFF);
+			EchoStr(",dlc=");
+			EchoHex(rxObj.field.dlc);
+			EchoStr("] ");
+			for (index = 0; index < rxObj.field.dlc; index++) {
+				EchoHex(rxObj.data[index]);
+				UART3_Write(' ');
+			}
+			EchoStr("\r\n");
+		}
 	}
 }
 

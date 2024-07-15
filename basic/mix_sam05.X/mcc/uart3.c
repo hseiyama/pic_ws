@@ -5,9 +5,9 @@
 
 #define U3BRG_VALUE		(416)		// 9600bps @ 64MHz
 									// U3BRGH/L=64MHz/(9600bps*16)-1=416
-#define RX_BUFFER_SIZE	(32)		// Rx buffer size should be 2^n
+#define RX_BUFFER_SIZE	(64)		// Rx buffer size should be 2^n
 #define RX_BUFFER_MASK	(RX_BUFFER_SIZE - 1)
-#define TX_BUFFER_SIZE	(32)		// Tx buffer size should be 2^n
+#define TX_BUFFER_SIZE	(64)		// Tx buffer size should be 2^n
 #define TX_BUFFER_MASK	(TX_BUFFER_SIZE - 1)
 
 volatile uint8_t	au8_rx_buffer[RX_BUFFER_SIZE];
