@@ -483,6 +483,27 @@ static void CAN1_RX_FIFO_Configuration(void)
 static void CAN1_RX_FIFO_FilterMaskConfiguration(void)
 {
     /* Configure RX FIFO Filter control settings*/
+    
+    // message stored in FIFO1
+    C1FLTCON0Lbits.F0BP =  1;
+    // SID 0; 
+    C1FLTOBJ0L = 0x0;
+    // SID 1; EID 0; 
+    C1FLTOBJ0H = 0x1;
+    // EID 0; 
+    C1FLTOBJ0U = 0x0;
+    // EID 0; SID11 disabled; EXIDE disabled; 
+    C1FLTOBJ0T = 0x0;
+    // MSID 0; 
+    C1MASK0L = 0x0;
+    // MSID 7; MEID 0; 
+    C1MASK0H = 0x7;
+    // MEID 0; 
+    C1MASK0U = 0x0;
+    // MEID 0; MSID11 disabled; MIDE enabled; 
+    C1MASK0T = 0x40;
+    // Enable the filter 0
+    C1FLTCON0Lbits.FLTEN0 = 1;
 }
 
 /**
@@ -596,6 +617,16 @@ void CAN1_Deinitialize(void)
         C1FIFOCON1T = 0x0;
         
         /* Reset RX FIFO Filter control settings to POR*/
+        C1FLTCON0Lbits.F0BP = 0x0;
+        C1FLTOBJ0L = 0x0;
+        C1FLTOBJ0H = 0x0;
+        C1FLTOBJ0U = 0x0;
+        C1FLTOBJ0T = 0x0;
+        C1MASK0L = 0x0;
+        C1MASK0H = 0x0;
+        C1MASK0U = 0x0;
+        C1MASK0T = 0x0;
+        C1FLTCON0Lbits.FLTEN0 = 0x0;
 
     }
     
