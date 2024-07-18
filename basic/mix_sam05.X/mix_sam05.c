@@ -14,6 +14,7 @@ const uint8_t acu8_msg_awake[] = "Status is AWAKE.\r\n";
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
 volatile uint8_t	u8_count_out;
+uint8_t				u8_data_can;
 __bit				bit_event_1s;
 __bit				bit_event_200ms;
 __bit				bit_state_uart;
@@ -39,6 +40,7 @@ void setup(void) {
 
 	// Initialize variant
 	u8_count_out = 0x00;
+	u8_data_can = 0x00;
 	bit_event_1s = 0;
 	bit_event_200ms = 0;
 	bit_state_uart = 1;
@@ -57,6 +59,7 @@ void setup(void) {
 
 void loop(void) {
 	uint8_t chk_val;
+
 	CAN_ReceiveMessage();
 	// check timer_1s
 	chk_val = TimerCheck(&u16_timer_1s, TIME_1S);
@@ -79,7 +82,7 @@ void loop(void) {
 
 static void CAN_SendMessage(void) {
 	struct CAN_MSG_OBJ txObj;
-	uint8_t txData[8] = {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08};
+	uint8_t txData[8] = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18};
 	uint8_t txStatus;
 
 	txObj.field.formatType = CAN_2_0_FORMAT;	// CAN 2.0 フォーマット
@@ -89,6 +92,10 @@ static void CAN_SendMessage(void) {
 	txObj.msgId = 0x123;						// メッセージID
 	txObj.field.dlc = DLC_8;					// データ長
 	txObj.data = &txData[0];					// 送信データ
+
+	// 送信データを更新
+	txData[0] = (LATC & 0xF0) | (~PORTC & 0x0F);
+	txData[1] = u8_data_can;
 
 	// メッセージ送信
 	txStatus = CAN1_Transmit(CAN1_TXQ, &txObj);
@@ -112,15 +119,17 @@ static void CAN_ReceiveMessage(void) {
 		// メッセージ受信がある場合の処理
 		if (rxObj.field.frameType == CAN_FRAME_DATA) {
 			// 受信データを処理
-			EchoStr("\r\n[id=");
+			u8_data_can = rxObj.data[0];
+
+			EchoStr("\r\n<id:");
 			EchoHex((rxObj.msgId >> 8) & 0xFF);
 			EchoHex(rxObj.msgId & 0xFF);
-			EchoStr(",dlc=");
+			EchoStr(" dlc:");
 			EchoHex(rxObj.field.dlc);
-			EchoStr("] ");
+			EchoStr(">");
 			for (index = 0; index < rxObj.field.dlc; index++) {
-				EchoHex(rxObj.data[index]);
 				UART3_Write(' ');
+				EchoHex(rxObj.data[index]);
 			}
 			EchoStr("\r\n");
 		}
@@ -129,6 +138,7 @@ static void CAN_ReceiveMessage(void) {
 
 static void request_in(void) {
 	uint8_t data_recv;
+
 	data_recv = UART3_Read();
 	switch (data_recv) {
 	case 'r':						// Judge Reset
