@@ -7,6 +7,7 @@
 
 #define TIME_1S			(1000 / SYS_MAIN_CYCLE)		// 1s
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
+#define TIME_40MS		(40 / SYS_MAIN_CYCLE)		// 40ms
 
 const uint8_t acu8_msg_reset[] = "Status is RESET.\r\n";
 const uint8_t acu8_msg_awake[] = "Status is AWAKE.\r\n";
@@ -15,8 +16,10 @@ struct CAN_MSG_OBJ	st_msgObj;
 uint8_t				msgData[8] = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18};
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
+uint16_t			u16_timer_40m;
 volatile uint8_t	u8_count_out;
 uint8_t				u8_data_can;
+uint8_t				u8_data_can_prev;
 __bit				bit_event_1s;
 __bit				bit_event_200ms;
 __bit				bit_state_uart;
@@ -43,6 +46,7 @@ void setup(void) {
 	// Initialize variant
 	u8_count_out = 0x00;
 	u8_data_can = 0x00;
+	u8_data_can_prev = 0x00;
 	bit_event_1s = 0;
 	bit_event_200ms = 0;
 	bit_state_uart = 1;
@@ -57,6 +61,8 @@ void setup(void) {
 	TimerStart(&u16_timer_1s);
 	// start timer_200ms
 	TimerStart(&u16_timer_200m);
+	// start timer_40ms
+	TimerStart(&u16_timer_40m);
 }
 
 void loop(void) {
@@ -66,7 +72,6 @@ void loop(void) {
 	// check timer_1s
 	chk_val = TimerCheck(&u16_timer_1s, TIME_1S);
 	if (chk_val) {
-		CAN_SendMessage();
 		bit_event_1s = 1;
 		// start timer_1s
 		TimerStart(&u16_timer_1s);
@@ -77,6 +82,13 @@ void loop(void) {
 		bit_event_200ms = 1;
 		// start timer_200ms
 		TimerStart(&u16_timer_200m);
+	}
+	// check timer_40ms
+	chk_val = TimerCheck(&u16_timer_40m, TIME_40MS);
+	if (chk_val) {
+		CAN_SendMessage();
+		// start timer_40ms
+		TimerStart(&u16_timer_40m);
 	}
 	request_in();
 	update_out();
@@ -97,8 +109,7 @@ static uint8_t CAN_SendMessage(void) {
 
 	// 送信データを更新
 	msgData[0] = (LATC & 0xF0) | (~PORTC & 0x0F);
-	msgData[1] = u8_data_can;
-	msgData[2] = u8_count_out;
+	msgData[1] = u8_count_out;
 
 	// メッセージ送信
 	txStatus = CAN1_Transmit(CAN1_TXQ, &txObj);
@@ -107,7 +118,6 @@ static uint8_t CAN_SendMessage(void) {
 		EchoStr("Can Transmit FIFO is Full.\r\n");
 	}
 	else {
-		UART3_Write('c');
 		retCode = TRUE;
 	}
 
@@ -125,8 +135,12 @@ static uint8_t CAN_ReceiveMessage(void) {
 		// メッセージ受信がある場合の処理
 		if (st_msgObj.field.frameType == CAN_FRAME_DATA) {
 			// 受信データを処理
-			u8_data_can = st_msgObj.data[0];
-			print_message();
+			u8_data_can = st_msgObj.data[1];
+			if (u8_data_can != u8_data_can_prev) {
+				// 前回から変化があった場合
+				print_message();
+			}
+			u8_data_can_prev = u8_data_can;
 			retCode = TRUE;
 		}
 	}

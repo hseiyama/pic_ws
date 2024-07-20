@@ -17,6 +17,7 @@ uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
 volatile uint8_t	u8_count_out;
 uint8_t				u8_data_can;
+uint8_t				u8_data_can_prev;
 __bit				bit_event_1s;
 __bit				bit_event_200ms;
 __bit				bit_state_uart;
@@ -43,6 +44,7 @@ void setup(void) {
 	// Initialize variant
 	u8_count_out = 0x00;
 	u8_data_can = 0x00;
+	u8_data_can_prev = 0x00;
 	bit_event_1s = 0;
 	bit_event_200ms = 0;
 	bit_state_uart = 1;
@@ -93,7 +95,7 @@ static uint8_t CAN_SendMessage(void) {
 
 	// 送信データを更新
 	msgData[0] = (LATC & 0xF0) | (~PORTC & 0x0F);
-	msgData[1] = u8_count_out++;
+	msgData[1] = u8_count_out;
 
 	// メッセージ送信
 	txStatus = CAN1_Transmit(CAN1_TXQ, &st_msgObj);
@@ -102,7 +104,6 @@ static uint8_t CAN_SendMessage(void) {
 		EchoStr("Can Transmit FIFO is Full.\r\n");
 	}
 	else {
-		UART3_Write('c');
 		retCode = TRUE;
 	}
 
@@ -125,7 +126,11 @@ static uint8_t CAN_ReceiveMessage(void) {
 			for (index = 0; index < st_msgObj.field.dlc; index++) {
 				msgData[index] = st_msgObj.data[index];
 			}
-			print_message();
+			if (u8_data_can != u8_data_can_prev) {
+				// 前回から変化があった場合
+				print_message();
+			}
+			u8_data_can_prev = u8_data_can;
 			retCode = TRUE;
 		}
 	}
@@ -184,8 +189,10 @@ static void request_in(void) {
 
 static void update_out(void) {
 	// LED output
+	LATC = (u8_data_can << 4) & 0xF0;
+	// timer_1s event
 	if (bit_event_1s == 1) {
-		LATC = (u8_data_can << 4) & 0xF0;
+		u8_count_out++;
 		bit_event_1s = 0;
 	}
 	// UART output
