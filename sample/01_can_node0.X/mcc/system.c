@@ -245,12 +245,22 @@ uint8_t TimerCheck(uint16_t *p_timer, uint16_t time) {
 	return ret_val;
 }
 
-void EchoHex(uint8_t data) {
+void EchoHex8(uint8_t data) {
 	static const uint8_t hex_table[] = {
 		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
 	};
 	UART3_Write(hex_table[(data >> 4) & 0x0F]);
 	UART3_Write(hex_table[data & 0x0F]);
+}
+
+void EchoHex16(uint16_t data) {
+	EchoHex8((data >> 8) & 0xFF);
+	EchoHex8(data & 0xFF);
+}
+
+void EchoHex32(uint32_t data) {
+	EchoHex16((data >> 16) & 0xFFFF);
+	EchoHex16(data & 0xFFFF);
 }
 
 void EchoStr(char *p_data) {

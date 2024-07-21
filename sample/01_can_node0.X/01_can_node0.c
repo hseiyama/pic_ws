@@ -13,16 +13,16 @@ const uint8_t acu8_msg_reset[] = "Status is RESET.\r\n";
 const uint8_t acu8_msg_awake[] = "Status is AWAKE.\r\n";
 
 struct CAN_MSG_OBJ	st_msgObj;
-uint8_t				msgData[8] = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18};
+uint8_t				au8_msgData[8] = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18};
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
 uint16_t			u16_timer_40m;
-volatile uint8_t	u8_count_out;
+uint8_t				u8_count_out;
 uint8_t				u8_data_can;
 uint8_t				u8_data_can_prev;
-__bit				bit_event_1s;
 __bit				bit_event_200ms;
 __bit				bit_state_uart;
+volatile __bit		bit_event_int0;
 
 static uint8_t CAN_SendMessage(void);
 static uint8_t CAN_ReceiveMessage(void);
@@ -30,7 +30,22 @@ static void print_message(void);
 static void request_in(void);
 static void update_out(void);
 
+void __interrupt(irq(INT0),base(8)) INT0_ISR() {
+	// Clear interrupt flag
+	INT0IF = 0;
+	// Interrupt process
+	bit_event_int0 = 1;
+}
+
 void setup(void) {
+	// RB0(INT0) input pin
+	ANSELB0 = 0;					// Disable analog function
+	WPUB0 = 0;						// Disable week pull up
+	TRISB0 = 1;						// Set as intput
+    INT0PPS = 0x08;					// RB0->INT0
+	INT0EDG = 1;					// INT0 external interrupt rising edge
+	INT0IF = 0;						// Clear INT0 external interrupt flag
+	INT0IE = 1;						// INT0 external interrupt enable
 	// RC0-RC3 input pin
 	// RC4-RC7 output pin
 	ANSELC = 0x00;					// Disable analog function
@@ -47,9 +62,9 @@ void setup(void) {
 	u8_count_out = 0x00;
 	u8_data_can = 0x00;
 	u8_data_can_prev = 0x00;
-	bit_event_1s = 0;
 	bit_event_200ms = 0;
 	bit_state_uart = 1;
+	bit_event_int0 = 0;
 
 	// Global interrupt
 	GIE = 1;						// Global interrupt enable
@@ -72,7 +87,7 @@ void loop(void) {
 	// check timer_1s
 	chk_val = TimerCheck(&u16_timer_1s, TIME_1S);
 	if (chk_val) {
-		bit_event_1s = 1;
+		u8_count_out++;
 		// start timer_1s
 		TimerStart(&u16_timer_1s);
 	}
@@ -95,27 +110,28 @@ void loop(void) {
 }
 
 static uint8_t CAN_SendMessage(void) {
-	struct CAN_MSG_OBJ txObj;
 	uint8_t txStatus;
 	uint8_t retCode;
 
-	txObj.field.formatType = CAN_2_0_FORMAT;	// CAN 2.0 フォーマット
-	txObj.field.brs = CAN_NON_BRS_MODE;			// CANビットレート切替え(CAN FD用)
-	txObj.field.frameType = CAN_FRAME_DATA;		// CANデータフレーム
-	txObj.field.idType = CAN_FRAME_STD;			// CAN標準ID
-	txObj.msgId = 0x123;						// メッセージID
-	txObj.field.dlc = DLC_8;					// データ長
-	txObj.data = &msgData[0];					// 送信データ
+	retCode = FALSE;
+	// CANオブジェクトを設定
+	st_msgObj.field.formatType = CAN_2_0_FORMAT;	// CAN 2.0 フォーマット
+	st_msgObj.field.brs = CAN_NON_BRS_MODE;			// CANビットレート切替え(CAN FD用)
+	st_msgObj.field.frameType = CAN_FRAME_DATA;		// CANデータフレーム
+	st_msgObj.field.idType = CAN_FRAME_STD;			// CAN標準ID
+	st_msgObj.msgId = 0x123;						// メッセージID
+	st_msgObj.field.dlc = DLC_8;					// データ長
+	st_msgObj.data = &au8_msgData[0];				// 送信データ
 
 	// 送信データを更新
-	msgData[0] = (LATC & 0xF0) | (~PORTC & 0x0F);
-	msgData[1] = u8_count_out;
+	au8_msgData[0] = (LATC & 0xF0) | (~PORTC & 0x0F);
+	au8_msgData[1] = u8_count_out;
 
 	// メッセージ送信
-	txStatus = CAN1_Transmit(CAN1_TXQ, &txObj);
+	txStatus = CAN1_Transmit(CAN1_TXQ, &st_msgObj);
 	if (txStatus == CAN_TX_MSG_REQUEST_FIFO_FULL) {
 		// 送信バッファがいっぱいの場合の処理
-		EchoStr("Can Transmit FIFO is Full.\r\n");
+		UART3_Write('f');
 	}
 	else {
 		retCode = TRUE;
@@ -135,7 +151,7 @@ static uint8_t CAN_ReceiveMessage(void) {
 		// メッセージ受信がある場合の処理
 		if (st_msgObj.field.frameType == CAN_FRAME_DATA) {
 			// 受信データを処理
-			u8_data_can = st_msgObj.data[1];
+			u8_data_can = st_msgObj.data[0];
 			if (u8_data_can != u8_data_can_prev) {
 				// 前回から変化があった場合
 				print_message();
@@ -152,14 +168,13 @@ static void print_message(void) {
 	uint8_t index;
 
 	EchoStr("\r\n<id:");
-	EchoHex((st_msgObj.msgId >> 8) & 0xFF);
-	EchoHex(st_msgObj.msgId & 0xFF);
+	EchoHex16(st_msgObj.msgId & 0xFFFF);
 	EchoStr(" dlc:");
-	EchoHex(st_msgObj.field.dlc);
+	EchoHex8(st_msgObj.field.dlc);
 	EchoStr(">");
 	for (index = 0; index < st_msgObj.field.dlc; index++) {
 		UART3_Write(' ');
-		EchoHex(st_msgObj.data[index]);
+		EchoHex8(st_msgObj.data[index]);
 	}
 	EchoStr("\r\n");
 }
@@ -177,8 +192,10 @@ static void request_in(void) {
 		LATC = (~PORTC << 4) & 0xF0;
 		break;
 	case 's':						// Judge Sleep
+		CAN1_Deinitialize();
 		// Sleep
 		Sleep();
+		CAN1_Initialize();
 		// Message
 		EchoStr((char *)&acu8_msg_awake[0]);
 		break;
@@ -190,8 +207,7 @@ static void request_in(void) {
 		EchoStr((char *)&acu8_msg_awake[0]);
 		break;
 	case 'z':						// Judge Zero
-		u8_count_out = 0xFF;
-		bit_event_1s = 1;
+		u8_count_out = 0x00;
 		break;
 	default:
 		break;
@@ -200,12 +216,12 @@ static void request_in(void) {
 
 static void update_out(void) {
 	// LED output
-	if (bit_event_1s == 1) {
-		u8_count_out++;
-		LATC = (u8_count_out << 4) & 0xF0;
-		bit_event_1s = 0;
-	}
+	LATC = (u8_count_out << 4) & 0xF0;
 	// UART output
+	if (bit_event_int0 == 1) {
+		UART3_Write('e');
+		bit_event_int0 = 0;
+	}
 	if (bit_event_200ms == 1) {
 		if (bit_state_uart == 1) {
 			UART3_Write('+');

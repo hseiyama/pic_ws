@@ -602,6 +602,11 @@ void CAN1_Deinitialize(void)
     
     /* Disable the CAN1 module */
     C1CONHbits.ON = 0;
+
+	// RB1 STBY
+	ANSELB1 = 0;					// Disable analog function
+	LATB1 = 1;						// Set high level
+	TRISB1 = 0;						// Set as output
 }
 
 enum CAN_OP_MODE_STATUS CAN1_OperationModeSet(const enum CAN_OP_MODES requestMode)
