@@ -21,6 +21,7 @@ uint8_t				u8_data_can_prev;
 __bit				bit_event_200ms;
 __bit				bit_state_uart;
 volatile __bit		bit_event_int0;
+__bit				bit_state_mode;
 
 static uint8_t CAN_SendMessage(void);
 static uint8_t CAN_ReceiveMessage(void);
@@ -63,6 +64,7 @@ void setup(void) {
 	bit_event_200ms = 0;
 	bit_state_uart = 1;
 	bit_event_int0 = 0;
+	bit_state_mode = 0;
 
 	// Global interrupt
 	GIE = 1;						// Global interrupt enable
@@ -157,7 +159,7 @@ static uint8_t CAN_ReceiveMessage(void) {
 static void print_message(void) {
 	uint8_t index;
 
-	EchoStr("\r\n<id:");
+	EchoStr("\r\n<node1 id:");
 	EchoHex16(st_msgObj.msgId & 0xFFFF);
 	EchoStr(" dlc:");
 	EchoHex8(st_msgObj.field.dlc);
@@ -174,12 +176,12 @@ static void request_in(void) {
 
 	data_recv = UART3_Read();
 	switch (data_recv) {
+	case 'm':						// Mode Change
+		bit_state_mode = !bit_state_mode;
+		break;
 	case 'r':						// Judge Reset
 		// Reset
 		Reset();
-		break;
-	case 'p':						// Judge Port
-		LATC = (~PORTC << 4) & 0xF0;
 		break;
 	case 's':						// Judge Sleep
 		CAN1_Deinitialize();
@@ -206,7 +208,12 @@ static void request_in(void) {
 
 static void update_out(void) {
 	// LED output
-	LATC = (u8_data_can << 4) & 0xF0;
+	if (bit_state_mode == 1) {
+		LATC = (u8_count_out << 4) & 0xF0;
+	}
+	else {
+		LATC = (u8_data_can << 4) & 0xF0;
+	}
 	// UART output
 	if (bit_event_int0 == 1) {
 		UART3_Write('e');
