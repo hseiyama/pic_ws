@@ -9,6 +9,12 @@
 #define TIME_200MS		(200 / SYS_MAIN_CYCLE)		// 200ms
 #define TIME_40MS		(40 / SYS_MAIN_CYCLE)		// 40ms
 
+#define MODE_OWN_SW		(0)
+#define MODE_OWN_CNT	(1)
+#define MODE_CAN_SW		(2)
+#define MODE_CAN_CNT	(3)
+#define MODE_MASK		(0x03)
+
 const uint8_t acu8_msg_reset[] = "Status is RESET.\r\n";
 const uint8_t acu8_msg_awake[] = "Status is AWAKE.\r\n";
 
@@ -17,13 +23,14 @@ uint8_t				au8_msgData[8] = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18};
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
 uint16_t			u16_timer_40m;
+uint8_t				u8_mode_out;
 uint8_t				u8_count_out;
-uint8_t				u8_data_can;
-uint8_t				u8_data_can_prev;
+uint8_t				u8_state_can;
+uint8_t				u8_state_can_prev;
+uint8_t				u8_count_can;
 __bit				bit_event_200ms;
 __bit				bit_state_uart;
 volatile __bit		bit_event_int0;
-__bit				bit_state_mode;
 
 static uint8_t CAN_SendMessage(void);
 static uint8_t CAN_ReceiveMessage(void);
@@ -60,13 +67,14 @@ void setup(void) {
 	CAN1_Initialize();
 
 	// Initialize variant
+	u8_mode_out = MODE_OWN_CNT;
 	u8_count_out = 0x00;
-	u8_data_can = 0x00;
-	u8_data_can_prev = 0x00;
+	u8_state_can = 0x00;
+	u8_state_can_prev = 0x00;
+	u8_count_can = 0x00;
 	bit_event_200ms = 0;
 	bit_state_uart = 1;
 	bit_event_int0 = 0;
-	bit_state_mode = 1;
 
 	// Global interrupt
 	GIE = 1;						// Global interrupt enable
@@ -153,12 +161,13 @@ static uint8_t CAN_ReceiveMessage(void) {
 		// メッセージ受信がある場合の処理
 		if (st_msgObj.field.frameType == CAN_FRAME_DATA) {
 			// 受信データを処理
-			u8_data_can = st_msgObj.data[0];
-			if (u8_data_can != u8_data_can_prev) {
+			u8_state_can = st_msgObj.data[0];
+			u8_count_can = st_msgObj.data[1];
+			if (u8_state_can != u8_state_can_prev) {
 				// 前回から変化があった場合
 				print_message();
 			}
-			u8_data_can_prev = u8_data_can;
+			u8_state_can_prev = u8_state_can;
 			retCode = TRUE;
 		}
 	}
@@ -187,7 +196,11 @@ static void request_in(void) {
 	data_recv = UART3_Read();
 	switch (data_recv) {
 	case 'm':						// Mode Change
-		bit_state_mode = !bit_state_mode;
+		u8_mode_out++;
+		u8_mode_out &= MODE_MASK;
+		EchoStr("\r\nmode=");
+		EchoHex8(u8_mode_out);
+		EchoStr("\r\n");
 		break;
 	case 'r':						// Judge Reset
 		// Reset
@@ -218,11 +231,22 @@ static void request_in(void) {
 
 static void update_out(void) {
 	// LED output
-	if (bit_state_mode == 1) {
+	switch (u8_mode_out) {
+	case MODE_OWN_SW:
+		LATC = (~PORTC << 4) & 0xF0;
+		break;
+	case MODE_OWN_CNT:
 		LATC = (u8_count_out << 4) & 0xF0;
-	}
-	else {
-		LATC = (u8_data_can << 4) & 0xF0;
+		break;
+	case MODE_CAN_SW:
+		LATC = (u8_state_can << 4) & 0xF0;
+		break;
+	case MODE_CAN_CNT:
+		LATC = (u8_count_can << 4) & 0xF0;
+		break;
+	default:
+		u8_mode_out = MODE_OWN_SW;
+		break;
 	}
 	// UART output
 	if (bit_event_int0 == 1) {
