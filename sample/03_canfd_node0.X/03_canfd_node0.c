@@ -15,11 +15,22 @@
 #define MODE_CAN_CNT	(3)
 #define MODE_MASK		(0x03)
 
-const uint8_t acu8_msg_reset[] = "Status is RESET.\r\n";
-const uint8_t acu8_msg_awake[] = "Status is AWAKE.\r\n";
+const uint8_t acu8_dlc_size[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64};
+const char acu8_msg_reset[] = "Status is RESET.\r\n";
+const char acu8_msg_awake[] = "Status is AWAKE.\r\n";
+const char acu8_msg_mode0[] = "(OWN_SW)";
+const char acu8_msg_mode1[] = "(OWN_CNT)";
+const char acu8_msg_mode2[] = "(CAN_SW)";
+const char acu8_msg_mode3[] = "(CAN_CNT)";
+const char *pacu8_mode_msg[4] = {
+	acu8_msg_mode0,
+	acu8_msg_mode1,
+	acu8_msg_mode2,
+	acu8_msg_mode3
+};
 
 struct CAN_MSG_OBJ	st_msgObj;
-uint8_t				au8_msgData[8] = {0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18};
+uint8_t				au8_msgData[16] = {0x10, 0x11, 0x12, 0x13, 0x14, 0x15, 0x16, 0x17, 0x18, 0x19, 0x1A, 0x1B, 0x1C, 0x1D, 0x1E, 0x1F};
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
 uint16_t			u16_timer_40m;
@@ -125,12 +136,12 @@ static uint8_t CAN_SendMessage(void) {
 
 	retCode = FALSE;
 	// CANオブジェクトを設定
-	st_msgObj.field.formatType = CAN_2_0_FORMAT;	// CAN 2.0 フォーマット
-	st_msgObj.field.brs = CAN_NON_BRS_MODE;			// CANビットレート切替え(CAN FD用)
+	st_msgObj.field.formatType = CAN_FD_FORMAT;		// CAN FD フォーマット
+	st_msgObj.field.brs = CAN_BRS_MODE;				// CANビットレート切替え(CAN FD用)
 	st_msgObj.field.frameType = CAN_FRAME_DATA;		// CANデータフレーム
 	st_msgObj.field.idType = CAN_FRAME_STD;			// CAN標準ID
 	st_msgObj.msgId = 0x123;						// メッセージID
-	st_msgObj.field.dlc = DLC_8;					// データ長
+	st_msgObj.field.dlc = DLC_16;					// データ長
 	st_msgObj.data = &au8_msgData[0];				// 送信データ
 
 	// 送信データを更新
@@ -183,7 +194,7 @@ static void print_message(void) {
 	EchoStr(" dlc:");
 	EchoHex8(st_msgObj.field.dlc);
 	EchoStr(">");
-	for (index = 0; index < st_msgObj.field.dlc; index++) {
+	for (index = 0; index < acu8_dlc_size[st_msgObj.field.dlc]; index++) {
 		UART3_Write(' ');
 		EchoHex8(st_msgObj.data[index]);
 	}
@@ -200,6 +211,7 @@ static void request_in(void) {
 		u8_mode_out &= MODE_MASK;
 		EchoStr("\r\nmode=");
 		EchoHex8(u8_mode_out);
+		EchoStr((char *)pacu8_mode_msg[u8_mode_out]);
 		EchoStr("\r\n");
 		break;
 	case 'r':						// Judge Reset

@@ -40,7 +40,7 @@
  */
 ///@{
 #define CAN1_NUM_OF_RX_FIFO            (1U)    // No of RX FIFOs configured
-#define CAN1_RX_FIFO_MSG_DATA          (8U)   // CAN1 RX FIFO Message object data field size
+#define CAN1_RX_FIFO_MSG_DATA          (16U)   // CAN1 RX FIFO Message object data field size
 ///@}
 
 /**  
@@ -128,7 +128,7 @@ static volatile struct CAN1_FIFOREG * const FIFO = (struct CAN1_FIFOREG *)&C1TXQ
 */
 static uint8_t CAN1_DlcToDataBytesGet(const enum CAN_DLC dlc)
 {
-    static const uint8_t dlcByteSize[] = {0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U, 8U};
+    static const uint8_t dlcByteSize[] = {0U, 1U, 2U, 3U, 4U, 5U, 6U, 7U, 8U, 12U, 16U, 20U, 24U, 32U, 48U, 64U};
     return dlcByteSize[dlc];
 }
 
@@ -144,8 +144,8 @@ static uint8_t CAN1_PLSIZEToPayloadBytesGet(uint8_t plsize)
 }
 
 /**
- * @ingroup  can_driver
- * @brief    Check if a valid channel is configured as transmitter or not.
+ * @ingroup can_driver
+ * @brief Check if a valid channel is configured as transmitter or not.
  * @param [in] channel - Transmit FIFO channel as described in CAN_TX_FIFO_CHANNELS.
  * @retval True - FIFO channel is configured as transmitter.
  * @retval False - FIFO channel is not configured as transmitter.
@@ -156,8 +156,8 @@ static bool CAN1_IsTxChannel(uint8_t channel)
 }
 
 /**
- * @ingroup  can_driver
- * @brief    Returns the CAN1 transmit FIFO status.
+ * @ingroup can_driver
+ * @brief Returns the CAN1 transmit FIFO status.
  * @param [in] channel - Transmit FIFO channel as described in CAN_TX_FIFO_CHANNELS.
  * @return Status of the CAN1 Transmit FIFO as described in CAN_TX_FIFO_STATUS.
 */
@@ -167,8 +167,8 @@ static enum CAN_TX_FIFO_STATUS CAN1_GetTxFifoStatus(uint8_t validChannel)
 }
 
 /**
- * @ingroup  can_driver
- * @brief   Reads the message object from user input and updates the CAN1 TX FIFO.
+ * @ingroup can_driver
+ * @brief Reads the message object from user input and updates the CAN1 TX FIFO.
  * @param [out] txFifoObj - Transmit FIFO message object.
  * @param [in] txCanMsg - Pointer to the message object of type CAN_MSG_OBJ.
  * @return None.
@@ -236,19 +236,26 @@ static void CAN1_MessageWriteToFifo(uint8_t *txFifoObj, struct CAN_MSG_OBJ *txCa
 static enum CAN_TX_MSG_REQUEST_STATUS CAN1_ValidateTransmission(uint8_t channel, struct CAN_MSG_OBJ *txCanMsg)
 {
     enum CAN_TX_MSG_REQUEST_STATUS txMsgStatus = CAN_TX_MSG_REQUEST_SUCCESS;
+    uint8_t plsize = (FIFO[channel].CONT & _C1FIFOCON1T_PLSIZE_MASK) >> _C1FIFOCON1T_PLSIZE_POSN;
     
-    // If TX message object has BRS set
-    if ((uint8_t)CAN_BRS_MODE == txCanMsg->field.brs)
+    // If CAN module is configured in Non-BRS mode and TX message object has BRS set
+    if (((uint8_t)CAN_BRS_MODE == txCanMsg->field.brs) && ((1U == C1CONHbits.BRSDIS) || (CAN_NORMAL_2_0_MODE == CAN1_OperationModeGet())))
     {
         txMsgStatus |= CAN_TX_MSG_REQUEST_BRS_ERROR;
     }
     
-    // If TX Message object has more than 8 bytes of DLC Size
-    if (txCanMsg->field.dlc > (uint8_t)DLC_8)
+    // If CAN 2.0 mode, TX Message object has more than 8 bytes of DLC Size
+    if ((txCanMsg->field.dlc > (uint8_t)DLC_8) && (((uint8_t)CAN_2_0_FORMAT == txCanMsg->field.formatType) || (CAN_NORMAL_2_0_MODE == CAN1_OperationModeGet())))
     {
         txMsgStatus |= CAN_TX_MSG_REQUEST_DLC_EXCEED_ERROR;
     }
-       
+    
+    // If any CAN TX message object has DLC size more than CAN TX FIFO Payload size
+    if (CAN1_DlcToDataBytesGet(txCanMsg->field.dlc) > CAN1_PLSIZEToPayloadBytesGet(plsize))
+    {
+        txMsgStatus |= CAN_TX_MSG_REQUEST_DLC_EXCEED_ERROR;
+    }
+    
     // If CAN TX FIFO is full
     if (CAN_TX_FIFO_FULL ==  CAN1_TransmitFIFOStatusGet(channel))
     {
@@ -317,16 +324,16 @@ static uint8_t CAN1_GetRxFifoDepth(uint8_t validChannel)
 */
 static void CAN1_MessageReadFromFifo(uint8_t *rxFifoObj, struct CAN_MSG_OBJ *rxCanMsg)
 {
-	uint8_t index;
-    uint32_t msgId;
-    
+    uint8_t index;
+	uint32_t msgId;
+	
 	// DLC <3:0>, IDE <1>, FDF <1> 
     rxCanMsg->field.dlc = rxFifoObj[4];
     rxCanMsg->field.idType = (rxFifoObj[4] & (1UL << CAN_MSG_OBJ_IDE_POSN)) ? CAN_FRAME_EXT : CAN_FRAME_STD;
     rxCanMsg->field.frameType = (rxFifoObj[4] & (1UL << CAN_MSG_OBJ_RTR_POSN)) ? CAN_FRAME_RTR : CAN_FRAME_DATA;
     rxCanMsg->field.brs = (rxFifoObj[4] & (1UL << CAN_MSG_OBJ_BRS_POSN)) ? CAN_BRS_MODE : CAN_NON_BRS_MODE;
     rxCanMsg->field.formatType = (rxFifoObj[4] & (1UL << CAN_MSG_OBJ_FDF_POSN)) ? CAN_FRAME_EXT : CAN_FRAME_STD;
-	
+        
     msgId = (uint32_t)(rxFifoObj[1] & CAN_MSG_OBJ_SID_HIGH_MASK);
     msgId <<= CAN_MSG_OBJ_SID_LOW_WIDTH;
     
@@ -347,9 +354,9 @@ static void CAN1_MessageReadFromFifo(uint8_t *rxFifoObj, struct CAN_MSG_OBJ *rxC
     }
 	
     rxCanMsg->msgId = msgId;
-	     
+	
     // Copying receive FIFO data starting memory location
-    for(index = 0; index < CAN1_DlcToDataBytesGet(rxCanMsg->field.dlc); index++)
+	for(index = 0; index < CAN1_DlcToDataBytesGet(rxCanMsg->field.dlc); index++)
     {
         *(rxMsgData + index) = rxFifoObj[8U + index];
     }
@@ -422,8 +429,8 @@ static void CAN1_TX_FIFO_Configuration(void)
     C1TXQCONH = 0x4;
     // TXPRI 0; TXAT Unlimited number of retransmission attempts; 
     C1TXQCONU = 0x60;
-    // FSIZE 4; PLSIZE 8; 
-    C1TXQCONT = 0x3;
+    // FSIZE 4; PLSIZE 16; 
+    C1TXQCONT = 0x43;
 }
 
 /**
@@ -440,8 +447,8 @@ static void CAN1_RX_FIFO_Configuration(void)
     C1FIFOCON1H = 0x4;
     // TXPRI 0; TXAT Disables retransmission attempts; 
     C1FIFOCON1U = 0x0;
-    // FSIZE 4; PLSIZE 8; 
-    C1FIFOCON1T = 0x3;
+    // FSIZE 4; PLSIZE 16; 
+    C1FIFOCON1T = 0x43;
 }
 
 /**
@@ -492,6 +499,22 @@ static void CAN1_BitRateConfiguration(void)
     C1NBTCFGU = 0x5E;
     // BRP 0; 
     C1NBTCFGT = 0x0;
+    // SJW 7; 
+    C1DBTCFGL = 0x7;
+    // TSEG2 7; 
+    C1DBTCFGH = 0x7;
+    // TSEG1 22; 
+    C1DBTCFGU = 0x16;
+    // BRP 0; 
+    C1DBTCFGT = 0x0;
+    // TDCV 0x0; 
+    C1TDCL = 0x0;
+    // TDCO 23; 
+    C1TDCH = 0x17;
+    // TDCMOD Auto; 
+    C1TDCU = 0x2;
+    // SID11EN disabled; EDGFLTEN disabled; 
+    C1TDCT = 0x0;
 }
 
 
@@ -528,8 +551,8 @@ void CAN1_Initialize(void)
         C1FIFOBAL = (uint8_t)0x2600U; 
         C1FIFOBAH = (uint8_t)(0x2600U >> 8); 
 		
-        // WAKFIL enabled; WFT T11 Filter; SIDL disabled; FRZ disabled; ON enabled; BRSDIS enabled; 
-        C1CONH = 0x97;  
+        // WAKFIL enabled; WFT T11 Filter; SIDL disabled; FRZ disabled; ON enabled; BRSDIS disabled; 
+        C1CONH = 0x87;  
 	
         // DNCNT 0x0; CLKSEL0 disabled; ISOCRCEN enabled; PXEDIS enabled; 
         C1CONL = 0x60;  
@@ -553,7 +576,7 @@ void CAN1_Initialize(void)
         CAN1_RX_FIFO_ResetInfo();
         
         /* Place CAN1 module in Normal Operation mode */
-        (void)CAN1_OperationModeSet(CAN_NORMAL_2_0_MODE);    
+        (void)CAN1_OperationModeSet(CAN_NORMAL_FD_MODE);    
     }
 }
 
@@ -572,6 +595,14 @@ void CAN1_Deinitialize(void)
         C1NBTCFGH = 0xF;
         C1NBTCFGU = 0x3E;
         C1NBTCFGT = 0x0;
+        C1DBTCFGL = 0x3;
+        C1DBTCFGH = 0x3;
+        C1DBTCFGU = 0xE;
+        C1DBTCFGT = 0x0;
+        C1TDCL = 0x0;
+        C1TDCH = 0x10;
+        C1TDCU = 0x2;
+        C1TDCT = 0x0;
         
         /* Configure CAN1 FIFO settings */
         /* Reset TX FIFO settings to POR*/
@@ -902,8 +933,8 @@ void __interrupt(irq(CAN),base(8)) CAN1_InformationISR(void)
         if(CAN1_BusWakeUpActivityHandler != NULL)
         {
             CAN1_BusWakeUpActivityHandler();
-        }
-        
+        } 
+		
         C1INTHbits.WAKIF = 0;
     }
     
@@ -918,8 +949,8 @@ void CAN1_Tasks(void)
         if(CAN1_InvalidMessageHandler != NULL)
         {
             CAN1_InvalidMessageHandler();
-        }
-       
+        } 
+		
         C1INTHbits.IVMIF = 0;
     }  
 	
@@ -928,8 +959,8 @@ void CAN1_Tasks(void)
         if(CAN1_BusErrorHandler != NULL)
         {
             CAN1_BusErrorHandler();
-        }
-       
+        } 
+		
         C1INTHbits.CERRIF = 0;
     }  
 	
@@ -938,8 +969,8 @@ void CAN1_Tasks(void)
         if(CAN1_ModeChangeHandler != NULL)
         {
             CAN1_ModeChangeHandler();
-        }
-       
+        } 
+		
         C1INTLbits.MODIF = 0;
     }  
 	
@@ -948,8 +979,8 @@ void CAN1_Tasks(void)
         if(CAN1_SystemErrorHandler != NULL)
         {
             CAN1_SystemErrorHandler();
-        }
-       
+        } 
+		
         C1INTHbits.SERRIF = 0;
     }  
         
@@ -968,13 +999,10 @@ void CAN1_Tasks(void)
 	    if(CAN1_RxBufferOverFlowHandler != NULL)
 		{
 			CAN1_RxBufferOverFlowHandler();
-		}
+		} 
 		
         C1FIFOSTA1Lbits.RXOVIF = 0;
     }
 }
-
-
-
 
 

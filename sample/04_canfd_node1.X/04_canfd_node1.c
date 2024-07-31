@@ -14,11 +14,22 @@
 #define MODE_CAN_CNT	(3)
 #define MODE_MASK		(0x03)
 
-const uint8_t acu8_msg_reset[] = "Status is RESET.\r\n";
-const uint8_t acu8_msg_awake[] = "Status is AWAKE.\r\n";
+const uint8_t acu8_dlc_size[] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 12, 16, 20, 24, 32, 48, 64};
+const char acu8_msg_reset[] = "Status is RESET.\r\n";
+const char acu8_msg_awake[] = "Status is AWAKE.\r\n";
+const char acu8_msg_mode0[] = "(OWN_SW)";
+const char acu8_msg_mode1[] = "(OWN_CNT)";
+const char acu8_msg_mode2[] = "(CAN_SW)";
+const char acu8_msg_mode3[] = "(CAN_CNT)";
+const char *pacu8_mode_msg[4] = {
+	acu8_msg_mode0,
+	acu8_msg_mode1,
+	acu8_msg_mode2,
+	acu8_msg_mode3
+};
 
 struct CAN_MSG_OBJ	st_msgObj;
-uint8_t				au8_msgData[8];
+uint8_t				au8_msgData[16];
 uint16_t			u16_timer_1s;
 uint16_t			u16_timer_200m;
 uint8_t				u8_mode_out;
@@ -150,7 +161,7 @@ static uint8_t CAN_ReceiveMessage(void) {
 			// 受信データを処理
 			u8_state_can = st_msgObj.data[0];
 			u8_count_can = st_msgObj.data[1];
-			for (index = 0; index < st_msgObj.field.dlc; index++) {
+			for (index = 0; index < acu8_dlc_size[st_msgObj.field.dlc]; index++) {
 				au8_msgData[index] = st_msgObj.data[index];
 			}
 			if (u8_state_can != u8_state_can_prev) {
@@ -173,7 +184,7 @@ static void print_message(void) {
 	EchoStr(" dlc:");
 	EchoHex8(st_msgObj.field.dlc);
 	EchoStr(">");
-	for (index = 0; index < st_msgObj.field.dlc; index++) {
+	for (index = 0; index < acu8_dlc_size[st_msgObj.field.dlc]; index++) {
 		UART3_Write(' ');
 		EchoHex8(st_msgObj.data[index]);
 	}
@@ -190,6 +201,7 @@ static void request_in(void) {
 		u8_mode_out &= MODE_MASK;
 		EchoStr("\r\nmode=");
 		EchoHex8(u8_mode_out);
+		EchoStr((char *)pacu8_mode_msg[u8_mode_out]);
 		EchoStr("\r\n");
 		break;
 	case 'r':						// Judge Reset

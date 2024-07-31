@@ -3,7 +3,7 @@
  *
  * @file can1.h
  *
- * @defgroup can_driver CAN 2.0 DRIVER
+ * @defgroup can_driver CAN FD DRIVER
  *
  * @brief This file contains API prototypes and other data types for the CAN1 driver.
  *
@@ -40,6 +40,131 @@
 #include "can_types.h"
 
 /**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_Initialize() API.
+ */
+#define CAN_FD1_Initialize CAN1_Initialize
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_Deinitialize() API.
+ */
+#define CAN_FD1_Deinitialize CAN1_Deinitialize
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_OperationModeSet() API.
+ */
+#define CAN_FD1_OperationModeSet CAN1_OperationModeSet
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_OperationModeGet() API.
+ */
+#define CAN_FD1_OperationModeGet CAN1_OperationModeGet
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_Transmit() API.
+ */
+#define CAN_FD1_Transmit CAN1_Transmit
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_TransmitFIFOStatusGet() API.
+ */
+#define CAN_FD1_TransmitFIFOStatusGet CAN1_TransmitFIFOStatusGet
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_IsTxErrorPassive() API.
+ */
+#define CAN_FD1_IsTxErrorPassive CAN1_IsTxErrorPassive
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_IsTxErrorWarning() API.
+ */
+#define CAN_FD1_IsTxErrorWarning CAN1_IsTxErrorWarning
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_IsTxErrorActive() API.
+ */
+#define CAN_FD1_IsTxErrorActive CAN1_IsTxErrorActive
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_Receive() API.
+ */
+#define CAN_FD1_Receive CAN1_Receive
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_ReceiveMessageGet() API.
+ */
+#define CAN_FD1_ReceiveMessageGet CAN1_ReceiveMessageGet
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_ReceivedMessageCountGet() API.
+ */
+#define CAN_FD1_ReceivedMessageCountGet CAN1_ReceivedMessageCountGet
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_ReceiveFIFOStatusGet() API.
+ */
+#define CAN_FD1_ReceiveFIFOStatusGet CAN1_ReceiveFIFOStatusGet
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_IsRxErrorPassive() API.
+ */
+#define CAN_FD1_IsRxErrorPassive CAN1_IsRxErrorPassive
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_IsRxErrorWarning() API.
+ */
+#define CAN_FD1_IsRxErrorWarning CAN1_IsRxErrorWarning
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_IsRxErrorActive() API.
+ */
+#define CAN_FD1_IsRxErrorActive CAN1_IsRxErrorActive
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_IsBusOff() API.
+ */
+#define CAN_FD1_IsBusOff CAN1_IsBusOff
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_Sleep() API.
+ */
+#define CAN_FD1_Sleep CAN1_Sleep
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_InvalidMessageCallbackRegister() API.
+ */
+#define CAN_FD1_InvalidMessageCallbackRegister CAN1_InvalidMessageCallbackRegister
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_BusWakeUpActivityCallbackRegister() API.
+ */
+#define CAN_FD1_BusWakeUpActivityCallbackRegister CAN1_BusWakeUpActivityCallbackRegister
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_BusErrorCallbackRegister() API.
+ */
+#define CAN_FD1_BusErrorCallbackRegister CAN1_BusErrorCallbackRegister
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_ModeChangeCallbackRegister() API.
+ */
+#define CAN_FD1_ModeChangeCallbackRegister CAN1_ModeChangeCallbackRegister
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_SystemErrorCallbackRegister() API.
+ */
+#define CAN_FD1_SystemErrorCallbackRegister CAN1_SystemErrorCallbackRegister
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_TxAttemptCallbackRegister() API.
+ */
+#define CAN_FD1_TxAttemptCallbackRegister CAN1_TxAttemptCallbackRegister
+/**
+ * @ingroup  can_driver
+ * @brief    Defines the Custom Name for CAN1_RxBufferOverFlowCallbackRegister() API.
+ */
+#define CAN_FD1_RxBufferOverFlowCallbackRegister CAN1_RxBufferOverFlowCallbackRegister
+/**
  @ingroup  can_driver
  @brief    CAN1 Transmit FIFO TXQ Custom Name.
 */
@@ -53,7 +178,7 @@
  * @ingroup  can_driver
  * @brief    Defines the Custom Name for CAN1_Tasks() API.
  */
-#define CAN1_Tasks CAN1_Tasks
+#define CAN_FD1_Tasks CAN1_Tasks
 
 /**
  * @ingroup can_driver
@@ -92,7 +217,7 @@ enum CAN_OP_MODES CAN1_OperationModeGet(void);
 /**
  * @ingroup can_driver
  * @brief Writes the CAN message object to the specified transmit FIFO channel.
- * @pre CAN1_Initialize() function is already called. 
+ * @pre CAN1_Initialize() function is already called.
  *		CAN1_TransmitFIFOStatusGet function is called to check buffer availability in the Transmit FIFO.
  * @param [in] fifoChannel - Transmit FIFO channel as described in CAN_TX_FIFO_CHANNELS where the message object is to be written.
  * @param [in] txCanMsg - Pointer to the message object of type CAN_MSG_OBJ.
